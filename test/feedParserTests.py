@@ -33,6 +33,7 @@ class ParsingTests(unittest.TestCase):
         feedParser = FeedParser(xml)
         events = feedParser.events()
         self.assertEqual(1, len(events))
+        self.assertTrue(events[0].id != None)
 
 def suite():
     return unittest.makeSuite(ParsingTests)

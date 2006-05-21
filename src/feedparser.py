@@ -19,10 +19,10 @@ def parseTag(originalTag):
 
 def createEvent(elem):
     """ Parses calender entry XML into an Event object. """
+    id = None
     for node in elem.getchildren():
         #print node.tag
-        id = None
         if parseTag(node.tag) == 'id':
-            pass
-    return Event()
+            id = node.text
+    return Event(id)
 
