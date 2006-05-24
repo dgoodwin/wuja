@@ -34,6 +34,7 @@ def createEvent(elem):
     title = None
     description = None
     updated = None
+    recurrence = None
     for node in elem.getchildren():
         #print node.tag
         if parseTag(node.tag) == 'id':
@@ -44,5 +45,13 @@ def createEvent(elem):
             description = node.text
         elif parseTag(node.tag) == 'updated':
             updated = parseTimestamp(node.text)
-    return Event(id, title, description, updated)
+        elif parseTag(node.tag) == 'recurrence':
+            recurrence = parseRecurrence(node.text)
+    return Event(id, title, description, updated, recurrence)
 
+def parseRecurrence(recurrence):
+    """ Parses the recurrence field. (iCalendar format, see RFC 2445) """
+    import vobject
+    parsed = vobject.readOne(recurrence)
+    #parsed.prettyPrint()
+    return recurrence # TODO: Change this...
