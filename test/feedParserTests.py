@@ -13,15 +13,16 @@ class ParsingTests(unittest.TestCase):
         feedParser = FeedParser(xml)
         entries = feedParser.entries()
 
-        # Distant Event is in the year 3000, make sure we get it:
-        endDate = datetime(3001, 01, 01)
+        # Distant Event is in the year 2015, make sure we get it:
+        endDate = datetime(2020, 01, 01)
 
         distantEvent = findEntry(entries, "Distant Event")
         self.assertTrue(distantEvent != None)
         events = distantEvent.events(endDate)
+
         self.assertEquals(1, len(events))
-        expectedWhen = datetime(3000, 05, 23, 22, 0, 0)
-        # "3000-05-23T22:00:00.000-03:00" endTime="3000-05-23T23:00:00.000-03:00"
+        expectedWhen = datetime(2015, 05, 23, 22, 0, 0)
+
         self.assertEquals(expectedWhen, events[0].when)
         self.assertEquals(60*60, events[0].duration)
 
