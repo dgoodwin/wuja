@@ -1,17 +1,20 @@
+import time
+
 from datetime import datetime
 from elementtree import ElementTree
-from model import Event
+from model import SingleOccurrenceEntry
+from model import RecurringEntry
 
 class FeedParser:
     def __init__(self, xml):
         self.rootNode = ElementTree.XML(xml)
 
-    def events(self):
+    def entries(self):
         events = []
         for elem in self.rootNode.getchildren():
             # TODO: Is there a better way to examine tag names?
             if parseTag(elem.tag) == "entry":
-                events.append(createEvent(elem))
+                events.append(createEntry(elem))
         return events
 
 def parseTag(originalTag):
@@ -28,15 +31,16 @@ def parseTimestamp(timestamp):
     hour, minute, second = time.split(':')
     return datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
 
-def createEvent(elem):
-    """ Parses calender entry XML into an Event object. """
+def createEntry(elem):
+    """ Parses calender entry XML into an Entry object. """
     id = None
     title = None
     description = None
     updated = None
     recurrence = None
+    when = None
+    duration = None
     for node in elem.getchildren():
-        #print node.tag
         if parseTag(node.tag) == 'id':
             id = node.text
         elif parseTag(node.tag) == 'title':
@@ -47,7 +51,15 @@ def createEvent(elem):
             updated = parseTimestamp(node.text)
         elif parseTag(node.tag) == 'recurrence':
             recurrence = parseRecurrence(node.text)
-    return Event(id, title, description, updated, recurrence)
+        elif parseTag(node.tag) == 'when':
+            when = parseTimestamp(node.attrib["startTime"])
+            endTime = parseTimestamp(node.attrib["endTime"])
+            duration = time.mktime(endTime.timetuple()) - \
+                time.mktime(when.timetuple())
+    if recurrence != None:
+        return RecurringEntry(id, title, description, updated, recurrence)
+    return SingleOccurrenceEntry(id, title, description, updated, when,
+        duration, "where")
 
 def parseRecurrence(recurrence):
     """ Parses the recurrence field. (iCalendar format, see RFC 2445) """
