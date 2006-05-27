@@ -13,18 +13,8 @@ class ParsingTests(unittest.TestCase):
         feedParser = FeedParser(xml)
         entries = feedParser.entries()
 
-        # Distant Event is in the year 2015, make sure we get it:
-        endDate = datetime(2020, 01, 01)
-
         distantEvent = findEntry(entries, "Distant Event")
         self.assertTrue(distantEvent != None)
-        events = distantEvent.events(endDate)
-
-        self.assertEquals(1, len(events))
-        expectedWhen = datetime(2015, 05, 23, 22, 0, 0)
-
-        self.assertEquals(expectedWhen, events[0].when)
-        self.assertEquals(60*60, events[0].duration)
 
     # Recurring entry, no exceptions:
     #def testRecurringEntry(self):

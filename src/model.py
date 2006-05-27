@@ -1,3 +1,5 @@
+from datetime import datetime
+
 class Entry:
     """
     Represents a calendar entry. (not event, can involve recurrence and
@@ -24,7 +26,14 @@ class SingleOccurrenceEntry(Entry):
         self.where = where
 
     def events(self, endDate):
-        return [Event(self.when, self.duration, self.where)]
+        # Assume a start date of now, no point returning past events:
+        # TODO: Unless they've never been acknowledged!!!
+        startDate = datetime.now()
+
+        returnMe = []
+        if startDate < self.when < endDate:
+            returnMe.append(Event(self.when, self.duration, self.where))
+        return returnMe
 
 class RecurringEntry(Entry):
     """ An entry with recurrence information. """

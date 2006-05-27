@@ -6,6 +6,7 @@ from model import SingleOccurrenceEntry
 from model import RecurringEntry
 
 class FeedParser:
+
     def __init__(self, xml):
         self.rootNode = ElementTree.XML(xml)
 
@@ -23,13 +24,16 @@ def parseTag(originalTag):
 
 def parseTimestamp(timestamp):
     """ Convert internet timestamp (RFC 3339) into a Python datetime object. """
-    # NOTE: Couldn't find anything in the standard python library to parse these for us:
+    # NOTE: Couldn't find anything in the standard python library to parse
+    # these for us:
     date, time = timestamp.split('T')
     time, timezone = time.split('.')
-    # NOTE: Not using timezone right now, dates here seem to always come back GMT.
+    # NOTE: Not using timezone right now, dates here seem to always come
+    # back GMT.
     year, month, day = date.split('-')
     hour, minute, second = time.split(':')
-    return datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
+    return datetime(int(year), int(month), int(day), int(hour), int(minute),
+        int(second))
 
 def createEntry(elem):
     """ Parses calender entry XML into an Entry object. """
