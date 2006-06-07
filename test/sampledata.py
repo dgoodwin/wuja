@@ -20,3 +20,25 @@ RRULE:FREQ=YEARLY;BYMONTH=4;BYDAY=1SU
 END:DAYLIGHT
 END:VTIMEZONE
 </gd:recurrence><gd:transparency value='http://schemas.google.com/g/2005#event.opaque'></gd:transparency><gd:eventStatus value='http://schemas.google.com/g/2005#event.confirmed'></gd:eventStatus><gd:where valueString='Boardroom'></gd:where></entry></feed>"""
+
+dailyRecurrence = """DTSTART;TZID=Canada/Atlantic:20060518T100000
+DURATION:PT1800S
+RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR
+BEGIN:VTIMEZONE
+TZID:Canada/Atlantic
+X-LIC-LOCATION:Canada/Atlantic
+BEGIN:STANDARD
+TZOFFSETFROM:-0300
+TZOFFSETTO:-0400
+TZNAME:AST
+DTSTART:19701025T020000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+BEGIN:DAYLIGHT
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0300
+TZNAME:ADT
+DTSTART:19700405T020000
+RRULE:FREQ=YEARLY;BYMONTH=4;BYDAY=1SU
+END:DAYLIGHT
+END:VTIMEZONE"""

@@ -43,6 +43,7 @@ def createEntry(elem):
     updated = None
     recurrence = None
     when = None
+    where = None
     duration = None
     for node in elem.getchildren():
         if parseTag(node.tag) == 'id':
@@ -54,20 +55,18 @@ def createEntry(elem):
         elif parseTag(node.tag) == 'updated':
             updated = parseTimestamp(node.text)
         elif parseTag(node.tag) == 'recurrence':
-            recurrence = parseRecurrence(node.text)
+            recurrence = node.text
+            # TODO: duration = ?
         elif parseTag(node.tag) == 'when':
             when = parseTimestamp(node.attrib["startTime"])
             endTime = parseTimestamp(node.attrib["endTime"])
             duration = time.mktime(endTime.timetuple()) - \
                 time.mktime(when.timetuple())
+        elif parseTag(node.tag) == 'where':
+            where = node.text
     if recurrence != None:
-        return RecurringEntry(id, title, description, updated, recurrence)
+        return RecurringEntry(id, title, description, where, updated,
+            recurrence)
     return SingleOccurrenceEntry(id, title, description, updated, when,
         duration, "where")
 
-def parseRecurrence(recurrence):
-    """ Parses the recurrence field. (iCalendar format, see RFC 2445) """
-    import vobject
-    parsed = vobject.readOne(recurrence)
-    #parsed.prettyPrint()
-    return recurrence # TODO: Change this...

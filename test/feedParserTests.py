@@ -16,18 +16,6 @@ class ParsingTests(unittest.TestCase):
         distantEvent = findEntry(entries, "Distant Event")
         self.assertTrue(distantEvent != None)
 
-    # Recurring entry, no exceptions:
-    #def testRecurringEntry(self):
-    #    feedParser = FeedParser(xml)
-    #    entries = feedParser.entries()
-
-    #    standupMeeting = findEntry(entries, "Standup Meeting")
-    #    self.assertTrue(standupMeeting != None)
-    #    self.assertEquals(2006, standupMeeting.updated.year)
-    #    self.assertEquals(5, standupMeeting.updated.month)
-    #    self.assertEquals(18, standupMeeting.updated.day)
-    #    self.assertTrue(len(standupMeeting.recurrence) > 0)
-
     def testTimestampParsing(self):
         timestamp = "2006-05-18T15:24:41.000Z"
         date = parseTimestamp(timestamp)
