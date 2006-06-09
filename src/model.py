@@ -59,7 +59,9 @@ class RecurringEntry(Entry):
         self.startDate = parse(d)
 
         # Seems to arrive as something like PT1800S:
-        self.duration = int(parsed.duration.value[2:-1])
+        self.duration = None
+        if parsed.contents.has_key('duration'):
+            self.duration = int(parsed.duration.value[2:-1])
 
         self.__buildRrule(parsed.rrule.value)
 
@@ -79,15 +81,20 @@ class RecurringEntry(Entry):
             else:
                 key = key.lower()
                 val = val.split(',')
+
+                # Massage attributes into something dateutil can use:
                 if key == 'byday':
                     key = 'byweekday' # documented dateutil deviance from RFC
-                    # Convert "MO, TU, WE..." strings to their rrule objects:
+
                     for i in range(len(val)):
                         val[i] = getattr(dateutil.rrule, val[i])
+
                     val = tuple(val)
+
                 elif key == 'until':
                     val = datetime(int(val[0][0:4]), int(val[0][4:6]),
                         int(val[0][6:8]))
+
                 else:
                     val = tuple(val)
 

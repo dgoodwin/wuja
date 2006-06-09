@@ -4,7 +4,8 @@ from datetime import datetime
 import settestpath
 from model import SingleOccurrenceEntry, RecurringEntry
 from feedparser import FeedParser
-from sampledata import dailyRecurrence, dailyRecurrenceForOneWeek
+from sampledata import dailyRecurrence, dailyRecurrenceForOneWeek, \
+    weeklyRecurrenceAllDay
 
 # Sample data:
 UPDATED = datetime(2006, 05, 26, 12, 00, 00)
@@ -45,9 +46,14 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
 
         self.assertEquals(0, len(distantEvent.events(None, endDate)))
 
-# TODO: Single occurrence all day event.
-
 class RecurringEntryTests(unittest.TestCase):
+
+    def __getDailyRecurringEntry(self):
+        standupMeeting = RecurringEntry("fakeId", "Standup Meeting", "",
+            WHERE, UPDATED, dailyRecurrence)
+        self.assertEqual(1800, standupMeeting.duration)
+        self.assertEqual(WHERE, standupMeeting.where)
+        return standupMeeting
 
     def testQueryEndDateBeforeStartDate(self):
         standupMeeting = self.__getDailyRecurringEntry()
@@ -80,12 +86,30 @@ class RecurringEntryTests(unittest.TestCase):
         events = dailyForOneWeek.events(startDate, endDate)
         self.assertEquals(5, len(events))
 
-    def __getDailyRecurringEntry(self):
-        standupMeeting = RecurringEntry("fakeId", "Standup Meeting", "",
-            WHERE, UPDATED, dailyRecurrence)
-        self.assertEqual(1800, standupMeeting.duration)
-        self.assertEqual(WHERE, standupMeeting.where)
-        return standupMeeting
+    def testWeeklyAllDayRecurrence(self):
+        weeklyAllDay = RecurringEntry("fakeId", "Weekly All Day", "", WHERE,
+            UPDATED, weeklyRecurrenceAllDay)
+        self.assertEqual(None, weeklyAllDay.duration)
+
+        # Event starts on June 5th 2006
+        startDate = datetime(2006, 5, 28)
+        endDate = datetime(2006, 6, 30)
+        events = weeklyAllDay.events(startDate, endDate)
+        self.assertEquals(4, len(events))
+
+        self.assertEquals(2006, events[0].year)
+        self.assertEquals(6, events[0].month)
+        self.assertEquals(5, events[0].day)
+
+
+        self.assertEquals(6, events[1].month)
+        self.assertEquals(12, events[1].day)
+
+        self.assertEquals(6, events[2].month)
+        self.assertEquals(19, events[2].day)
+
+        self.assertEquals(6, events[3].month)
+        self.assertEquals(26, events[3].day)
 
 def suite():
     suite = unittest.TestSuite()
