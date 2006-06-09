@@ -72,20 +72,7 @@ class RecurringEntry(Entry):
 
         # Define the same defaults as the rrule constructor takes:
         params = {}
-        params['interval'] = 1
-        params['wkst'] = None
-        params['count'] = None
-        params['until'] = None
-        params['bysetpos'] = None
-        params['bymonth'] = None
-        params['bymonthday'] = None
-        params['byyearday'] = None
-        params['byeaster'] = None
-        params['byweekno'] = None
-        params['byweekday'] = None
-        params['byhour'] = None
-        params['byminute'] = None
-        params['bysecond'] = None
+        params['dtstart'] = self.startDate
 
         for prop in ruleText.split(';'):
             key, val = prop.split('=')
@@ -110,14 +97,7 @@ class RecurringEntry(Entry):
                     raise Exception("Unsupported recurrence property: " + key)
                 params[key] = val
 
-        self.rrule = rrule(freq, dtstart=self.startDate,
-            interval=params['interval'], wkst=params['wkst'],
-            count=params['count'], until=params['until'],
-            bysetpos=params['bysetpos'], bymonth=params['bymonth'],
-            bymonthday=params['bymonthday'], byyearday=params['byyearday'],
-            byeaster=params['byeaster'], byweekno=params['byweekno'],
-            byweekday=params['byweekday'], byhour=params['byhour'],
-            byminute=params['byminute'], bysecond=params['bysecond'])
+        self.rrule = rrule(freq, **params)
 
     def events(self, startDate, endDate):
         # Assume a start date of now, no point returning past events:
