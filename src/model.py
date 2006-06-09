@@ -1,4 +1,7 @@
+import dateutil.rrule
+
 from datetime import datetime
+from dateutil.rrule import rrule
 
 class Entry:
     """
@@ -50,24 +53,75 @@ class RecurringEntry(Entry):
         # those just the ones we're interested in. (Sorry, it's a big spec.)
         import vobject
         parsed = vobject.readOne(recurrence)
-        #parsed.prettyPrint()
-        #print(dir(parsed))
-        for child in parsed.getChildren():
-            if child.name == 'DURATION':
-                # Seems to arrive as something like PT1800S:
-                self.duration = int(child.value[2:-1])
-#            elif child.name == 'DTSTART':
-#                startDate = datetime(
-        return recurrence # TODO: Change this...
+
+        d = parsed.dtstart.value
+        self.startDate = datetime(int(d[0:4]), int(d[4:6]), int(d[6:8]),
+            int(d[9:11]), int(d[11:13]), int(d[13:15]))
+
+        # Seems to arrive as something like PT1800S:
+        self.duration = int(parsed.duration.value[2:-1])
+
+        self.__buildRrule(parsed.rrule.value)
+
+        return recurrence
+
+    def __buildRrule(self, ruleText):
+        freq = None
+
+        # TODO: Find a better way to leverage dynamic keyword arguments:
+
+        # Define the same defaults as the rrule constructor takes:
+        params = {}
+        params['interval'] = 1
+        params['wkst'] = None
+        params['count'] = None
+        params['until'] = None
+        params['bysetpos'] = None
+        params['bymonth'] = None
+        params['bymonthday'] = None
+        params['byyearday'] = None
+        params['byeaster'] = None
+        params['byweekno'] = None
+        params['byweekday'] = None
+        params['byhour'] = None
+        params['byminute'] = None
+        params['bysecond'] = None
+
+        for prop in ruleText.split(';'):
+            key, val = prop.split('=')
+            if key == 'FREQ':
+                freq = getattr(dateutil.rrule, val)
+            else:
+                key = key.lower()
+                val = val.split(',')
+                if key == 'byday':
+                    key = 'byweekday' # documented dateutil deviance from RFC
+                    # Convert "MO, TU, WE..." strings to their rrule objects:
+                    for i in range(len(val)):
+                        val[i] = getattr(dateutil.rrule, val[i])
+
+                val = tuple(val)
+                if not params.has_key(key):
+                    raise Exception("Unsupported recurrence property: " + key)
+                params[key] = val
+
+        self.rrule = rrule(freq, dtstart=self.startDate,
+            interval=params['interval'], wkst=params['wkst'],
+            count=params['count'], until=params['until'],
+            bysetpos=params['bysetpos'], bymonth=params['bymonth'],
+            bymonthday=params['bymonthday'], byyearday=params['byyearday'],
+            byeaster=params['byeaster'], byweekno=params['byweekno'],
+            byweekday=params['byweekday'], byhour=params['byhour'],
+            byminute=params['byminute'], bysecond=params['bysecond'])
 
     def events(self, startDate, endDate):
         # Assume a start date of now, no point returning past events:
-        # TODO: Unless they've never been acknowledged!!!
+        # TODO: Unless they've never been acknowledged...
         if startDate == None:
             startDate = datetime.now()
-        if endDate < startDate:
+        if endDate < startDate or endDate < self.startDate:
             return []
-        return []
+        return self.rrule.between(startDate, endDate, inc=True)
 
 class Event:
     """ An actual calendar event. Can be associated with an alarm. """

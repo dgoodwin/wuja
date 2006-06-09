@@ -54,13 +54,20 @@ class RecurringEntryTests(unittest.TestCase):
         endDate = datetime(2006, 06, 03)
         self.assertEqual(0, len(standupMeeting.events(startDate, endDate)))
 
+    def testQueryEndDateBeforeEntriesStartDate(self):
+        standupMeeting = self.__getDailyRecurringEntry()
+        # Event starts on May 18th 2006:
+        startDate = datetime(2006, 02, 04)
+        endDate = datetime(2006, 02, 05)
+        self.assertEqual(0, len(standupMeeting.events(startDate, endDate)))
+
     def testDailyRecurringEntry(self):
         standupMeeting = self.__getDailyRecurringEntry()
         # Should return five occurences during a standard work week:
         startDate = datetime(2006, 06, 04)
         endDate = datetime(2006, 06, 10)
-        # TODO: Pick up here:
-#        self.assertEqual(5, len(standupMeeting.events(startDate, endDate)))
+        events = standupMeeting.events(startDate, endDate)
+        self.assertEqual(5, len(events))
 
     def __getDailyRecurringEntry(self):
         from sampledata import dailyRecurrence
