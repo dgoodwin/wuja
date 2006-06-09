@@ -1,7 +1,9 @@
 import dateutil.rrule
+import vobject
 
 from datetime import datetime
 from dateutil.rrule import rrule
+from dateutil.parser import parse
 
 class Entry:
     """
@@ -51,12 +53,10 @@ class RecurringEntry(Entry):
         """ Parses the recurrence field. (iCalendar format, see RFC 2445) """
         # Parses only the fields that Google Calendar seems to use, and of
         # those just the ones we're interested in. (Sorry, it's a big spec.)
-        import vobject
         parsed = vobject.readOne(recurrence)
 
         d = parsed.dtstart.value
-        self.startDate = datetime(int(d[0:4]), int(d[4:6]), int(d[6:8]),
-            int(d[9:11]), int(d[11:13]), int(d[13:15]))
+        self.startDate = parse(d)
 
         # Seems to arrive as something like PT1800S:
         self.duration = int(parsed.duration.value[2:-1])
@@ -99,8 +99,13 @@ class RecurringEntry(Entry):
                     # Convert "MO, TU, WE..." strings to their rrule objects:
                     for i in range(len(val)):
                         val[i] = getattr(dateutil.rrule, val[i])
+                    val = tuple(val)
+                elif key == 'until':
+                    val = datetime(int(val[0][0:4]), int(val[0][4:6]),
+                        int(val[0][6:8]))
+                else:
+                    val = tuple(val)
 
-                val = tuple(val)
                 if not params.has_key(key):
                     raise Exception("Unsupported recurrence property: " + key)
                 params[key] = val

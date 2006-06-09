@@ -4,6 +4,7 @@ from datetime import datetime
 import settestpath
 from model import SingleOccurrenceEntry, RecurringEntry
 from feedparser import FeedParser
+from sampledata import dailyRecurrence, dailyRecurrenceForOneWeek
 
 # Sample data:
 UPDATED = datetime(2006, 05, 26, 12, 00, 00)
@@ -69,8 +70,17 @@ class RecurringEntryTests(unittest.TestCase):
         events = standupMeeting.events(startDate, endDate)
         self.assertEqual(5, len(events))
 
+    def testDailyRecurringEntryForOneWeek(self):
+        dailyForOneWeek = RecurringEntry("fakeId", "Daily For One Week", "",
+            WHERE, UPDATED, dailyRecurrenceForOneWeek)
+        self.assertEqual(3600, dailyForOneWeek.duration)
+        self.assertEqual(WHERE, dailyForOneWeek.where)
+        startDate = datetime(2006, 6, 1)
+        endDate = datetime(2006, 6, 30)
+        events = dailyForOneWeek.events(startDate, endDate)
+        self.assertEquals(5, len(events))
+
     def __getDailyRecurringEntry(self):
-        from sampledata import dailyRecurrence
         standupMeeting = RecurringEntry("fakeId", "Standup Meeting", "",
             WHERE, UPDATED, dailyRecurrence)
         self.assertEqual(1800, standupMeeting.duration)
