@@ -68,8 +68,6 @@ class RecurringEntry(Entry):
     def __buildRrule(self, ruleText):
         freq = None
 
-        # TODO: Find a better way to leverage dynamic keyword arguments:
-
         # Define the same defaults as the rrule constructor takes:
         params = {}
         params['dtstart'] = self.startDate
@@ -93,9 +91,7 @@ class RecurringEntry(Entry):
                 else:
                     val = tuple(val)
 
-                if not params.has_key(key):
-                    raise Exception("Unsupported recurrence property: " + key)
-                params[key] = val
+                params[str(key)] = val
 
         self.rrule = rrule(freq, **params)
 
