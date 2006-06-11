@@ -9,10 +9,12 @@ class WujaApplication:
 
     def __clicked(self, widget, data):
         """ Handle mouse clicks on the tray icon. (pop up the menu) """
+        # 1 = left, 2 = middle, 3 = right:
         print("Clicked button: " + str(data.button))
         # TODO: Popup menu!
+        self.menu.popup(None, None, None, data.button, data.time)
 
-    def __printSomething(self, widget, data, s):
+    def __printSomething(self, widget, s):
         print(s)
 
     def hello(self, widget, data, s):
@@ -28,27 +30,30 @@ class WujaApplication:
         gtk.main_quit()
 
     def __init__(self):
+        self.menu = gtk.Menu()
+
+        testMenuItem = gtk.MenuItem()
+        testMenuItem.add(gtk.Label("Hello World!"))
+        testMenuItem.connect("activate", self.__printSomething,
+            "Selected: Hello World!")
+        testMenuItem.show_all()
+        self.menu.append(testMenuItem)
+
+        self.menu.append(gtk.SeparatorMenuItem())
+
+        quitMenuItem = gtk.MenuItem()
+        quitMenuItem.add(gtk.Label("Quit"))
+        quitMenuItem.connect("activate", self.destroy)
+        quitMenuItem.show_all()
+        self.menu.append(quitMenuItem)
+
+        self.menu.show_all()
+
         icon = gtk.image_new_from_stock(gtk.STOCK_DIALOG_INFO,
             gtk.ICON_SIZE_BUTTON)
 
-        # Build the menu to display when clicking the system tray icon:
-        self.menu = gtk.Menu()
-        self.menuItem = gtk.MenuItem()
-        self.menuItem.add(gtk.Label("Hello World!"))
-        self.menuItem.connect("activate", self.__printSomething,
-            "Selected: Hello World!")
-        self.menuItem.show_all()
-        self.menu.append(self.menuItem)
-        self.menu.show_all()
-
         self.trayIcon = trayicon.TrayIcon("wuja")
 #        self.trayIcon.add(icon)
-#        self.trayIcon.add(gtk.Label("Wuja"))
-#        self.trayIcon.connect('map-event', self.hello, "map-event")
-#        self.trayIcon.connect('unmap-event', self.hello, "unmap-event")
-#        self.trayIcon.connect('scroll-event', self.hello, "scroll-event")
-#        self.trayIcon.connect('destroy', self.hello, "destroy")
-
         self.trayIcon.connect('button_press_event', self.__clicked)
 
         eb = gtk.EventBox()
