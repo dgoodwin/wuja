@@ -55,8 +55,7 @@ class RecurringEntry(Entry):
         # those just the ones we're interested in. (Sorry, it's a big spec.)
         parsed = vobject.readOne(recurrence)
 
-        d = parsed.dtstart.value
-        self.startDate = parse(d)
+        self.startDate = parse(parsed.dtstart.value)
 
         # Seems to arrive as something like PT1800S:
         self.duration = None
