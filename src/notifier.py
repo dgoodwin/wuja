@@ -13,13 +13,14 @@ http://www.google.com/calendar/feeds/gqfbp7ajq1b71v5jgdtbe815ps@group.calendar.g
 
 class Notifier:
 
-    def __init__ (self):
+    def __init__ (self, threshold=1):
         self.observers = []
         self.update()
+        self.threshold = threshold
 
-    def __notifyObservers(self):
+    def __notifyObservers(self, event):
         for o in self.observers:
-            o.notify()
+            o.notify(event)
 
     def updateEvents(self):
         self.events = []
@@ -52,7 +53,7 @@ class Notifier:
         for e in self.events:
             now = datetime.datetime.now()
             delta = e.when - now
-            if delta < datetime.timedelta(minutes=1):
-                self.__notifyObservers()
+            if delta < datetime.timedelta(minutes=self.threshold):
+                self.__notifyObservers(e)
         return True
 

@@ -28,9 +28,11 @@ class TestNotifier(Notifier):
 class TestObserver:
     def __init__(self):
         self.notified = False
+        self.triggerEntry = None
 
-    def notify(self):
+    def notify(self, event):
         self.notified = True
+        self.triggerEntry = event.entry
 
 class NotifierTests(unittest.TestCase):
 
@@ -40,17 +42,19 @@ class NotifierTests(unittest.TestCase):
         self.__createEntry(futureTime)
         self.notifier.checkForNotifications()
         self.assertTrue(self.observer.notified)
+        self.assertEqual(self.entry, self.observer.triggerEntry)
 
     def testNotificationBeyondThreshold(self):
         futureTime = datetime.datetime.now() + datetime.timedelta(seconds=61)
         self.__createEntry(futureTime)
         self.notifier.checkForNotifications()
         self.assertFalse(self.observer.notified)
+        self.assertEqual(None, self.observer.triggerEntry)
 
     def __createEntry(self, futureTime):
-        entry = SingleOccurrenceEntry("fakeId", "Fake Title", "",
+        self.entry = SingleOccurrenceEntry("fakeId", "Fake Title", "",
             datetime.datetime.now(), futureTime, 3600, "Gumdrop Alley")
-        self.notifier = TestNotifier([entry])
+        self.notifier = TestNotifier([self.entry])
         self.observer = TestObserver()
         self.notifier.attach(self.observer)
         self.assertFalse(self.observer.notified)
