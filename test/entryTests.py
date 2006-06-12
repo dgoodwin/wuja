@@ -26,7 +26,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         self.assertEquals(1, len(events))
 
         self.assertEquals(when, events[0].when)
-        self.assertEquals(3600, events[0].duration)
+        self.assertEquals(3600, events[0].entry.duration)
 
     def testEventBeyondEndtime(self):
         when = datetime(2015, 05, 23, 22, 0, 0)
@@ -97,19 +97,19 @@ class RecurringEntryTests(unittest.TestCase):
         events = weeklyAllDay.events(startDate, endDate)
         self.assertEquals(4, len(events))
 
-        self.assertEquals(2006, events[0].year)
-        self.assertEquals(6, events[0].month)
-        self.assertEquals(5, events[0].day)
+        self.assertEquals(2006, events[0].when.year)
+        self.assertEquals(6, events[0].when.month)
+        self.assertEquals(5, events[0].when.day)
 
 
-        self.assertEquals(6, events[1].month)
-        self.assertEquals(12, events[1].day)
+        self.assertEquals(6, events[1].when.month)
+        self.assertEquals(12, events[1].when.day)
 
-        self.assertEquals(6, events[2].month)
-        self.assertEquals(19, events[2].day)
+        self.assertEquals(6, events[2].when.month)
+        self.assertEquals(19, events[2].when.day)
 
-        self.assertEquals(6, events[3].month)
-        self.assertEquals(26, events[3].day)
+        self.assertEquals(6, events[3].when.month)
+        self.assertEquals(26, events[3].when.day)
 
 def suite():
     suite = unittest.TestSuite()

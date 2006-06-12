@@ -39,7 +39,7 @@ class SingleOccurrenceEntry(Entry):
             return []
         returnMe = []
         if startDate < self.when < endDate:
-            returnMe.append(Event(self.when, self.duration, self.where))
+            returnMe.append(Event(self.when, self))
         return returnMe
 
 class RecurringEntry(Entry):
@@ -108,12 +108,16 @@ class RecurringEntry(Entry):
             startDate = datetime.now()
         if endDate < startDate or endDate < self.startDate:
             return []
-        return self.rrule.between(startDate, endDate, inc=True)
+
+        eventList = []
+        eventDateTimes = self.rrule.between(startDate, endDate, inc=True)
+        for e in eventDateTimes:
+            eventList.append(Event(e, self))
+        return eventList
 
 class Event:
     """ An actual calendar event. Can be associated with an alarm. """
 
-    def __init__(self, when, duration, where):
+    def __init__(self, when, entry):
         self.when = when
-        self.duration = duration
-        self.where = where
+        self.entry = entry
