@@ -8,6 +8,10 @@ from egg import trayicon
 
 from notifier import Notifier
 
+# TODO: Remove these:
+from model import SingleOccurrenceEntry, Event
+import datetime
+
 class WujaApplication:
 
     def __clicked(self, widget, data):
@@ -34,9 +38,16 @@ class WujaApplication:
         testMenuItem.show_all()
         self.menu.append(testMenuItem)
 
+        # TODO: Remove:
         fakeNotification = gtk.MenuItem()
         fakeNotification.add(gtk.Label("Fake Notification"))
-        fakeNotification.connect("activate", self.displayNotification)
+        now = datetime.datetime.now()
+        when = now + datetime.timedelta(seconds=15)
+        fakeEntry = SingleOccurrenceEntry(-1, "Fake Event", "",
+            now, when, 2600, "")
+        fakeEvent = Event(fakeEntry.when, fakeEntry)
+        fakeNotification.connect("activate", self.displayNotification,
+            fakeEvent)
         self.menu.append(fakeNotification)
 
         self.menu.append(gtk.SeparatorMenuItem())
@@ -75,9 +86,48 @@ class WujaApplication:
         print("Event triggered: " + event.entry.title + " " + str(event.when))
         self.displayNotification(None, event)
 
-    def displayNotification(self, widget, data=None):
+    def displayNotification(self, widget, event):
+        box = gtk.VBox()
+
+        l = gtk.Label("Wake Up Jackass...")
+        l.show()
+        box.pack_start(l)
+
+        l = gtk.Label(event.entry.title)
+        l.show()
+        box.pack_start(l)
+
+        l = gtk.Label(event.entry.description)
+        l.show()
+        box.pack_start(l)
+
+        l = gtk.Label(event.when.strftime("%a %b %d %Y - %H:%M%P"))
+        l.show()
+        box.pack_start(l)
+
+        buttonBox = gtk.HBox()
+        b = gtk.Button("Accept")
+        b.connect("clicked", self.__printSomething, "Accepted: " + \
+            event.entry.title)
+        b.show()
+        buttonBox.pack_start(b)
+
+        b = gtk.Button("Snooze")
+        b.connect("clicked", self.__printSomething, "Snoozed: " + \
+            event.entry.title)
+        b.show()
+        buttonBox.pack_start(b)
+
+        buttonBox.show()
+        box.pack_start(buttonBox)
+
+        box.show()
+
         alertWindow = gtk.Window()
-        alertWindow.set_title("Wake Up Jackass!")
+        alertWindow.set_title("Alert")
+        alertWindow.add(box)
+        alertWindow.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG)
+
         alertWindow.show()
 
     def main(self):

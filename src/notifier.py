@@ -26,7 +26,7 @@ class Notifier:
         self.events = []
         for entry in self.calendarEntries:
             startDate = datetime.datetime.now()
-            endDate = startDate + datetime.timedelta(days=1)
+            endDate = startDate + datetime.timedelta(hours=1)
             events = entry.events(startDate, endDate)
             for e in events:
                 self.events.append(e)
