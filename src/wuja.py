@@ -71,9 +71,7 @@ class WujaApplication:
         self.trayIcon.add(eb)
         self.trayIcon.show_all()
 
-        # TODO: Temporarily poping up alerts for any events within the next
-        # day to ensure something shows up when testing:
-        self.notifier = Notifier(1440)
+        self.notifier = Notifier(1)
         # TODO: Add timeout to periodically update the feed.
         self.notifier.attach(self) # register ourselves as an observer
         gobject.timeout_add(5000, self.notifier.checkForNotifications)
@@ -107,14 +105,12 @@ class WujaApplication:
 
         buttonBox = gtk.HBox()
         b = gtk.Button("Accept")
-        b.connect("clicked", self.__printSomething, "Accepted: " + \
-            event.entry.title)
+        b.connect("clicked", self.acceptEvent, event)
         b.show()
         buttonBox.pack_start(b)
 
         b = gtk.Button("Snooze")
-        b.connect("clicked", self.__printSomething, "Snoozed: " + \
-            event.entry.title)
+        b.connect("clicked", self.destroy)
         b.show()
         buttonBox.pack_start(b)
 
@@ -129,6 +125,11 @@ class WujaApplication:
         alertWindow.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG)
 
         alertWindow.show()
+
+    def acceptEvent(self, widget, event):
+        event.accepted = True
+        print("Accepted event: " + event.entry.title)
+        widget.get_parent_window().destroy()
 
     def main(self):
         gtk.main()

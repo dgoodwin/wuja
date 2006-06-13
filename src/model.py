@@ -121,3 +121,4 @@ class Event:
     def __init__(self, when, entry):
         self.when = when
         self.entry = entry
+        self.accepted = False # set true once user confirms event
