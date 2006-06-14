@@ -4,6 +4,9 @@ from datetime import datetime
 from elementtree import ElementTree
 from model import SingleOccurrenceEntry
 from model import RecurringEntry
+from log import getLogger
+
+logger = getLogger("feedparser")
 
 class FeedParser:
 
@@ -64,6 +67,7 @@ def createEntry(elem):
                 time.mktime(when.timetuple())
         elif parseTag(node.tag) == 'where':
             where = node.text
+    logger.debug("Found entry: " + title)
     if recurrence != None:
         return RecurringEntry(id, title, description, where, updated,
             recurrence)

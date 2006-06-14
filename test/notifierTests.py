@@ -1,9 +1,9 @@
 import unittest
-import datetime
+from datetime import datetime, timedelta
 
 import settestpath
 
-from notifier import Notifier
+from notifier import Notifier, DEFAULT_THRESHOLD
 from model import SingleOccurrenceEntry
 
 class TestNotifier(Notifier):
@@ -29,31 +29,55 @@ class TestObserver:
     def __init__(self):
         self.notified = False
         self.triggerEntry = None
+        self.triggerEvent = None
 
     def notify(self, event):
         self.notified = True
         self.triggerEntry = event.entry
+        self.triggerEvent = event
 
 class NotifierTests(unittest.TestCase):
 
     def testSimpleNotification(self):
-        # Create entry for less than 60 seconds in the future:
-        futureTime = datetime.datetime.now() + datetime.timedelta(seconds=55)
+        futureTime = datetime.now() + timedelta(minutes=10)
         self.__createEntry(futureTime)
         self.notifier.checkForNotifications()
         self.assertTrue(self.observer.notified)
         self.assertEqual(self.entry, self.observer.triggerEntry)
 
     def testNotificationBeyondThreshold(self):
-        futureTime = datetime.datetime.now() + datetime.timedelta(seconds=61)
+        futureTime = datetime.now() + timedelta(minutes=DEFAULT_THRESHOLD,
+            seconds=1)
         self.__createEntry(futureTime)
         self.notifier.checkForNotifications()
         self.assertFalse(self.observer.notified)
         self.assertEqual(None, self.observer.triggerEntry)
 
+    def testPastEvent(self):
+        pastTime = datetime.now() - timedelta(minutes=30)
+        self.__createEntry(pastTime)
+        self.notifier.checkForNotifications()
+        self.assertFalse(self.observer.notified)
+        self.assertEqual(None, self.observer.triggerEntry)
+
+    def testEventConfirmed(self):
+        eventTime = datetime.now() + timedelta(minutes=2)
+        self.__createEntry(eventTime)
+        self.notifier.checkForNotifications()
+        self.assertTrue(self.observer.notified)
+        self.assertEqual(self.entry, self.observer.triggerEntry)
+
+        # Accept the event:
+        self.observer.triggerEvent.accepted = True
+
+        # Reset the observer and make sure he's not renotified:
+        self.observer.notified = False
+        self.notifier.checkForNotifications()
+        self.assertFalse(self.observer.notified)
+
     def __createEntry(self, futureTime):
         self.entry = SingleOccurrenceEntry("fakeId", "Fake Title", "",
-            datetime.datetime.now(), futureTime, 3600, "Gumdrop Alley")
+            datetime.now(), futureTime, 3600, "Gumdrop Alley")
         self.notifier = TestNotifier([self.entry])
         self.observer = TestObserver()
         self.notifier.attach(self.observer)

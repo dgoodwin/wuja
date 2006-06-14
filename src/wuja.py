@@ -1,34 +1,27 @@
 #!/usr/bin/env python
 
 import pygtk
-pygtk.require('2.0')
 import gtk
 import gobject
+
 from egg import trayicon
 
 from notifier import Notifier
+from log import getLogger
 
-# TODO: Remove these:
-from model import SingleOccurrenceEntry, Event
-import datetime
+pygtk.require('2.0')
+logger = getLogger("wuja")
 
 class WujaApplication:
 
-    def __clicked(self, widget, data):
-        """ Handle mouse clicks on the tray icon. (pop up the menu) """
-        # 1 = left, 2 = middle, 3 = right:
-        self.menu.popup(None, None, None, data.button, data.time)
-
-    def __printSomething(self, widget, s):
-        print(s)
-
-    def delete_event(self, widget, event, data=None):
-        return False
-
-    def destroy(self, widget, data=None):
-        gtk.main_quit()
-
     def __init__(self):
+        logger.info("Starting application.")
+
+        # Maintain a map of events that have alert windows open to ensure
+        # we don't popup multiple windows for the same event that hasn't
+        # been confirmed by the user:
+        self.__openAlerts = {}
+
         self.menu = gtk.Menu()
 
         testMenuItem = gtk.MenuItem()
@@ -37,18 +30,6 @@ class WujaApplication:
             "Selected: Hello World!")
         testMenuItem.show_all()
         self.menu.append(testMenuItem)
-
-        # TODO: Remove:
-        fakeNotification = gtk.MenuItem()
-        fakeNotification.add(gtk.Label("Fake Notification"))
-        now = datetime.datetime.now()
-        when = now + datetime.timedelta(seconds=15)
-        fakeEntry = SingleOccurrenceEntry(-1, "Fake Event", "",
-            now, when, 2600, "")
-        fakeEvent = Event(fakeEntry.when, fakeEntry)
-        fakeNotification.connect("activate", self.displayNotification,
-            fakeEvent)
-        self.menu.append(fakeNotification)
 
         self.menu.append(gtk.SeparatorMenuItem())
 
@@ -70,21 +51,43 @@ class WujaApplication:
         eb.add(gtk.Label("Wuja"))
         self.trayIcon.add(eb)
         self.trayIcon.show_all()
+        self.buildNotifier()
 
-        self.notifier = Notifier(1)
+    def __clicked(self, widget, data):
+        """ Handle mouse clicks on the tray icon. (pop up the menu) """
+        # 1 = left, 2 = middle, 3 = right:
+        self.menu.popup(None, None, None, data.button, data.time)
+
+    def __printSomething(self, widget, s):
+        print(s)
+
+    def buildNotifier(self):
+        self.notifier = Notifier()
         # TODO: Add timeout to periodically update the feed.
         self.notifier.attach(self) # register ourselves as an observer
-        gobject.timeout_add(5000, self.notifier.checkForNotifications)
+        gobject.timeout_add(60000, self.notifier.checkForNotifications)
+        self.notifier.checkForNotifications()
+
+    def delete_event(self, widget, event, data=None):
+        return False
+
+    def destroy(self, widget, data=None):
+        gtk.main_quit()
 
     def notify(self, event):
         """
         Triggered by the notifier when a notifaction of an event needs to
         go out to the user.
         """
-        print("Event triggered: " + event.entry.title + " " + str(event.when))
         self.displayNotification(None, event)
 
     def displayNotification(self, widget, event):
+        # Check if we already have a notification window open for this event:
+        if self.__openAlerts.has_key(self.__getEventKey(event)):
+            logger.debug("Alert window already open for event: " + \
+                event.entry.title)
+            return
+
         box = gtk.VBox()
 
         l = gtk.Label("Wake Up Jackass...")
@@ -110,7 +113,7 @@ class WujaApplication:
         buttonBox.pack_start(b)
 
         b = gtk.Button("Snooze")
-        b.connect("clicked", self.destroy)
+        b.connect("clicked", self.snoozeEvent, event)
         b.show()
         buttonBox.pack_start(b)
 
@@ -126,10 +129,22 @@ class WujaApplication:
 
         alertWindow.show()
 
+        self.__openAlerts[self.__getEventKey(event)] = alertWindow
+
+    def __getEventKey(self, event):
+        """ Build a unique string representation of an event. """
+        return str(event.entry.id) + " " + str(event.when)
+
     def acceptEvent(self, widget, event):
         event.accepted = True
-        print("Accepted event: " + event.entry.title)
+        logger.debug("Accepted event: " + event.entry.title)
         widget.get_parent_window().destroy()
+        self.__openAlerts.pop(self.__getEventKey(event))
+
+    def snoozeEvent(self, widget, event):
+        logger.debug("Snoozed event: " + event.entry.title)
+        widget.get_parent_window().destroy()
+        self.__openAlerts.pop(self.__getEventKey(event))
 
     def main(self):
         gtk.main()
