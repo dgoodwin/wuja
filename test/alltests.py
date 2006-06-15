@@ -1,6 +1,7 @@
 import unittest
 import sys
 import settestpath
+import configureLogging
 
 import feedParserTests
 import entryTests

@@ -4,7 +4,7 @@ from datetime import datetime
 from elementtree import ElementTree
 from model import SingleOccurrenceEntry
 from model import RecurringEntry
-from log import getLogger
+from logging import getLogger
 
 logger = getLogger("feedparser")
 

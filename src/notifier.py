@@ -4,7 +4,7 @@ import time
 import datetime
 
 from feedparser import FeedParser
-from log import getLogger
+from logging import getLogger
 
 # Grab feed URL's from a config file?
 feedUrl = \

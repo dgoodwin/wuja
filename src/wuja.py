@@ -4,13 +4,19 @@ import pygtk
 import gtk
 import gobject
 
+from logging import getLogger
 from egg import trayicon
 
+from log import setupLogging
+
+# Configure logging: (needs to be done before importing our modules)
+confFileLocations = ["~/.wuja/logging.conf", "./logging.conf"]
+setupLogging(confFileLocations)
+logger = getLogger("wuja")
+
 from notifier import Notifier
-from log import getLogger
 
 pygtk.require('2.0')
-logger = getLogger("wuja")
 
 class WujaApplication:
 

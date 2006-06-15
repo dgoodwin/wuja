@@ -1,16 +1,18 @@
 import logging
+import logging.config
+from os.path import expanduser, exists, abspath
 
-def getLogger(moduleName):
-    logger = logging.getLogger(moduleName)
-    logger.setLevel(logging.DEBUG)
+def setupLogging(confFileLocations):
+    actualLoggingConfLocation = None
+    for location in confFileLocations:
+        if exists(expanduser(location)):
+            actualLoggingConfLocation = location
+            break
 
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    ch.setFormatter(formatter)
-
-    logger.addHandler(ch)
-    return logger
+    if actualLoggingConfLocation != None:
+        logging.config.fileConfig(expanduser(location))
+    else:
+        print("Unable to locate logging configuration in the following locations:")
+        for location in confFileLocations:
+            print("   " + abspath(expanduser(location)))
 
