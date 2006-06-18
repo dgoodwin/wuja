@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 
 import settestpath
 
-from notifier import Notifier, DEFAULT_THRESHOLD
-from model import SingleOccurrenceEntry
+from wuja.notifier import Notifier, DEFAULT_THRESHOLD
+from wuja.model import SingleOccurrenceEntry
 
 class TestNotifier(Notifier):
     """

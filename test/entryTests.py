@@ -2,8 +2,8 @@ import unittest
 from datetime import datetime
 
 import settestpath
-from model import SingleOccurrenceEntry, RecurringEntry
-from feedparser import FeedParser
+from wuja.model import SingleOccurrenceEntry, RecurringEntry
+from wuja.feedparser import FeedParser
 from sampledata import dailyRecurrence, dailyRecurrenceForOneWeek, \
     weeklyRecurrenceAllDay
 

@@ -1,4 +1,4 @@
-from log import setupLogging
+from wuja.log import setupLogging
 
 import logging
 

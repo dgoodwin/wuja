@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 
 import settestpath
 
-from wuja import WujaApplication
-from notifier import DEFAULT_THRESHOLD
-from model import SingleOccurrenceEntry, Event
+from wuja.wuja import WujaApplication
+from wuja.notifier import DEFAULT_THRESHOLD
+from wuja.model import SingleOccurrenceEntry, Event
 from notifierTests import TestNotifier
 
 pygtk.require('2.0')
