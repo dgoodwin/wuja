@@ -4,7 +4,7 @@ import settestpath
 from wuja.feedparser import FeedParser, parseTimestamp
 from datetime import datetime
 
-from sampledata import xml
+from samplefeed import xml
 
 class ParsingTests(unittest.TestCase):
 

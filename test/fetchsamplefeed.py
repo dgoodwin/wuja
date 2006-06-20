@@ -17,5 +17,5 @@ http://www.google.com/calendar/feeds/gqfbp7ajq1b71v5jgdtbe815ps@group.calendar.g
 """
 
 feed = urllib2.urlopen(feedUrl).read()
-outputFile = open('sampledata.py', 'w')
+outputFile = open('samplefeed.py', 'w')
 outputFile.write("xml = \"\"\"" + feed + "\"\"\"")
