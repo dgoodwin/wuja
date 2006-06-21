@@ -35,8 +35,8 @@ class TestWujaApplication(WujaApplication):
             datetime.now(), futureTime, 3600, "Gumdrop Alley")
         self.notifier = TestNotifier([self.entry])
         self.notifier.attach(self)
-        gobject.timeout_add(5000, self.notifier.checkForNotifications)
-        self.notifier.checkForNotifications()
+        gobject.timeout_add(5000, self.notifier.check_for_notifications)
+        self.notifier.check_for_notifications()
 
 if __name__ == "__main__":
     wujaApp = TestWujaApplication()

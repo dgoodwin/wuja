@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+""" The main Wuja GTK application. """
 
 import pygtk
 import gtk
@@ -87,8 +88,8 @@ class WujaApplication:
         self.notifier = Notifier()
         # TODO: Add timeout to periodically update the feed.
         self.notifier.attach(self) # register ourselves as an observer
-        gobject.timeout_add(60000, self.notifier.checkForNotifications)
-        self.notifier.checkForNotifications()
+        gobject.timeout_add(60000, self.notifier.check_for_notifications)
+        self.notifier.check_for_notifications()
 
     def delete_event(self, widget, event, data=None):
         return False

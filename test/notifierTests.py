@@ -14,9 +14,9 @@ class TestNotifier(Notifier):
     """
     def __init__(self, entries):
         Notifier.__init__(self)
-        self.calendarEntries = entries
+        self.calendar_entries = entries
         self.update()
-        self.updateEvents()
+        self.update_events()
 
     def update(self):
         """
@@ -41,7 +41,7 @@ class NotifierTests(unittest.TestCase):
     def testSimpleNotification(self):
         futureTime = datetime.now() + timedelta(minutes=10)
         self.__createEntry(futureTime)
-        self.notifier.checkForNotifications()
+        self.notifier.check_for_notifications()
         self.assertTrue(self.observer.notified)
         self.assertEqual(self.entry, self.observer.triggerEntry)
 
@@ -49,21 +49,21 @@ class NotifierTests(unittest.TestCase):
         futureTime = datetime.now() + timedelta(minutes=DEFAULT_THRESHOLD,
             seconds=1)
         self.__createEntry(futureTime)
-        self.notifier.checkForNotifications()
+        self.notifier.check_for_notifications()
         self.assertFalse(self.observer.notified)
         self.assertEqual(None, self.observer.triggerEntry)
 
     def testPastEvent(self):
         pastTime = datetime.now() - timedelta(minutes=30)
         self.__createEntry(pastTime)
-        self.notifier.checkForNotifications()
+        self.notifier.check_for_notifications()
         self.assertFalse(self.observer.notified)
         self.assertEqual(None, self.observer.triggerEntry)
 
     def testEventConfirmed(self):
         eventTime = datetime.now() + timedelta(minutes=2)
         self.__createEntry(eventTime)
-        self.notifier.checkForNotifications()
+        self.notifier.check_for_notifications()
         self.assertTrue(self.observer.notified)
         self.assertEqual(self.entry, self.observer.triggerEntry)
 
@@ -72,7 +72,7 @@ class NotifierTests(unittest.TestCase):
 
         # Reset the observer and make sure he's not renotified:
         self.observer.notified = False
-        self.notifier.checkForNotifications()
+        self.notifier.check_for_notifications()
         self.assertFalse(self.observer.notified)
 
     def __createEntry(self, futureTime):
