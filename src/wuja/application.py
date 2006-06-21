@@ -3,6 +3,7 @@
 import pygtk
 import gtk
 import gobject
+import os.path
 
 from logging import getLogger
 from egg import trayicon
@@ -27,6 +28,8 @@ class WujaApplication:
         # we don't popup multiple windows for the same event that hasn't
         # been confirmed by the user:
         self.__openAlerts = {}
+
+        self.__verifySettingsDirectory()
 
         self.menu = gtk.Menu()
 
@@ -58,6 +61,19 @@ class WujaApplication:
         self.trayIcon.add(eb)
         self.trayIcon.show_all()
         self.buildNotifier()
+
+    def __verifySettingsDirectory(self):
+        """
+        Check that ~/.wuja/ and ~/.wuja/settings.conf exist, create them
+        if they don't.
+        """
+        pass
+        settingsDir = os.path.expanduser("~/.wuja/")
+        settingsFile = os.path.join(settingsDir, "settings.conf")
+        logger.debug("Settings directory: " + settingsDir)
+        logger.debug("Settings file: " + settingsFile)
+        if os.path.exists(settingsDir):
+            self.__parseSettings()
 
     def __clicked(self, widget, data):
         """ Handle mouse clicks on the tray icon. (pop up the menu) """
