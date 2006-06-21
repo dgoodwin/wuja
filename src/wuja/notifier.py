@@ -1,6 +1,6 @@
 """ Components related to notifying listeners of events. """
 
-__revision__ = "$Revision"
+__revision__ = "$Revision$"
 
 import urllib2
 import datetime
