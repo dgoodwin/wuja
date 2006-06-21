@@ -16,7 +16,6 @@ class FeedParser:
     def entries(self):
         events = []
         for elem in self.rootNode.getchildren():
-            # TODO: Is there a better way to examine tag names?
             if parseTag(elem.tag) == "entry":
                 events.append(createEntry(elem))
         return events
