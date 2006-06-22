@@ -11,6 +11,12 @@ class WujaConfigurationTests(unittest.TestCase):
     def setUp(self):
         self.config = WujaConfiguration(gconfTestPath)
 
+    def tearDown(self):
+        # NOTE: Couldn't find a way to actually delete the directory, this just
+        # unsets all the properties beneath it.
+        client = gconf.client_get_default()
+        client.recursive_unset(gconfTestPath, gconf.UNSET_INCLUDING_SCHEMA_NAMES)
+
     def testAddFeedUrl(self):
         self.config.addFeedUrl('url1')
         urls = self.config.getFeedUrls()
@@ -23,12 +29,6 @@ class WujaConfigurationTests(unittest.TestCase):
         self.config.addFeedUrl('url3')
         urls = self.config.getFeedUrls()
         self.assertEqual(3, len(urls))
-
-    def tearDown(self):
-        # NOTE: Couldn't find a way to actually delete the directory, this just
-        # unsets all the properties beneath it.
-        client = gconf.client_get_default()
-        client.recursive_unset(gconfTestPath, gconf.UNSET_INCLUDING_SCHEMA_NAMES)
 
 def suite():
     suite = unittest.TestSuite()
