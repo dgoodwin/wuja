@@ -1,0 +1,159 @@
+<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
+<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
+<glade-interface>
+    <widget class="GtkDialog" id="dialog1">
+        <property name="default_height">260</property>
+        <property name="default_width">320</property>
+        <property name="type_hint">normal</property>
+        <child internal-child="vbox">
+            <widget class="GtkVBox" id="dialog1-vbox">
+                <property name="border_width">2</property>
+                <property name="visible">True</property>
+                <child>
+                    <widget class="GtkVBox" id="vbox1">
+                        <property name="border_width">6</property>
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkLabel" id="label1">
+                                <property name="label" context="yes" translatable="yes">&lt;b&gt;Calendar Feeds&lt;/b&gt;</property>
+                                <property name="use_markup">True</property>
+                                <property name="visible">True</property>
+                                <property name="xalign">0.0</property>
+                            </widget>
+                            <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">False</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkAlignment" id="alignment2">
+                                <property name="left_padding">12</property>
+                                <property name="visible">True</property>
+                                <child>
+                                    <widget class="GtkVBox" id="vbox2">
+                                        <property name="spacing">6</property>
+                                        <property name="visible">True</property>
+                                        <child>
+                                            <widget class="GtkHBox" id="hbox1">
+                                                <property name="visible">True</property>
+                                                <child>
+                                                    <widget class="GtkEntry" id="entry1">
+                                                        <property name="visible">True</property>
+                                                    </widget>
+                                                </child>
+                                                <child>
+                                                    <widget class="GtkButton" id="button3">
+                                                        <property name="label">gtk-add</property>
+                                                        <property name="use_stock">True</property>
+                                                        <property name="visible">True</property>
+                                                    </widget>
+                                                    <packing>
+                                                        <property name="position">1</property>
+                                                    </packing>
+                                                </child>
+                                            </widget>
+                                            <packing>
+                                                <property name="expand">False</property>
+                                                <property name="fill">False</property>
+                                            </packing>
+                                        </child>
+                                        <child>
+                                            <widget class="GtkScrolledWindow" id="scrolledwindow1">
+                                                <property name="hscrollbar_policy">never</property>
+                                                <property name="shadow_type">etched-in</property>
+                                                <property name="visible">True</property>
+                                                <property name="vscrollbar_policy">automatic</property>
+                                                <child>
+                                                    <widget class="GtkTreeView" id="treeview1">
+                                                        <property name="headers_visible">False</property>
+                                                        <property name="is_focus">True</property>
+                                                        <property name="rules_hint">True</property>
+                                                        <property name="search_column">0</property>
+                                                        <property name="visible">True</property>
+                                                    </widget>
+                                                </child>
+                                            </widget>
+                                            <packing>
+                                                <property name="position">1</property>
+                                            </packing>
+                                        </child>
+                                        <child>
+                                            <widget class="GtkHButtonBox" id="hbuttonbox1">
+                                                <property name="layout_style">start</property>
+                                                <property name="visible">True</property>
+                                                <child>
+                                                    <widget class="GtkButton" id="button4">
+                                                        <property name="label">gtk-remove</property>
+                                                        <property name="use_stock">True</property>
+                                                        <property name="visible">True</property>
+                                                    </widget>
+                                                </child>
+                                                <child>
+                                                    <widget class="GtkButton" id="button5">
+                                                        <property name="label" context="yes" translatable="yes">Remove All</property>
+                                                        <property name="visible">True</property>
+                                                    </widget>
+                                                    <packing>
+                                                        <property name="position">1</property>
+                                                    </packing>
+                                                </child>
+                                            </widget>
+                                            <packing>
+                                                <property name="expand">False</property>
+                                                <property name="fill">False</property>
+                                                <property name="position">2</property>
+                                            </packing>
+                                        </child>
+                                    </widget>
+                                </child>
+                            </widget>
+                            <packing>
+                                <property name="position">1</property>
+                            </packing>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="position">2</property>
+                    </packing>
+                </child>
+                <child internal-child="action_area">
+                    <widget class="GtkHButtonBox" id="dialog1-action_area">
+                        <property name="border_width">5</property>
+                        <property name="layout_style">edge</property>
+                        <property name="spacing">10</property>
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkButton" id="button1">
+                                <property name="label">gtk-help</property>
+                                <property name="use_stock">True</property>
+                                <property name="visible">True</property>
+                            </widget>
+                        </child>
+                        <child>
+                            <widget class="GtkButton" id="button2">
+                                <property name="label">gtk-close</property>
+                                <property name="use_stock">True</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="position">1</property>
+                            </packing>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="expand">False</property>
+                        <property name="pack_type">end</property>
+                    </packing>
+                </child>
+            </widget>
+        </child>
+    </widget>
+    <widget class="GtkWindow" id="window1">
+        <property name="default_height">250</property>
+        <property name="default_width">440</property>
+        <property name="title" context="yes" translatable="yes">Wuja Preferences</property>
+        <child>
+            <placeholder/>
+        </child>
+    </widget>
+</glade-interface>
