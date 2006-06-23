@@ -15,20 +15,35 @@ class WujaConfigurationTests(unittest.TestCase):
         # NOTE: Couldn't find a way to actually delete the directory, this just
         # unsets all the properties beneath it.
         client = gconf.client_get_default()
-        client.recursive_unset(gconfTestPath, gconf.UNSET_INCLUDING_SCHEMA_NAMES)
+        client.recursive_unset(gconfTestPath,
+            gconf.UNSET_INCLUDING_SCHEMA_NAMES)
 
-    def testAddFeedUrl(self):
-        self.config.addFeedUrl('url1')
-        urls = self.config.getFeedUrls()
+    def test_add_feed_url(self):
+        self.config.add_feed_url('url1')
+        urls = self.config.get_feed_urls()
         self.assertEqual(1, len(urls))
         self.assertEqual('url1', urls[0])
 
-    def testAddMultipleFeedUrls(self):
-        self.config.addFeedUrl('url1')
-        self.config.addFeedUrl('url2')
-        self.config.addFeedUrl('url3')
-        urls = self.config.getFeedUrls()
-        self.assertEqual(3, len(urls))
+    def test_add_multiple_feed_urls(self):
+        urls = ['url1', 'url2', 'url3']
+        for url in urls:
+            self.config.add_feed_url(url)
+        result_urls = self.config.get_feed_urls()
+        self.assertEqual(urls, result_urls)
+
+    def test_remove_feed_url(self):
+        urls = ['url1', 'url2', 'url3']
+        for url in urls:
+            self.config.add_feed_url(url)
+        self.config.remove_feed_url(urls[1])
+        self.assertEqual([urls[0], urls[2]], self.config.get_feed_urls())
+
+    def test_remove_nonexistent_url(self):
+        urls = ['url1', 'url2', 'url3']
+        for url in urls:
+            self.config.add_feed_url(url)
+        self.assertRaises(ValueError, self.config.remove_feed_url,
+            'not a real url')
 
 def suite():
     suite = unittest.TestSuite()

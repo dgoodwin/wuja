@@ -9,20 +9,26 @@ class WujaConfiguration:
     def __init__(self, gconfPath):
         self.__gconfPath = gconfPath
 
-    def getFeedUrls(self):
+    def get_feed_urls(self):
         client = gconf.client_get_default()
         return client.get_list(os.path.join(self.__gconfPath, 'feed_urls'),
             gconf.VALUE_STRING)
 
-    def addFeedUrl(self, url):
+    def add_feed_url(self, url):
         client = gconf.client_get_default()
         client.add_dir(self.__gconfPath, gconf.CLIENT_PRELOAD_ONELEVEL)
-        urlsPath = os.path.join(self.__gconfPath, 'feed_urls')
-        currentUrls = client.get_list(urlsPath, gconf.VALUE_STRING)
+        urls_path = os.path.join(self.__gconfPath, 'feed_urls')
+        currentUrls = client.get_list(urls_path, gconf.VALUE_STRING)
         currentUrls.append(url)
-        client.set_list(urlsPath, gconf.VALUE_STRING, currentUrls)
+        client.set_list(urls_path, gconf.VALUE_STRING, currentUrls)
+        client.suggest_sync()
 
-        # Seems to be required to get unit tests to pass, assuming sync is too
-        # slow:
+    def remove_feed_url(self, url):
+        client = gconf.client_get_default()
+        client.add_dir(self.__gconfPath, gconf.CLIENT_PRELOAD_ONELEVEL)
+        urls_path = os.path.join(self.__gconfPath, 'feed_urls')
+        currentUrls = client.get_list(urls_path, gconf.VALUE_STRING)
+        currentUrls.remove(url)
+        client.set_list(urls_path, gconf.VALUE_STRING, currentUrls)
         client.suggest_sync()
 
