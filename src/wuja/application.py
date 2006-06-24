@@ -6,8 +6,13 @@ __revision__ = "$Rev"
 
 import pygtk
 import gtk
+import gtk.glade
 import gobject
 import os.path
+import sys
+
+# Setup the Python path so it can find our uninstalled modules/packages:
+sys.path.append('./src/')
 
 from logging import getLogger
 from egg import trayicon
@@ -36,12 +41,11 @@ class WujaApplication:
 
         self.menu = gtk.Menu()
 
-        test_menu_item = gtk.MenuItem()
-        test_menu_item.add(gtk.Label("Hello World!"))
-        test_menu_item.connect("activate", self.__print_something,
-            "Selected: Hello World!")
-        test_menu_item.show_all()
-        self.menu.append(test_menu_item)
+        config_menu_item = gtk.MenuItem()
+        config_menu_item.add(gtk.Label("Preferences"))
+        config_menu_item.connect("activate", self.__open_preferences_dialog)
+        config_menu_item.show_all()
+        self.menu.append(config_menu_item)
 
         self.menu.append(gtk.SeparatorMenuItem())
 
@@ -71,9 +75,27 @@ class WujaApplication:
         # 1 = left, 2 = middle, 3 = right:
         self.menu.popup(None, None, None, data.button, data.time)
 
-    def __print_something(self, widget, message):
-        """ Debugging method. """
-        print(message)
+    def __open_preferences_dialog(self, widget):
+        logger.debug("Opening preferences dialog.")
+        glade_file = 'data/wuja-prefs.glade'
+        window_name = 'window1'
+        self.prefs_dialog = gtk.glade.XML(glade_file, window_name)
+        signals = {
+            'on_button3_clicked' : self.__add_url,
+            'on_button4_clicked' : self.__remove_url,
+            'on_button5_clicked' : self.__remove_all_urls
+        }
+        self.prefs_dialog.signal_autoconnect(signals)
+        logger.debug(dir(self.prefs_dialog))
+
+    def __add_url(self):
+        logger.info("Adding URL: ")
+
+    def __remove_url(self):
+        loger.info("Removing URL: ")
+
+    def __remove_all_urls(self):
+        logger.warn("Removing *ALL* URLs.")
 
     def build_notifier(self):
         """ Builds the notifier object. """
