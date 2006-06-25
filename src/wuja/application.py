@@ -2,7 +2,7 @@
 
 """ The main Wuja GTK application. """
 
-__revision__ = "$Rev"
+__revision__ = "$Revision"
 
 import pygtk
 import gtk
@@ -25,8 +25,11 @@ setupLogging(confFileLocations)
 logger = getLogger("wuja")
 
 from wuja.notifier import Notifier
+from wuja.config import WujaConfiguration
 
 pygtk.require('2.0')
+
+GCONF_PATH = "/apps/wuja/"
 
 class WujaApplication:
     """ The main Wuja application. """
@@ -38,6 +41,7 @@ class WujaApplication:
         # we don't popup multiple windows for the same event that hasn't
         # been confirmed by the user:
         self.__open_alerts = {}
+        self.config = WujaConfiguration(GCONF_PATH)
 
         self.menu = gtk.Menu()
 
@@ -79,7 +83,7 @@ class WujaApplication:
         logger.debug("Opening preferences dialog.")
         glade_file = 'data/wuja-prefs.glade'
         window_name = 'dialog1'
-        glade_xml = gtk.glade.XML(glade_file)
+        self.glade_prefs = gtk.glade.XML(glade_file)
         signals = {
             'on_add_clicked' : self.__add_url,
             'on_remove_clicked' : self.__remove_url,
@@ -87,15 +91,46 @@ class WujaApplication:
             'on_help_clicked' : self.__display_help,
             'on_close_clicked' : self.__close_dialog
         }
-        glade_xml.signal_autoconnect(signals)
-        self.prefs_dialog = glade_xml.get_widget(window_name)
+        self.glade_prefs.signal_autoconnect(signals)
+        self.prefs_dialog = self.glade_prefs.get_widget(window_name)
+
+        # Populate the list of existing URLs:
+        self.prefs_url_list = self.glade_prefs.get_widget('treeview1')
+        urls_list = gtk.ListStore(gobject.TYPE_STRING)
+        for url in self.config.get_feed_urls():
+            logger.debug("Existing URL: " + url)
+            iter = urls_list.append()
+            urls_list.set_value(iter, 0, url)
+        self.prefs_url_list.set_model(urls_list)
+        renderer = gtk.CellRendererText()
+        column = gtk.TreeViewColumn("Feed URLs", renderer, text=0)
+        num = self.prefs_url_list.append_column(column)
+
         self.prefs_dialog.show_all()
 
     def __add_url(self, widget):
-        logger.info("Adding URL: ")
+        add_url_textfield = self.glade_prefs.get_widget('entry1')
+
+        url = add_url_textfield.get_text()
+        logger.info("Adding URL: " + url)
+        self.config.add_feed_url(url)
+        add_url_textfield.set_text('')
+
+        # Update the list:
+        urls_list = self.glade_prefs.get_widget('treeview1').get_model()
+        urls_list.set_value(urls_list.append(), 0, url)
 
     def __remove_url(self, widget):
-        logger.info("Removing URL: ")
+        urls_list = self.glade_prefs.get_widget('treeview1')
+        selection = urls_list.get_selection()
+        (model, iter) = selection.get_selected()
+        if iter == None:
+            logger.debug("Unable to remove URL, no entry selected.")
+            return
+        url_to_remove = model.get_value(iter, 0)
+        logger.info("Removing URL: " + url_to_remove)
+        self.config.remove_feed_url(url_to_remove)
+        model.remove(iter)
 
     def __remove_all_urls(self, widget):
         logger.warn("Removing *ALL* URLs.")
@@ -109,11 +144,15 @@ class WujaApplication:
 
     def build_notifier(self):
         """ Builds the notifier object. """
-        self.notifier = Notifier()
-        # TODO: Add timeout to periodically update the feed.
+        self.notifier = Notifier(self.config)
         self.notifier.attach(self) # register ourselves as an observer
+
         gobject.timeout_add(60000, self.notifier.check_for_notifications)
         self.notifier.check_for_notifications()
+        logger.debug("Checking for notifications every 60 seconds.")
+
+        gobject.timeout_add(60 * 1000 * 10, self.notifier.update)
+        logger.debug("Checking for new calendar entries every 10 minutes.")
 
     def delete_event(self, widget, event, data=None):
         """ GTK function. """

@@ -9,10 +9,6 @@ from logging import getLogger
 
 from wuja.feedparser import FeedParser
 
-# Grab feed URL's from a config file?
-feedUrl = ("""http://www.google.com/calendar/feeds/gqfbp7ajq1b71v5jg""" +
-    """dtbe815ps@group.calendar.google.com/private-f404480fd9b64f2f7""" +
-    """cb78b2a3d6daf6a/full""")
 logger = getLogger("notifier")
 
 # Notify observers of events within this threshold. (defined in minutes)
@@ -27,7 +23,9 @@ class Notifier:
     due.
     """
 
-    def __init__ (self, threshold=DEFAULT_THRESHOLD):
+    def __init__ (self, config, threshold=DEFAULT_THRESHOLD):
+        self.config = config
+        self.config.attach(self)
         self.observers = []
         self.events = []
         self.calendar_entries = []
@@ -40,10 +38,34 @@ class Notifier:
         for observer in self.observers:
             observer.notify(event)
 
-    def update_events(self):
-        """ Update events that are soon to occur.
+    def attach(self, observer):
+        """ Register an observer. All observers will be notified
+        when an alarm should be displayed.
+        """
+        self.observers.append(observer)
 
-        Note: does not refetch feeds from the Google servers. """
+    def update(self):
+        """ Update all feeds from Google's servers and check for
+        upcoming events.
+        """
+        logger.debug("Updating feeds from Google servers.")
+        self.calendar_entries = []
+        for feed_url in self.config.get_feed_urls():
+            xml = urllib2.urlopen(feed_url).read()
+            parser = FeedParser(xml)
+            self.calendar_entries = parser.entries()
+        self.update_events()
+
+    def update_configuration(self):
+        """ Configuration has changed, update our feeds. """
+        logger.debug("Configuration change.")
+        self.update()
+
+    def update_events(self):
+        """ Check pre-fetched calendar entries for upcoming events.
+
+        Note: Does not query Google's servers.
+        """
         self.events = []
         for entry in self.calendar_entries:
             start_date = datetime.datetime.now()
@@ -52,23 +74,9 @@ class Notifier:
             for entry in events:
                 self.events.append(entry)
 
-    def attach(self, observer):
-        """ Register an observer. All observers will be notified
-        when an alarm should be displayed.
-        """
-        self.observers.append(observer)
-
-    def update(self):
-        """ Update feeds from the Google servers. """
-        logger.debug("Reading entries from calendar feed:")
-        xml = urllib2.urlopen(feedUrl).read()
-        parser = FeedParser(xml)
-        self.calendar_entries = parser.entries()
-        self.update_events()
-
     def check_for_notifications(self):
         """ Check for any pending notifications that need to be sent. """
-        logger.debug("Checking for events:")
+        logger.debug("Checking for events.")
         for event in self.events:
             # Ignore previously accepted event alerts:
             if event.accepted:
