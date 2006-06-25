@@ -14,36 +14,30 @@ class WujaConfiguration:
         self.__gconf_path = gconf_path
         self.observers = []
 
+        self.client = gconf.client_get_default()
+        self.urls_path = os.path.join(self.__gconf_path, "feed_urls")
+
     def get_feed_urls(self):
-        client = gconf.client_get_default()
-        return client.get_list(os.path.join(self.__gconf_path, 'feed_urls'),
-            gconf.VALUE_STRING)
+        return self.client.get_list(self.urls_path, gconf.VALUE_STRING)
+
+    def __set_feed_urls(self, urls):
+        self.client.set_list(self.urls_path, gconf.VALUE_STRING, urls)
+        self.client.suggest_sync()
+        self.notify_configuration_changed()
 
     def add_feed_url(self, url):
-        client = gconf.client_get_default()
-        urls_path = os.path.join(self.__gconf_path, 'feed_urls')
-        current_urls = client.get_list(urls_path, gconf.VALUE_STRING)
+        current_urls = self.get_feed_urls()
         current_urls.append(url)
-        client.set_list(urls_path, gconf.VALUE_STRING, current_urls)
-        client.suggest_sync()
-        self.notify_configuration_changed()
+        self.__set_feed_urls(current_urls)
 
     def remove_feed_url(self, url):
-        client = gconf.client_get_default()
-        urls_path = os.path.join(self.__gconf_path, 'feed_urls')
-        current_urls = client.get_list(urls_path, gconf.VALUE_STRING)
+        current_urls = self.get_feed_urls()
         current_urls.remove(url)
-        client.set_list(urls_path, gconf.VALUE_STRING, current_urls)
-        client.suggest_sync()
-        self.notify_configuration_changed()
+        self.__set_feed_urls(current_urls)
 
     def remove_all_feed_urls(self):
-        client = gconf.client_get_default()
-        urls_path = os.path.join(self.__gconf_path, "feed_urls")
-        client.set_list(urls_path, gconf.VALUE_STRING, [])
-        client.suggest_sync()
-        self.notify_configuration_changed()
-
+        self.__set_feed_urls([])
+        
     def attach(self, observer):
         self.observers.append(observer)
 
