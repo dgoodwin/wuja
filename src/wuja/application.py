@@ -43,22 +43,18 @@ class WujaApplication:
         self.__open_alerts = {}
         self.config = WujaConfiguration(GCONF_PATH)
 
-        self.menu = gtk.Menu()
-
-        config_menu_item = gtk.MenuItem()
-        config_menu_item.add(gtk.Label("Preferences"))
-        config_menu_item.connect("activate", self.__open_preferences_dialog)
-        config_menu_item.show_all()
-        self.menu.append(config_menu_item)
-
-        self.menu.append(gtk.SeparatorMenuItem())
-
-        quit_menu_item = gtk.MenuItem()
-        quit_menu_item.add(gtk.Label("Quit"))
-        quit_menu_item.connect("activate", self.destroy)
-        quit_menu_item.show_all()
-        self.menu.append(quit_menu_item)
-
+        actions = (("preferences", gtk.STOCK_PREFERENCES, None, None, None,
+            self.__open_preferences_dialog),
+            ("about", gtk.STOCK_ABOUT, None, None, None, None),
+            ("quit", gtk.STOCK_QUIT, None, None, None, self.destroy))
+        action_group = gtk.ActionGroup("wuja_menu")
+        action_group.add_actions(actions)
+     
+        ui = gtk.UIManager()
+        ui.add_ui_from_file("data/wuja-menu.xml")
+        ui.insert_action_group(action_group, 0)
+      
+        self.menu = ui.get_widget("/wuja_menu")
         self.menu.show_all()
 
         #icon = gtk.image_new_from_stock(gtk.STOCK_DIALOG_INFO,

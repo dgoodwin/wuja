@@ -1,0 +1,8 @@
+<ui>
+    <popup name="wuja_menu">
+        <menuitem action="preferences" />
+        <separator />
+        <menuitem action="about" />
+        <menuitem action="quit" />
+    </popup>
+</ui>
