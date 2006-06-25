@@ -2,7 +2,7 @@
 
 """ The main Wuja GTK application. """
 
-__revision__ = "$Revision"
+__revision__ = "$Revision$"
 
 import pygtk
 import gtk
@@ -136,10 +136,10 @@ class WujaApplication:
     def __remove_all_urls(self, widget):
         logger.warn("Removing *ALL* URLs.")
         self.config.remove_all_feed_urls()
-    
+
         urls_list = self.glade_prefs.get_widget('treeview1')
         urls_list.set_model()
- 
+
     def __display_help(self, widget):
         logger.info("Help clicked")
 

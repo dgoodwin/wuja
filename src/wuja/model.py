@@ -1,3 +1,7 @@
+""" Model classes for the Wuja application. """
+
+__revision__ = "$Revision$"
+
 import dateutil.rrule
 import vobject
 
@@ -6,10 +10,7 @@ from dateutil.rrule import rrule
 from dateutil.parser import parse
 
 class Entry:
-    """
-    Represents a calendar entry. (not event, can involve recurrence and
-    thus many events)
-    """
+    """ Parent class of calendar entries. """
 
     def __init__(self, id, title, desc, where, updated, duration):
         self.id = id
@@ -19,7 +20,7 @@ class Entry:
         self.updated = updated
         self.duration = duration
 
-    def events(self, endDate):
+    def events(self, end_date):
         """ Returns the events for this entry between now and the end date. """
         raise Exception("Not implemented.")
 
@@ -30,48 +31,53 @@ class SingleOccurrenceEntry(Entry):
         Entry.__init__(self, id, title, desc, where, updated, duration)
         self.when = when
 
-    def events(self, startDate, endDate):
+    def events(self, start_date, end_date):
+        """ Returns at most one event for this single occurrence
+        calendar entry.
+        """
         # Assume a start date of now, no point returning past events:
-        # TODO: Unless they've never been acknowledged!!!
-        if startDate == None:
-            startDate = datetime.now()
-        if endDate < startDate:
+        if start_date == None:
+            start_date = datetime.now()
+        if end_date < start_date:
             return []
-        returnMe = []
-        if startDate < self.when < endDate:
-            returnMe.append(Event(self.when, self))
-        return returnMe
+        return_me = []
+        if start_date < self.when < end_date:
+            return_me.append(Event(self.when, self))
+        return return_me
 
 class RecurringEntry(Entry):
     """ An entry with recurrence information. """
 
     def __init__(self, id, title, desc, where, updated, recurrence):
         Entry.__init__(self, id, title, desc, where, updated, None)
-        self.__parseRecurrence(recurrence)
+        self.__parse_recurrence(recurrence)
 
-    def __parseRecurrence(self, recurrence):
+    def __parse_recurrence(self, recurrence):
         """ Parses the recurrence field. (iCalendar format, see RFC 2445) """
         # Parses only the fields that Google Calendar seems to use, and of
         # those just the ones we're interested in. (Sorry, it's a big spec.)
         parsed = vobject.readOne(recurrence)
 
-        self.startDate = parse(parsed.dtstart.value)
+        self.start_date = parse(parsed.dtstart.value)
 
         # Seems to arrive as something like PT1800S:
         self.duration = None
         if parsed.contents.has_key('duration'):
             self.duration = int(parsed.duration.value[2:-1])
 
-        self.__buildRrule(parsed.rrule.value)
+        self.__build_rrule(parsed.rrule.value)
 
         return recurrence
 
-    def __buildRrule(self, ruleText):
+    def __build_rrule(self, ruleText):
+        """ Convert the recurrence data from Google's feed into something
+        the dateutil library can work with.
+        """
         freq = None
 
         # Define the same defaults as the rrule constructor takes:
         params = {}
-        params['dtstart'] = self.startDate
+        params['dtstart'] = self.start_date
 
         for prop in ruleText.split(';'):
             key, val = prop.split('=')
@@ -101,19 +107,21 @@ class RecurringEntry(Entry):
 
         self.rrule = rrule(freq, **params)
 
-    def events(self, startDate, endDate):
+    def events(self, start_date, end_date):
+        """ Return a list of all events for this recurring entry
+        between the specified start and end date.
+        """
         # Assume a start date of now, no point returning past events:
-        # TODO: Unless they've never been acknowledged...
-        if startDate == None:
-            startDate = datetime.now()
-        if endDate < startDate or endDate < self.startDate:
+        if start_date == None:
+            start_date = datetime.now()
+        if end_date < start_date or end_date < self.start_date:
             return []
 
-        eventList = []
-        eventDateTimes = self.rrule.between(startDate, endDate, inc=True)
-        for e in eventDateTimes:
-            eventList.append(Event(e, self))
-        return eventList
+        event_list = []
+        event_date_times = self.rrule.between(start_date, end_date, inc=True)
+        for e in event_date_times:
+            event_list.append(Event(e, self))
+        return event_list
 
 class Event:
     """ An actual calendar event. Can be associated with an alarm. """
