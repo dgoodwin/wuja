@@ -125,7 +125,7 @@ class WujaApplication:
         urls_list = self.glade_prefs.get_widget('treeview1')
         selection = urls_list.get_selection()
         (model, iter) = selection.get_selected()
-        if iter == None:
+        if iter is None:
             logger.debug("Unable to remove URL, no entry selected.")
             return
         url_to_remove = model.get_value(iter, 0)
@@ -135,7 +135,11 @@ class WujaApplication:
 
     def __remove_all_urls(self, widget):
         logger.warn("Removing *ALL* URLs.")
-
+        self.config.remove_all_feed_urls()
+    
+        urls_list = self.glade_prefs.get_widget('treeview1')
+        urls_list.set_model()
+ 
     def __display_help(self, widget):
         logger.info("Help clicked")
 

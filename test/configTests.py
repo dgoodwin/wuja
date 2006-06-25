@@ -45,6 +45,14 @@ class WujaConfigurationTests(unittest.TestCase):
         self.assertRaises(ValueError, self.config.remove_feed_url,
             'not a real url')
 
+    def test_remove_all_urls(self):
+        urls = ['url1', 'url2', 'url3']
+        for url in urls:
+            self.config.add_feed_url(url)
+        self.config.remove_all_feed_urls()
+        self.assertEqual(0, len(self.config.get_feed_urls()))
+       
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(WujaConfigurationTests))
