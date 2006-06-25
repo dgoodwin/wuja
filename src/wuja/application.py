@@ -81,22 +81,31 @@ class WujaApplication:
         window_name = 'dialog1'
         glade_xml = gtk.glade.XML(glade_file)
         signals = {
-            'on_button3_clicked' : self.__add_url,
-            'on_button4_clicked' : self.__remove_url,
-            'on_button5_clicked' : self.__remove_all_urls
+            'on_add_clicked' : self.__add_url,
+            'on_remove_clicked' : self.__remove_url,
+            'on_remove_all_clicked' : self.__remove_all_urls,
+            'on_help_clicked' : self.__display_help,
+            'on_close_clicked' : self.__close_dialog
         }
         glade_xml.signal_autoconnect(signals)
         self.prefs_dialog = glade_xml.get_widget(window_name)
         self.prefs_dialog.show_all()
 
-    def __add_url(self):
+    def __add_url(self, widget):
         logger.info("Adding URL: ")
 
-    def __remove_url(self):
-        loger.info("Removing URL: ")
+    def __remove_url(self, widget):
+        logger.info("Removing URL: ")
 
-    def __remove_all_urls(self):
+    def __remove_all_urls(self, widget):
         logger.warn("Removing *ALL* URLs.")
+
+    def __display_help(self, widget):
+        logger.info("Help clicked")
+
+    def __close_dialog(self, widget):
+        self.prefs_dialog.destroy()
+        self.prefs_dialog = None
 
     def build_notifier(self):
         """ Builds the notifier object. """
