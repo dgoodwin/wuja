@@ -5,6 +5,8 @@
 __revision__ = "$Revision$"
 
 import pygtk
+pygtk.require('2.0')
+
 import gtk
 import gtk.glade
 import gobject
@@ -26,8 +28,6 @@ logger = getLogger("wuja")
 
 from wuja.notifier import Notifier
 from wuja.config import WujaConfiguration
-
-pygtk.require('2.0')
 
 GCONF_PATH = "/apps/wuja/"
 
