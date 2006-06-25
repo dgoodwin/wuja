@@ -26,6 +26,7 @@ class WujaConfiguration:
         current_urls.append(url)
         client.set_list(urls_path, gconf.VALUE_STRING, current_urls)
         client.suggest_sync()
+        self.notify_configuration_changed()
 
     def remove_feed_url(self, url):
         client = gconf.client_get_default()
@@ -34,6 +35,7 @@ class WujaConfiguration:
         current_urls.remove(url)
         client.set_list(urls_path, gconf.VALUE_STRING, current_urls)
         client.suggest_sync()
+        self.notify_configuration_changed()
 
     def attach(self, observer):
         self.observers.append(observer)

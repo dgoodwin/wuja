@@ -113,12 +113,13 @@ class WujaApplication:
 
         url = add_url_textfield.get_text()
         logger.info("Adding URL: " + url)
-        self.config.add_feed_url(url)
         add_url_textfield.set_text('')
 
         # Update the list:
         urls_list = self.glade_prefs.get_widget('treeview1').get_model()
         urls_list.set_value(urls_list.append(), 0, url)
+
+        self.config.add_feed_url(url)
 
     def __remove_url(self, widget):
         urls_list = self.glade_prefs.get_widget('treeview1')

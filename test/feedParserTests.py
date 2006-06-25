@@ -1,30 +1,34 @@
+""" Tests for the feedparser module. """
+
+__revision__ = "$Revision$"
+
 import unittest
 import settestpath
 
-from wuja.feedparser import FeedParser, parseTimestamp
 from datetime import datetime
 
+from wuja.feedparser import FeedParser, parse_timestamp
 from samplefeed import xml
 
 class ParsingTests(unittest.TestCase):
 
     # One entry, no recurrence:
-    def testSimpleEntry(self):
-        feedParser = FeedParser(xml)
-        entries = feedParser.entries()
+    def test_simple_entry(self):
+        feed_parser = FeedParser(xml)
+        entries = feed_parser.entries()
 
-        distantEvent = findEntry(entries, "Distant Event")
-        self.assertTrue(distantEvent != None)
+        distant_event = find_entry(entries, "Distant Event")
+        self.assertTrue(distant_event != None)
 
-    def testTimestampParsing(self):
+    def test_timestamp_parsing(self):
         timestamp = "2006-05-18T15:24:41.000Z"
-        date = parseTimestamp(timestamp)
+        date = parse_timestamp(timestamp)
         self.assertEquals(2006, date.year)
         self.assertEquals(15, date.hour)
         self.assertEquals(24, date.minute)
         self.assertEquals(41, date.second)
 
-def findEntry(entries, title):
+def find_entry(entries, title):
     for entry in entries:
         if entry.title == title:
             return entry
