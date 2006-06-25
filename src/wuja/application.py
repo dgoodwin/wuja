@@ -78,15 +78,16 @@ class WujaApplication:
     def __open_preferences_dialog(self, widget):
         logger.debug("Opening preferences dialog.")
         glade_file = 'data/wuja-prefs.glade'
-        window_name = 'window1'
-        self.prefs_dialog = gtk.glade.XML(glade_file, window_name)
+        window_name = 'dialog1'
+        glade_xml = gtk.glade.XML(glade_file)
         signals = {
             'on_button3_clicked' : self.__add_url,
             'on_button4_clicked' : self.__remove_url,
             'on_button5_clicked' : self.__remove_all_urls
         }
-        self.prefs_dialog.signal_autoconnect(signals)
-        logger.debug(dir(self.prefs_dialog))
+        glade_xml.signal_autoconnect(signals)
+        self.prefs_dialog = glade_xml.get_widget(window_name)
+        self.prefs_dialog.show_all()
 
     def __add_url(self):
         logger.info("Adding URL: ")
