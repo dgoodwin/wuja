@@ -81,10 +81,9 @@ def create_entry(elem):
                 time.mktime(when.timetuple())
         elif parse_tag(node.tag) == 'where':
             where = node.text
-    logger.debug("   Entry: " + title)
     if recurrence != None:
         return RecurringEntry(entry_id, title, description, where, updated,
             recurrence)
     return SingleOccurrenceEntry(entry_id, title, description, updated, when,
-        duration, "where")
+        duration, where)
 

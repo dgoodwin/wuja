@@ -49,11 +49,11 @@ class WujaApplication:
             ("quit", gtk.STOCK_QUIT, None, None, None, self.destroy))
         action_group = gtk.ActionGroup("wuja_menu")
         action_group.add_actions(actions)
-     
+
         ui = gtk.UIManager()
         ui.add_ui_from_file("data/wuja-menu.xml")
         ui.insert_action_group(action_group, 0)
-      
+
         self.menu = ui.get_widget("/wuja_menu")
         self.menu.show_all()
 
@@ -187,7 +187,10 @@ class WujaApplication:
         label.show()
         box.pack_start(label)
 
-        label = gtk.Label(event.entry.description)
+        description = ""
+        if event.entry.description != None:
+            description = event.entry.description
+        label = gtk.Label(description)
         label.show()
         box.pack_start(label)
 

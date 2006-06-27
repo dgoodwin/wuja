@@ -53,7 +53,7 @@ class Notifier:
         for feed_url in self.config.get_feed_urls():
             xml = urllib2.urlopen(feed_url).read()
             parser = FeedParser(xml)
-            self.calendar_entries = parser.entries()
+            self.calendar_entries.extend(parser.entries())
         self.update_events()
 
     def update_configuration(self):
@@ -66,17 +66,25 @@ class Notifier:
 
         Note: Does not query Google's servers.
         """
+        logger.debug("Updating events for calendar entries.")
         self.events = []
+
+        start_date = datetime.datetime.now()
+        end_date = start_date + datetime.timedelta(hours=1)
+        logger.debug("   start date: " + str(start_date))
+        logger.debug("   end date: " + str(end_date))
+
         for entry in self.calendar_entries:
-            start_date = datetime.datetime.now()
-            end_date = start_date + datetime.timedelta(hours=1)
             events = entry.events(start_date, end_date)
-            for entry in events:
-                self.events.append(entry)
+            if len(events) > 0:
+                logger.debug("Found events for: " + entry.title)
+                for event in events:
+                    logger.debug("   " + str(event.when))
+                    self.events.append(event)
 
     def check_for_notifications(self):
         """ Check for any pending notifications that need to be sent. """
-        logger.debug("Checking for events.")
+        logger.debug("Checking for notifications.")
         for event in self.events:
             # Ignore previously accepted event alerts:
             if event.accepted:

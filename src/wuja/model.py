@@ -8,6 +8,9 @@ import vobject
 from datetime import datetime
 from dateutil.rrule import rrule
 from dateutil.parser import parse
+from logging import getLogger
+
+logger = getLogger("model")
 
 class Entry:
     """ Parent class of calendar entries. """
