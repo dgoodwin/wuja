@@ -1,6 +1,7 @@
 <ui>
     <popup name="wuja_menu">
         <menuitem action="preferences" />
+        <menuitem action="update_feeds" />
         <separator />
         <menuitem action="about" />
         <menuitem action="quit" />

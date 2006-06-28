@@ -45,8 +45,13 @@ class WujaApplication:
         self.__open_alerts = {}
         self.config = WujaConfiguration(GCONF_PATH)
 
+        self.notifier = None
+        self.build_notifier()
+
         actions = (("preferences", gtk.STOCK_PREFERENCES, None, None, None,
             self.__open_preferences_dialog),
+            ("update_feeds", gtk.STOCK_REFRESH, "Update Feeds", None, None,
+                self.__update_feeds),
             ("about", gtk.STOCK_ABOUT, None, None, None, None),
             ("quit", gtk.STOCK_QUIT, None, None, None, self.destroy))
         action_group = gtk.ActionGroup("wuja_menu")
@@ -69,8 +74,9 @@ class WujaApplication:
         event_box.add(gtk.Label("Wuja"))
         self.tray_icon.add(event_box)
         self.tray_icon.show_all()
-        self.notifier = None
-        self.build_notifier()
+
+    def __update_feeds(self, widget):
+        self.notifier.update()
 
     def __clicked(self, widget, data):
         """ Handle mouse clicks on the tray icon. (pop up the menu) """
