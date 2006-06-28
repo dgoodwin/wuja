@@ -30,6 +30,8 @@ from wuja.notifier import Notifier
 from wuja.config import WujaConfiguration
 
 GCONF_PATH = "/apps/wuja/"
+NOTIFICATION_INTERVAL = 1 # minutes between notification checks
+FEED_UPDATE_INTERVAL = 10 # minutes between feed updates
 
 class WujaApplication:
     """ The main Wuja application. """
@@ -148,12 +150,22 @@ class WujaApplication:
         self.notifier = Notifier(self.config)
         self.notifier.attach(self) # register ourselves as an observer
 
-        gobject.timeout_add(60000, self.notifier.check_for_notifications)
+        gobject.timeout_add(NOTIFICATION_INTERVAL * 1000 * 60,
+            self.notifier.check_for_notifications)
         self.notifier.check_for_notifications()
-        logger.debug("Checking for notifications every 60 seconds.")
+        logger.debug("Checking for notifications every %s minutes."
+            % NOTIFICATION_INTERVAL)
 
-        gobject.timeout_add(60 * 1000 * 10, self.notifier.update)
-        logger.debug("Checking for new calendar entries every 10 minutes.")
+        gobject.timeout_add(FEED_UPDATE_INTERVAL * 1000 * 60,
+            self.notifier.update)
+        logger.debug("Updating feeds from Google servers every %s minutes."
+            % FEED_UPDATE_INTERVAL)
+
+        #gobject.timeout_add(5000, self.do_something_else)
+
+    def do_something_else(self):
+        logger.debug("Fine, I'll do something else then.")
+        return True
 
     def delete_event(self, widget, event, data=None):
         """ GTK function. """

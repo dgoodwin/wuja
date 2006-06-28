@@ -25,13 +25,14 @@ class Notifier:
 
     def __init__ (self, config, threshold=DEFAULT_THRESHOLD):
         self.config = config
+        self.threshold = threshold
+
         self.config.attach(self)
         self.observers = []
         self.events = []
         self.calendar_entries = []
 
         self.update()
-        self.threshold = threshold
 
     def __notify_observers(self, event):
         """ Notify observers that an event is due. """
@@ -50,17 +51,22 @@ class Notifier:
         """
         logger.debug("Updating feeds from Google servers.")
         self.calendar_entries = []
-        for feed_url in self.config.get_feed_urls():
+        feeds = self.config.get_feed_urls()
+        for feed_url in feeds:
             xml = urllib2.urlopen(feed_url).read()
             parser = FeedParser(xml)
             self.calendar_entries.extend(parser.entries())
+        logger.debug("Found %s calendar entries from %s feeds." %
+            (str(len(self.calendar_entries)), str(len(feeds))))
         self.update_events()
+        return True
 
     def update_configuration(self):
         """ Configuration has changed, update our feeds. """
         logger.debug("Configuration change.")
         self.update()
 
+    # TODO: Check for events already confirmed.
     def update_events(self):
         """ Check pre-fetched calendar entries for upcoming events.
 
@@ -84,7 +90,8 @@ class Notifier:
 
     def check_for_notifications(self):
         """ Check for any pending notifications that need to be sent. """
-        logger.debug("Checking for notifications.")
+        logger.debug("Checking for notifications within next " +
+            str(self.threshold) + " minutes.")
         for event in self.events:
             # Ignore previously accepted event alerts:
             if event.accepted:

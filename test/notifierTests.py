@@ -1,3 +1,7 @@
+""" Tests for the notifier module. """
+
+__revision__ = "$Revision$"
+
 import unittest
 from datetime import datetime, timedelta
 
