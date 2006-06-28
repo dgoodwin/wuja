@@ -133,3 +133,14 @@ class Event:
         self.when = when
         self.entry = entry
         self.accepted = False # set true once user confirms event
+
+    def get_key(self):
+        """ Used to simulate an event.key member representing a unique
+        string for this event.
+        """
+        return str(self.entry.id) + str(self.when)
+
+    def set_key(self):
+        raise Exception("Key's aren't for setting.")
+
+    key = property(get_key, set_key)

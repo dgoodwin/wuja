@@ -86,6 +86,26 @@ class NotifierTests(unittest.TestCase):
         self.notifier.check_for_notifications()
         self.assertFalse(self.observer.notified)
 
+    def test_confirm_event_and_update_feeds(self):
+        event_time = datetime.now() + timedelta(minutes=2)
+        self.__create_entry(event_time)
+        self.notifier.check_for_notifications()
+        self.assertTrue(self.observer.notified)
+
+        # Accept the event:
+        self.observer.trigger_event.accepted = True
+
+        # Reset the observer and make sure he's not renotified:
+        self.observer.notified = False
+        self.notifier.check_for_notifications()
+        self.assertFalse(self.observer.notified)
+
+        # Update events (normally called after feeds are updated) and
+        # ensure the accepted status of our event remains:
+        self.notifier.update_events()
+        self.notifier.check_for_notifications()
+        self.assertFalse(self.observer.notified)
+
     def __create_entry(self, future_time):
         self.entry = SingleOccurrenceEntry("fakeId", "Fake Title", "",
             datetime.now(), future_time, 3600, "Gumdrop Alley")

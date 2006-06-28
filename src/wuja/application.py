@@ -184,7 +184,7 @@ class WujaApplication:
 
     def display_notification(self, widget, event):
         # Check if we already have a notification window open for this event:
-        if self.__open_alerts.has_key(self.__get_event_key(event)):
+        if self.__open_alerts.has_key(event.key):
             logger.debug("Alert window already open for event: " + \
                 event.entry.title)
             return
@@ -233,18 +233,14 @@ class WujaApplication:
 
         alert_window.show()
 
-        self.__open_alerts[self.__get_event_key(event)] = alert_window
-
-    def __get_event_key(self, event):
-        """ Build a unique string representation of an event. """
-        return str(event.entry.id) + " " + str(event.when)
+        self.__open_alerts[self.event.key] = alert_window
 
     def accept_event(self, widget, event):
         """ Called when the user accepts an alert. """
         event.accepted = True
         logger.debug("Accepted event: " + event.entry.title)
         widget.get_parent_window().destroy()
-        self.__open_alerts.pop(self.__get_event_key(event))
+        self.__open_alerts.pop(event.key)
 
     def snooze_event(self, widget, event):
         """ Called when the user presses snooze. Destroys the alert
@@ -252,7 +248,7 @@ class WujaApplication:
         """
         logger.debug("Snoozed event: " + event.entry.title)
         widget.get_parent_window().destroy()
-        self.__open_alerts.pop(self.__get_event_key(event))
+        self.__open_alerts.pop(event.key)
 
     def main(self):
         """ Launches the GTK main loop. """

@@ -73,6 +73,14 @@ class Notifier:
         Note: Does not query Google's servers.
         """
         logger.debug("Updating events for calendar entries.")
+
+        # Maintain confirmed status on events:
+        accepted_events = set()
+        for event in self.events:
+            if event.accepted:
+                logger.debug("Saving accepted state for entry: " + event.key)
+                accepted_events.add(event.key)
+
         self.events = []
 
         start_date = datetime.datetime.now()
@@ -87,6 +95,10 @@ class Notifier:
                 for event in events:
                     logger.debug("   " + str(event.when))
                     self.events.append(event)
+                    if event.key in accepted_events:
+                        logger.debug("Restoring accepted state for entry: " +
+                            event.key)
+                        event.accepted = True
 
     def check_for_notifications(self):
         """ Check for any pending notifications that need to be sent. """
