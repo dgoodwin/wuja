@@ -141,6 +141,6 @@ class Event:
         return str(self.entry.id) + str(self.when)
 
     def set_key(self):
-        raise Exception("Key's aren't for setting.")
+        raise Exception("Keys aren't for setting.")
 
     key = property(get_key, set_key)

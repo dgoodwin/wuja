@@ -233,7 +233,7 @@ class WujaApplication:
 
         alert_window.show()
 
-        self.__open_alerts[self.event.key] = alert_window
+        self.__open_alerts[event.key] = alert_window
 
     def accept_event(self, widget, event):
         """ Called when the user accepts an alert. """
