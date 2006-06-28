@@ -232,6 +232,7 @@ class WujaApplication:
         alert_window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG)
 
         alert_window.show()
+        alert_window.set_urgency_hint(True)
 
         self.__open_alerts[event.key] = alert_window
 
