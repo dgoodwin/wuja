@@ -76,7 +76,16 @@ class WujaApplication:
         self.tray_icon.show_all()
 
     def __update_feeds(self, widget):
+        # Stop the feed update timer:
+        gobject.source_remove(self.feed_update_event_source)
+
         self.notifier.update()
+
+        # Restart the feed update timer from now:
+        self.feed_update_event_source = gobject.timeout_add(
+            FEED_UPDATE_INTERVAL * 1000 * 60, self.notifier.update)
+        logger.debug("Updating feeds from Google servers every %s minutes."
+            % FEED_UPDATE_INTERVAL)
 
     def __clicked(self, widget, data):
         """ Handle mouse clicks on the tray icon. (pop up the menu) """
@@ -162,8 +171,8 @@ class WujaApplication:
         logger.debug("Checking for notifications every %s minutes."
             % NOTIFICATION_INTERVAL)
 
-        gobject.timeout_add(FEED_UPDATE_INTERVAL * 1000 * 60,
-            self.notifier.update)
+        self.feed_update_event_source = gobject.timeout_add(
+            FEED_UPDATE_INTERVAL * 1000 * 60, self.notifier.update)
         logger.debug("Updating feeds from Google servers every %s minutes."
             % FEED_UPDATE_INTERVAL)
 
