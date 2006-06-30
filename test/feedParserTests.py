@@ -15,7 +15,7 @@ class ParsingTests(unittest.TestCase):
     # One entry, no recurrence:
     def test_simple_entry(self):
         feed_parser = FeedParser(xml)
-        entries = feed_parser.entries()
+        entries = feed_parser.entries
 
         distant_event = find_entry(entries, "Distant Event")
         self.assertTrue(distant_event != None)
@@ -27,6 +27,10 @@ class ParsingTests(unittest.TestCase):
         self.assertEquals(15, date.hour)
         self.assertEquals(24, date.minute)
         self.assertEquals(41, date.second)
+
+    def test_get_feed_title(self):
+        feed_parser = FeedParser(xml)
+        self.assertEqual("Wuja Testing Calendar", feed_parser.title)
 
 def find_entry(entries, title):
     for entry in entries:

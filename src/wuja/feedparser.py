@@ -18,15 +18,14 @@ class FeedParser:
     """
 
     def __init__(self, xml):
-        self.root_node = ElementTree.XML(xml)
-
-    def entries(self):
-        """ Returns the calendar entries for the XML provided. """
-        events = []
-        for elem in self.root_node.getchildren():
+        self.__root_node = ElementTree.XML(xml)
+        self.entries = []
+        self.title = None
+        for elem in self.__root_node.getchildren():
             if parse_tag(elem.tag) == "entry":
-                events.append(create_entry(elem))
-        return events
+                self.entries.append(create_entry(elem))
+            elif parse_tag(elem.tag) == "title":
+                self.title = elem.text
 
 def parse_tag(original_tag):
     """ Element Tree tags show up with a {url} prefix. """

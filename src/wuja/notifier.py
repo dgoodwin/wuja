@@ -32,6 +32,12 @@ class Notifier:
         self.events = []
         self.calendar_entries = []
 
+        # Maps URL's (which is all we store in gconf) to the friendly
+        # feed name. (used by the preferences dialog) Will be populated
+        # during calls to 'update'.
+        self.url_title_dict = {}
+        self.title_url_dict = {}
+
         self.update()
 
     def __notify_observers(self, event):
@@ -55,9 +61,12 @@ class Notifier:
         for feed_url in feeds:
             xml = urllib2.urlopen(feed_url).read()
             parser = FeedParser(xml)
-            self.calendar_entries.extend(parser.entries())
-        logger.debug("Found %s calendar entries from %s feeds." %
-            (str(len(self.calendar_entries)), str(len(feeds))))
+            self.calendar_entries.extend(parser.entries)
+            self.url_title_dict[feed_url] = parser.title
+            self.title_url_dict[parser.title] = feed_url
+            logger.debug("Processed feed: " + parser.title)
+        logger.debug("Found %s calendar entries." %
+            str(len(self.calendar_entries)))
         self.update_events()
         return True
 

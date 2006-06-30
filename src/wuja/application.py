@@ -113,7 +113,7 @@ class WujaApplication:
         for url in self.config.get_feed_urls():
             logger.debug("Existing URL: " + url)
             iter = urls_list.append()
-            urls_list.set_value(iter, 0, url)
+            urls_list.set_value(iter, 0, self.notifier.url_title_dict[url])
         self.prefs_url_list.set_model(urls_list)
         renderer = gtk.CellRendererText()
         column = gtk.TreeViewColumn("Feed URLs", renderer, text=0)
@@ -128,11 +128,13 @@ class WujaApplication:
         logger.info("Adding URL: " + url)
         add_url_textfield.set_text('')
 
+        self.config.add_feed_url(url)
+
         # Update the list:
         urls_list = self.glade_prefs.get_widget('treeview1').get_model()
-        urls_list.set_value(urls_list.append(), 0, url)
+        feed_title = self.notifier.url_title_dict[url]
+        urls_list.set_value(urls_list.append(), 0, feed_title)
 
-        self.config.add_feed_url(url)
 
     def __remove_url(self, widget):
         urls_list = self.glade_prefs.get_widget('treeview1')
@@ -141,10 +143,12 @@ class WujaApplication:
         if iter is None:
             logger.debug("Unable to remove URL, no entry selected.")
             return
-        url_to_remove = model.get_value(iter, 0)
-        logger.info("Removing URL: " + url_to_remove)
-        self.config.remove_feed_url(url_to_remove)
+        url_to_remove_title = model.get_value(iter, 0)
+        url_to_remove = self.notifier.title_url_dict[url_to_remove_title]
+        logger.info("Removing URL for feed %s: %s" % (url_to_remove_title,
+            url_to_remove))
         model.remove(iter)
+        self.config.remove_feed_url(url_to_remove)
 
     def __remove_all_urls(self, widget):
         logger.warn("Removing *ALL* URLs.")
