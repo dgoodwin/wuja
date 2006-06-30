@@ -51,7 +51,14 @@ class WujaConfigurationTests(unittest.TestCase):
             self.config.add_feed_url(url)
         self.config.remove_all_feed_urls()
         self.assertEqual(0, len(self.config.get_feed_urls()))
-       
+
+    def test_basic_url_replacement(self):
+        """ /basic URLs lack data Wuja needs. """
+        urls = ['url1/basic']
+        for url in urls:
+            self.config.add_feed_url(url)
+        lookup_urls = self.config.get_feed_urls()
+        self.assertEqual('url1/full', lookup_urls[0])
 
 def suite():
     suite = unittest.TestSuite()
