@@ -15,8 +15,8 @@ logger = getLogger("model")
 class Entry:
     """ Parent class of calendar entries. """
 
-    def __init__(self, id, title, desc, where, updated, duration):
-        self.id = id
+    def __init__(self, entry_id, title, desc, where, updated, duration):
+        self.entry_id = entry_id
         self.title = title
         self.description = desc
         self.where = where
@@ -30,8 +30,8 @@ class Entry:
 class SingleOccurrenceEntry(Entry):
     """ An entry occurring only once. """
 
-    def __init__(self, id, title, desc, updated, when, duration, where):
-        Entry.__init__(self, id, title, desc, where, updated, duration)
+    def __init__(self, entry_id, title, desc, updated, when, duration, where):
+        Entry.__init__(self, entry_id, title, desc, where, updated, duration)
         self.when = when
 
     def events(self, start_date, end_date):
@@ -51,8 +51,8 @@ class SingleOccurrenceEntry(Entry):
 class RecurringEntry(Entry):
     """ An entry with recurrence information. """
 
-    def __init__(self, id, title, desc, where, updated, recurrence):
-        Entry.__init__(self, id, title, desc, where, updated, None)
+    def __init__(self, entry_id, title, desc, where, updated, recurrence):
+        Entry.__init__(self, entry_id, title, desc, where, updated, None)
         self.__parse_recurrence(recurrence)
 
     def __parse_recurrence(self, recurrence):
@@ -72,7 +72,7 @@ class RecurringEntry(Entry):
 
         return recurrence
 
-    def __build_rrule(self, ruleText):
+    def __build_rrule(self, rule_text):
         """ Convert the recurrence data from Google's feed into something
         the dateutil library can work with.
         """
@@ -82,7 +82,7 @@ class RecurringEntry(Entry):
         params = {}
         params['dtstart'] = self.start_date
 
-        for prop in ruleText.split(';'):
+        for prop in rule_text.split(';'):
             key, val = prop.split('=')
             if key == 'FREQ':
                 freq = getattr(dateutil.rrule, val)
@@ -122,8 +122,8 @@ class RecurringEntry(Entry):
 
         event_list = []
         event_date_times = self.rrule.between(start_date, end_date, inc=True)
-        for e in event_date_times:
-            event_list.append(Event(e, self))
+        for event_time in event_date_times:
+            event_list.append(Event(event_time, self))
         return event_list
 
 class Event:
@@ -138,9 +138,12 @@ class Event:
         """ Used to simulate an event.key member representing a unique
         string for this event.
         """
-        return str(self.entry.id) + str(self.when)
+        return str(self.entry.entry_id) + str(self.when)
 
     def set_key(self):
+        """ Dummy setter for the key property, which doesn't really
+        exist.
+        """
         raise Exception("Keys aren't for setting.")
 
     key = property(get_key, set_key)

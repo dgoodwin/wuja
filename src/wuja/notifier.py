@@ -56,17 +56,25 @@ class Notifier:
         upcoming events.
         """
         logger.debug("Updating feeds from Google servers.")
-        self.calendar_entries = []
         feeds = self.config.get_feed_urls()
-        for feed_url in feeds:
-            xml = urllib2.urlopen(feed_url).read()
-            parser = FeedParser(xml)
-            self.calendar_entries.extend(parser.entries)
-            self.url_title_dict[feed_url] = parser.title
-            self.title_url_dict[parser.title] = feed_url
-            logger.debug("Processed feed: " + parser.title)
-        logger.debug("Found %s calendar entries." %
-            str(len(self.calendar_entries)))
+
+        # In the event of communication errors, don't wipe out our existing
+        # calendar entries:
+        temporary_entries = []
+
+        try:
+            for feed_url in feeds:
+                xml = urllib2.urlopen(feed_url).read()
+                parser = FeedParser(xml)
+                temporary_entries.extend(parser.entries)
+                self.url_title_dict[feed_url] = parser.title
+                self.title_url_dict[parser.title] = feed_url
+                logger.debug("Processed feed: " + parser.title)
+        except urllib2.URLError:
+            logger.warn("Error updating feeds.")
+        self.calendar_entries = temporary_entries
+        logger.debug("Found %s calendar entries from %s feeds." %
+            (str(len(self.calendar_entries)), str(len(feeds))))
         self.update_events()
         return True
 
@@ -75,7 +83,6 @@ class Notifier:
         logger.debug("Configuration change.")
         self.update()
 
-    # TODO: Check for events already confirmed.
     def update_events(self):
         """ Check pre-fetched calendar entries for upcoming events.
 

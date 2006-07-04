@@ -1,3 +1,7 @@
+""" Tests for the Wuja configuration object. """
+
+__revision__ = "$Revision$"
+
 import unittest
 import gconf
 

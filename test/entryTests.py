@@ -118,7 +118,7 @@ class EventTests(unittest.TestCase):
         entry = SingleOccurrenceEntry("fakeId", TITLE,
             DESCRIPTION, UPDATED, when, 3600, WHERE)
         event = Event(entry.when, entry)
-        self.assertEqual(entry.id + str(when), event.key)
+        self.assertEqual(entry.entry_id + str(when), event.key)
 
 def suite():
     suite = unittest.TestSuite()
