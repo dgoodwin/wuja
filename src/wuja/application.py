@@ -96,7 +96,7 @@ class WujaApplication:
         self.menu.popup(None, None, None, data.button, data.time)
 
     def __open_preferences_dialog(self, widget):
-        self.prefs_dialog = PreferencesDialog(self.config)
+        self.prefs_dialog = PreferencesDialog(self.config, self.notifier)
 
     def __close_dialog(self, widget):
         self.prefs_dialog.close()
@@ -214,10 +214,12 @@ class PreferencesDialog:
     dialog.
     """
 
-    def __init__(self, config):
+    def __init__(self, config, notifier):
         """ Open the preferences dialog. """
         logger.debug("Opening preferences dialog.")
         self.config = config
+        self.notifier = notifier
+
         glade_file = 'data/wuja-prefs.glade'
         window_name = 'dialog1'
         self.glade_prefs = gtk.glade.XML(glade_file)
@@ -237,7 +239,7 @@ class PreferencesDialog:
         for url in self.config.get_feed_urls():
             logger.debug("Existing URL: " + url)
             it = urls_list.append()
-            urls_list.set_value(iter, 0, self.notifier.url_title_dict[url])
+            urls_list.set_value(it, 0, self.notifier.url_title_dict[url])
         self.prefs_url_list.set_model(urls_list)
         renderer = gtk.CellRendererText()
         column = gtk.TreeViewColumn("Feed URLs", renderer, text=0)
