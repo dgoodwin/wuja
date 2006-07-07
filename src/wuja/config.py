@@ -5,6 +5,8 @@ __revision__ = "$Revision$"
 import gconf
 import os.path
 
+from wuja.feed import FeedSource
+
 from logging import getLogger
 logger = getLogger("notifier")
 
@@ -56,6 +58,12 @@ class WujaConfiguration:
         """
         for observer in self.observers:
             observer.update_configuration()
+
+    def get_feed_source(self):
+        """ Returns the appropriate FeedSource for this type of
+        configuration.
+        """
+        return FeedSource()
 
     def __set_feed_urls(self, urls):
         self.client.set_list(self.urls_path, gconf.VALUE_STRING, urls)

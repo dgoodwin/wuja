@@ -3,6 +3,7 @@
 __revision__ = "$Revision$"
 
 import time
+import urllib2
 
 from datetime import datetime
 from elementtree import ElementTree
@@ -11,16 +12,56 @@ from logging import getLogger
 from wuja.model import SingleOccurrenceEntry
 from wuja.model import RecurringEntry
 
-logger = getLogger("feedparser")
+logger = getLogger("feed")
 
-class FeedParser:
+class FeedSource:
+    """ Builds feeds objects given a URL and caches feed last updated
+    times to prevent excessive network chatter.
+    """
+    def __init__(self):
+        # Cache the feeds we've fetched thus far so we can compare their
+        # updated times with the latest and avoid redownloading the whole
+        # thing.
+        self._cache = {}
+
+    def get_feed(self, url):
+        """ Return the feed object for the given URL. First checks the
+        cache and latest updated time.
+        """
+        last_update = self._get_feed_last_update(url)
+        logger.debug("last_update = " + last_update)
+        if (self._cache.has_key(url) and self._cache[url].last_update ==
+            last_update):
+            feed = self._cache[url]
+            logger.debug("Returning unchanged cached feed for URL: %s" %
+                feed.title)
+            return feed
+
+        logger.debug("Feed not cached or outdated.")
+        feed = Feed(self._get_feed_xml(url), last_update)
+        self._cache[url] = feed
+        return feed
+
+    def _get_feed_last_update(self, url):
+        """ Fetch the last updated time for the given feed URL. """
+        url_file = urllib2.urlopen(url)
+        return url_file.headers['last-modified']
+
+    def _get_feed_xml(self, url):
+        """ Fetches the full XML source for the feed from Google's
+        servers.
+        """
+        return urllib2.urlopen(url).read()
+
+class Feed:
     """ Parses the XML provided and returns a list of calendar entries.
     """
 
-    def __init__(self, xml):
+    def __init__(self, xml, last_update):
         self.__root_node = ElementTree.XML(xml)
         self.entries = []
         self.title = None
+        self.last_update = last_update
         for elem in self.__root_node.getchildren():
             if parse_tag(elem.tag) == "entry":
                 self.entries.append(create_entry(elem))

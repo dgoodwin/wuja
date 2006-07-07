@@ -7,7 +7,7 @@ import datetime
 
 from logging import getLogger
 
-from wuja.feedparser import FeedParser
+from wuja.feed import Feed
 
 logger = getLogger("notifier")
 
@@ -26,6 +26,7 @@ class Notifier:
     def __init__ (self, config, threshold=DEFAULT_THRESHOLD):
         self.config = config
         self.threshold = threshold
+        self.feed_source = config.get_feed_source()
 
         self.config.attach(self)
         self.observers = []
@@ -56,26 +57,26 @@ class Notifier:
         upcoming events.
         """
         logger.debug("Updating feeds from Google servers.")
+        start_time = datetime.datetime.now()
         feeds = self.config.get_feed_urls()
 
         # In the event of communication errors, don't wipe out our existing
         # calendar entries:
         temporary_entries = []
 
-        try:
-            for feed_url in feeds:
-                xml = urllib2.urlopen(feed_url).read()
-                parser = FeedParser(xml)
-                temporary_entries.extend(parser.entries)
-                self.url_title_dict[feed_url] = parser.title
-                self.title_url_dict[parser.title] = feed_url
-                logger.debug("Processed feed: " + parser.title)
-        except urllib2.URLError:
-            logger.warn("Error updating feeds.")
+        for feed_url in feeds:
+            feed = self.feed_source.get_feed(feed_url)
+            temporary_entries.extend(feed.entries)
+            self.url_title_dict[feed_url] = feed.title
+            self.title_url_dict[feed.title] = feed_url
+            logger.debug("Processed feed: " + feed.title)
         self.calendar_entries = temporary_entries
         logger.debug("Found %s calendar entries from %s feeds." %
             (str(len(self.calendar_entries)), str(len(feeds))))
         self.update_events()
+        end_time = datetime.datetime.now()
+        delta = end_time - start_time
+        logger.debug("Updated feeds in: %s" % delta)
         return True
 
     def update_configuration(self):
