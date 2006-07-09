@@ -11,9 +11,6 @@ from wuja.feed import Feed
 
 logger = getLogger("notifier")
 
-# Notify observers of events within this threshold. (defined in minutes)
-DEFAULT_THRESHOLD = 15 # minutes
-
 class Notifier:
     """ Update Google feeds and notify listeners when an alarm should
     be displayed.
@@ -23,9 +20,8 @@ class Notifier:
     due.
     """
 
-    def __init__ (self, config, threshold=DEFAULT_THRESHOLD):
+    def __init__ (self, config):
         self.config = config
-        self.threshold = threshold
         self.feed_source = config.get_feed_source()
 
         self.config.attach(self)
@@ -119,8 +115,7 @@ class Notifier:
 
     def check_for_notifications(self):
         """ Check for any pending notifications that need to be sent. """
-        logger.debug("Checking for notifications within next " +
-            str(self.threshold) + " minutes.")
+        logger.debug("Checking for notifications.")
         for event in self.events:
             # Ignore previously accepted event alerts:
             if event.accepted:
@@ -129,13 +124,16 @@ class Notifier:
             # Ignore events in the past:
             if event.when < now:
                 continue
+            if event.entry.reminder is None:
+                continue
 
-            # NOTE: Overriding the Google Calendar reminder option and always
-            # notifying 15 minutes before an appointment:
             delta = event.when - now
-            if delta < datetime.timedelta(minutes=self.threshold):
-                logger.debug("Notifying observers: " + event.entry.title +
-                    " @ " + str(event.when))
+            if delta < datetime.timedelta(minutes=event.entry.reminder):
+                logger.debug("Notifying observers for event: " +
+                    event.entry.title)
+                logger.debug("   When: " + str(event.when))
+                logger.debug("   Reminder: " + str(event.entry.reminder) +
+                    " minutes")
                 self.__notify_observers(event)
         return True
 

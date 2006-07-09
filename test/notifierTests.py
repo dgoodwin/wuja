@@ -7,13 +7,14 @@ from datetime import datetime, timedelta
 
 import settestpath
 
-from wuja.notifier import Notifier, DEFAULT_THRESHOLD
+from wuja.notifier import Notifier
 from wuja.model import SingleOccurrenceEntry
 from wuja.config import WujaConfiguration
 
 from utils import TestWujaConfiguration
 
 TEST_GCONF_PATH = '/apps/wuja/test'
+REMIND = 10
 
 class TestNotifier(Notifier):
     """
@@ -61,7 +62,7 @@ class NotifierTests(unittest.TestCase):
         self.assertEqual(self.entry, self.observer.trigger_entry)
 
     def test_notification_beyond_threshold(self):
-        future_time = datetime.now() + timedelta(minutes=DEFAULT_THRESHOLD,
+        future_time = datetime.now() + timedelta(minutes=REMIND,
             seconds=1)
         self.__create_entry(future_time)
         self.notifier.check_for_notifications()
@@ -112,7 +113,7 @@ class NotifierTests(unittest.TestCase):
 
     def __create_entry(self, future_time):
         self.entry = SingleOccurrenceEntry("fakeId", "Fake Title", "",
-            datetime.now(), future_time, 3600, "Gumdrop Alley")
+            REMIND, datetime.now(), future_time, 3600, "Gumdrop Alley")
         self.notifier = TestNotifier([self.entry])
         self.observer = TestObserver()
         self.notifier.attach(self.observer)

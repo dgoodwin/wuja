@@ -15,13 +15,15 @@ logger = getLogger("model")
 class Entry:
     """ Parent class of calendar entries. """
 
-    def __init__(self, entry_id, title, desc, where, updated, duration):
+    def __init__(self, entry_id, title, desc, remind, where, updated,
+            duration):
         self.entry_id = entry_id
         self.title = title
         self.description = desc
         self.where = where
         self.updated = updated
         self.duration = duration
+        self.reminder = remind
 
     def events(self, end_date):
         """ Returns the events for this entry between now and the end date. """
@@ -30,8 +32,10 @@ class Entry:
 class SingleOccurrenceEntry(Entry):
     """ An entry occurring only once. """
 
-    def __init__(self, entry_id, title, desc, updated, when, duration, where):
-        Entry.__init__(self, entry_id, title, desc, where, updated, duration)
+    def __init__(self, entry_id, title, desc, remind, updated, when,
+        duration, where):
+        Entry.__init__(self, entry_id, title, desc, remind, where,
+            updated, duration)
         self.when = when
 
     def events(self, start_date, end_date):
@@ -51,8 +55,10 @@ class SingleOccurrenceEntry(Entry):
 class RecurringEntry(Entry):
     """ An entry with recurrence information. """
 
-    def __init__(self, entry_id, title, desc, where, updated, recurrence):
-        Entry.__init__(self, entry_id, title, desc, where, updated, None)
+    def __init__(self, entry_id, title, desc, remind, where,
+        updated, recurrence):
+        Entry.__init__(self, entry_id, title, desc, remind, where,
+            updated, None)
         self.__parse_recurrence(recurrence)
 
     def __parse_recurrence(self, recurrence):

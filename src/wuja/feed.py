@@ -103,6 +103,7 @@ def create_entry(elem):
     when = None
     where = None
     duration = None
+    reminder = None
     for node in elem.getchildren():
         if parse_tag(node.tag) == 'id':
             entry_id = node.text
@@ -119,11 +120,22 @@ def create_entry(elem):
             end_time = parse_timestamp(node.attrib["endTime"])
             duration = time.mktime(end_time.timetuple()) - \
                 time.mktime(when.timetuple())
+
+            # Check for a "reminder" tag:
+            for child_element in node.getchildren():
+                if parse_tag(child_element.tag) == 'reminder':
+                    reminder = int(child_element.get('minutes'))
+        elif parse_tag(node.tag) == 'reminder':
+            reminder = int(node.get('minutes'))
         elif parse_tag(node.tag) == 'where':
             where = node.text
+
+    if reminder is None:
+        logger.debug("No reminder found for entry: %s" % title)
+
     if recurrence != None:
-        return RecurringEntry(entry_id, title, description, where, updated,
-            recurrence)
-    return SingleOccurrenceEntry(entry_id, title, description, updated, when,
-        duration, where)
+        return RecurringEntry(entry_id, title, description, reminder,
+            where, updated, recurrence)
+    return SingleOccurrenceEntry(entry_id, title, description, reminder,
+        updated, when, duration, where)
 
