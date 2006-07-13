@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+
+""" Launches the main Wuja application. """
+
+__revision__ = "$Revision$"
+
+from wuja.application import WujaApplication
+
+if __name__ == "__main__":
+    wujaApp = WujaApplication()
+    wujaApp.main()
