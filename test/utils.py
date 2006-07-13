@@ -13,6 +13,7 @@ class TestWujaConfiguration(WujaConfiguration):
     """
 
     def __init__(self, urls):
+        super(WujaConfiguration, self).__init__()
         self.observers = []
         self.urls = urls
 

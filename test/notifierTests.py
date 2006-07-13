@@ -47,7 +47,7 @@ class TestObserver:
         self.trigger_entry = None
         self.trigger_event = None
 
-    def notify(self, event):
+    def notify(self, notifier, event):
         self.notified = True
         self.trigger_entry = event.entry
         self.trigger_event = event
@@ -116,7 +116,7 @@ class NotifierTests(unittest.TestCase):
             REMIND, datetime.now(), future_time, 3600, "Gumdrop Alley")
         self.notifier = TestNotifier([self.entry])
         self.observer = TestObserver()
-        self.notifier.attach(self.observer)
+        self.notifier.connect("feeds-updated", self.observer.notify)
         self.assertFalse(self.observer.notified)
 
 def suite():

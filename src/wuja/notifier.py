@@ -6,13 +6,15 @@ import urllib2
 import datetime
 import gtk
 
+import gobject
+
 from logging import getLogger
 
 from wuja.feed import Feed
 
 logger = getLogger("notifier")
 
-class Notifier:
+class Notifier(gobject.GObject):
     """ Update Google feeds and notify listeners when an alarm should
     be displayed.
 
@@ -22,11 +24,12 @@ class Notifier:
     """
 
     def __init__ (self, config):
+        gobject.GObject.__init__(self)
         self.config = config
         self.feed_source = config.get_feed_source()
 
-        self.config.attach(self)
-        self.observers = []
+        self.config.connect("config-changed", self.update_configuration)
+        
         self.events = []
         self.calendar_entries = []
 
@@ -37,17 +40,6 @@ class Notifier:
         self.title_url_dict = {}
 
         self.update()
-
-    def __notify_observers(self, event):
-        """ Notify observers that an event is due. """
-        for observer in self.observers:
-            observer.notify(event)
-
-    def attach(self, observer):
-        """ Register an observer. All observers will be notified
-        when an alarm should be displayed.
-        """
-        self.observers.append(observer)
 
     def update(self):
         """ Update all feeds from Google's servers and check for
@@ -80,7 +72,7 @@ class Notifier:
         logger.debug("Updated feeds in: %s" % delta)
         return True
 
-    def update_configuration(self):
+    def update_configuration(self, config):
         """ Configuration has changed, update our feeds. """
         logger.debug("Configuration change.")
         self.update()
@@ -139,6 +131,9 @@ class Notifier:
                 logger.debug("   When: " + str(event.when))
                 logger.debug("   Reminder: " + str(event.entry.reminder) +
                     " minutes")
-                self.__notify_observers(event)
+                self.emit("feeds-updated", event)
         return True
 
+
+gobject.signal_new("feeds-updated", Notifier, gobject.SIGNAL_ACTION,
+    gobject.TYPE_BOOLEAN, (gobject.TYPE_PYOBJECT,))

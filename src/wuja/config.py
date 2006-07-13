@@ -3,6 +3,7 @@
 __revision__ = "$Revision$"
 
 import gconf
+import gobject
 import os.path
 
 from wuja.feed import FeedSource
@@ -10,11 +11,13 @@ from wuja.feed import FeedSource
 from logging import getLogger
 logger = getLogger("notifier")
 
-class WujaConfiguration:
+
+class WujaConfiguration(gobject.GObject):
 
     def __init__(self, gconf_path):
+        gobject.GObject.__init__(self)
+
         self.__gconf_path = gconf_path
-        self.observers = []
 
         self.client = gconf.client_get_default()
         self.urls_path = os.path.join(self.__gconf_path, "feed_urls")
@@ -47,18 +50,6 @@ class WujaConfiguration:
         """ Remove all feed URLs. """
         self.__set_feed_urls([])
 
-    def attach(self, observer):
-        """ Register an observer. Observer must have an
-        "update_configuration" method.
-        """
-        self.observers.append(observer)
-
-    def notify_configuration_changed(self):
-        """ Notify observers that the configuration has been changed.
-        """
-        for observer in self.observers:
-            observer.update_configuration()
-
     def get_feed_source(self):
         """ Returns the appropriate FeedSource for this type of
         configuration.
@@ -68,5 +59,8 @@ class WujaConfiguration:
     def __set_feed_urls(self, urls):
         self.client.set_list(self.urls_path, gconf.VALUE_STRING, urls)
         self.client.suggest_sync()
-        self.notify_configuration_changed()
+        self.emit("config-changed")
 
+
+gobject.signal_new("config-changed", WujaConfiguration, gobject.SIGNAL_ACTION,
+    gobject.TYPE_BOOLEAN, ())

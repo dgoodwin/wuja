@@ -104,7 +104,8 @@ class WujaApplication:
     def build_notifier(self):
         """ Builds the notifier object. """
         self.notifier = Notifier(self.config)
-        self.notifier.attach(self) # register ourselves as an observer
+        # register ourselves as an observer
+        self.notifier.connect("feeds-updated", self.notify)
 
         gobject.timeout_add(NOTIFICATION_INTERVAL * 1000 * 60,
             self.notifier.check_for_notifications)
@@ -126,7 +127,7 @@ class WujaApplication:
         """ Quit the application. """
         gtk.main_quit()
 
-    def notify(self, event):
+    def notify(self, notifier, event):
         """
         Triggered by the notifier when a notifaction of an event needs to
         go out to the user.
