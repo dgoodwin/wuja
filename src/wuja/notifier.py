@@ -4,6 +4,7 @@ __revision__ = "$Revision$"
 
 import urllib2
 import datetime
+import gtk
 
 from logging import getLogger
 
@@ -59,13 +60,17 @@ class Notifier:
         # In the event of communication errors, don't wipe out our existing
         # calendar entries:
         temporary_entries = []
+        try:
+            for feed_url in feeds:
+                feed = self.feed_source.get_feed(feed_url)
+                temporary_entries.extend(feed.entries)
+                self.url_title_dict[feed_url] = feed.title
+                self.title_url_dict[feed.title] = feed_url
+                logger.debug("Processed feed: " + feed.title)
+        except urllib2.URLError:
+            logger.error("Error reaching Google servers.")
+            return True
 
-        for feed_url in feeds:
-            feed = self.feed_source.get_feed(feed_url)
-            temporary_entries.extend(feed.entries)
-            self.url_title_dict[feed_url] = feed.title
-            self.title_url_dict[feed.title] = feed_url
-            logger.debug("Processed feed: " + feed.title)
         self.calendar_entries = temporary_entries
         logger.debug("Found %s calendar entries from %s feeds." %
             (str(len(self.calendar_entries)), str(len(feeds))))
