@@ -116,8 +116,7 @@ class WujaApplication:
             % NOTIFICATION_INTERVAL)
 
         self.feed_update_event_source = gobject.timeout_add(
-            1 * 1000 * 60, self.notifier.update)
-#            FEED_UPDATE_INTERVAL * 1000 * 60, self.notifier.update)
+            FEED_UPDATE_INTERVAL * 1000 * 60, self.notifier.update)
         logger.debug("Updating feeds from Google servers every %s minutes."
             % FEED_UPDATE_INTERVAL)
 
