@@ -11,8 +11,10 @@ import gtk
 import gtk.glade
 import gobject
 import sys
+import os
 
-# Setup the Python path so it can find our uninstalled modules/packages:
+# Used when testing wuja during development from the top level of the
+# source tree:
 sys.path.append('./src/')
 
 from logging import getLogger
@@ -59,7 +61,7 @@ class WujaApplication:
         action_group.add_actions(actions)
 
         ui = gtk.UIManager()
-        ui.add_ui_from_file("data/wuja-menu.xml")
+        ui.add_ui_from_file(find_file_on_path("wuja/data/wuja-menu.xml"))
         ui.insert_action_group(action_group, 0)
 
         self.menu = ui.get_widget("/wuja_menu")
@@ -222,9 +224,9 @@ class PreferencesDialog:
         self.config = config
         self.notifier = notifier
 
-        glade_file = 'data/wuja-prefs.glade'
+        glade_file = 'wuja/data/wuja-prefs.glade'
         window_name = 'dialog1'
-        self.glade_prefs = gtk.glade.XML(glade_file)
+        self.glade_prefs = gtk.glade.XML(find_file_on_path(glade_file))
         signals = {
             'on_add_clicked' : self.__add_url,
             'on_remove_clicked' : self.__remove_url,
@@ -295,6 +297,24 @@ class PreferencesDialog:
         """ Close the preferences dialog. """
         self.prefs_dialog_widget.destroy()
         self.prefs_dialog = None
+
+def find_file_on_path(pathname):
+    """ Scan the Python path and locate a file with the appropriate
+    name.
+
+    See:
+
+      http://www.linuxjournal.com/xstatic/articles/lj/0087/4702/4702l2.html
+
+    """
+    if os.path.isabs(pathname):
+        return pathname
+    for dirname in sys.path:
+        candidate = os.path.join(dirname, pathname)
+        if os.path.isfile(candidate):
+            return candidate
+    raise Error("Could not find %s on the Python path."
+        % `pathname`)
 
 if __name__ == "__main__":
     wujaApp = WujaApplication()

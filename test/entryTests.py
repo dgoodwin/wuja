@@ -3,7 +3,6 @@ from datetime import datetime
 
 import settestpath
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Event
-from wuja.feedparser import FeedParser
 from sampledata import daily_recurrence, daily_recurrence_for_one_week, \
     weekly_recurrence_all_day
 
