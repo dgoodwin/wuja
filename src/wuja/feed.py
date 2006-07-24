@@ -29,16 +29,13 @@ class FeedSource:
         cache and latest updated time.
         """
         last_update = self._get_feed_last_update(url)
-        logger.debug("last_update = " + last_update)
         if (self._cache.has_key(url) and self._cache[url].last_update ==
             last_update):
             feed = self._cache[url]
-            logger.debug("Returning unchanged cached feed for URL: %s" %
-                feed.title)
             return feed
 
-        logger.debug("Feed not cached or outdated.")
         feed = Feed(self._get_feed_xml(url), last_update)
+        logger.debug("Updating feed: " + feed.title)
         self._cache[url] = feed
         return feed
 
@@ -64,7 +61,7 @@ class Feed:
         self.last_update = last_update
         for elem in self.__root_node.getchildren():
             if parse_tag(elem.tag) == "entry":
-                self.entries.append(create_entry(elem))
+                self.entries.append(create_entry(elem, self.title))
             elif parse_tag(elem.tag) == "title":
                 self.title = elem.text
 
@@ -93,7 +90,7 @@ def parse_timestamp(timestamp):
     return datetime(int(year), int(month), int(day), int(hour), int(minute),
         int(second))
 
-def create_entry(elem):
+def create_entry(elem, feed_title):
     """ Parses calender entry XML into an Entry object. """
     entry_id = None
     title = None
@@ -135,7 +132,7 @@ def create_entry(elem):
 
     if recurrence != None:
         return RecurringEntry(entry_id, title, description, reminder,
-            where, updated, recurrence)
+            where, updated, recurrence, feed_title)
     return SingleOccurrenceEntry(entry_id, title, description, reminder,
-        updated, when, duration, where)
+        updated, when, duration, where, feed_title)
 

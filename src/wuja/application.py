@@ -146,6 +146,19 @@ class WujaApplication:
                 event.entry.title)
             return
 
+        alert_window = AlertDialog(event, self.__open_alerts)
+        self.__open_alerts[event.key] = alert_window
+
+    def main(self):
+        """ Launches the GTK main loop. """
+        gtk.main()
+
+class AlertDialog:
+    """ Window displayed when an alert is triggered. """
+    def __init__(self, event, open_alerts):
+        # Maintain a reference to the main applications open alerts so we can
+        # pop entries when accepted or snoozed.
+        self.__open_alerts = open_alerts
         box = gtk.VBox()
 
         label = gtk.Label("Wake Up Jackass...")
@@ -191,8 +204,6 @@ class WujaApplication:
         alert_window.show()
         alert_window.set_urgency_hint(True)
 
-        self.__open_alerts[event.key] = alert_window
-
     def accept_event(self, widget, event):
         """ Called when the user accepts an alert. """
         event.accepted = True
@@ -207,10 +218,6 @@ class WujaApplication:
         logger.debug("Snoozed event: " + event.entry.title)
         widget.get_parent_window().destroy()
         self.__open_alerts.pop(event.key)
-
-    def main(self):
-        """ Launches the GTK main loop. """
-        gtk.main()
 
 class PreferencesDialog:
     """ Class to open, maintain, and close the Wuja preferences
