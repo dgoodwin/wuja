@@ -113,7 +113,8 @@ class NotifierTests(unittest.TestCase):
 
     def __create_entry(self, future_time):
         self.entry = SingleOccurrenceEntry("fakeId", "Fake Title", "",
-            REMIND, datetime.now(), future_time, 3600, "Gumdrop Alley")
+            REMIND, datetime.now(), future_time, 3600, "Gumdrop Alley",
+            "fakefeed")
         self.notifier = TestNotifier([self.entry])
         self.observer = TestObserver()
         self.notifier.connect("feeds-updated", self.observer.notify)

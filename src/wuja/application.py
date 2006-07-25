@@ -44,8 +44,8 @@ class WujaApplication:
         # we don't popup multiple windows for the same event that hasn't
         # been confirmed by the user:
         self.__open_alerts = {}
-        self.config = WujaConfiguration(GCONF_PATH)
 
+        self.config = WujaConfiguration(GCONF_PATH)
         self.notifier = None
         self.prefs_dialog = None
         self.feed_update_event_source = None
@@ -66,9 +66,6 @@ class WujaApplication:
 
         self.menu = ui.get_widget("/wuja_menu")
         self.menu.show_all()
-
-        #icon = gtk.image_new_from_stock(gtk.STOCK_DIALOG_INFO,
-        #    gtk.ICON_SIZE_BUTTON)
 
         self.tray_icon = trayicon.TrayIcon("wuja")
         self.tray_icon.connect('button_press_event', self.__clicked)

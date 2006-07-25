@@ -12,6 +12,7 @@ TITLE = "Super Important Meeting"
 DESCRIPTION = "In the future, there will be robots."
 WHERE = "Main Boardroom"
 REMIND = 10
+FEED_TITLE = "fakefeed"
 
 class SingleOccurrenceEntryTests(unittest.TestCase):
 
@@ -20,7 +21,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         end_date = datetime(2020, 01, 01)
 
         distant_event = SingleOccurrenceEntry("fakeId", TITLE,
-            DESCRIPTION, REMIND, UPDATED, when, 3600, WHERE)
+            DESCRIPTION, REMIND, UPDATED, when, 3600, WHERE, FEED_TITLE)
 
         events = distant_event.events(None, end_date)
         self.assertEquals(1, len(events))
@@ -33,7 +34,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         end_date = datetime(2006, 01, 01)
 
         distant_event = SingleOccurrenceEntry("fakeId", TITLE,
-            DESCRIPTION, REMIND, UPDATED, when, 3600, WHERE)
+            DESCRIPTION, REMIND, UPDATED, when, 3600, WHERE, FEED_TITLE)
 
         self.assertEquals(0, len(distant_event.events(None, end_date)))
 
@@ -42,7 +43,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         end_date = datetime(2006, 05, 26)
 
         distant_event = SingleOccurrenceEntry("fakeId", TITLE,
-            DESCRIPTION, REMIND, UPDATED, when, 3600, WHERE)
+            DESCRIPTION, REMIND, UPDATED, when, 3600, WHERE, FEED_TITLE)
 
         self.assertEquals(0, len(distant_event.events(None, end_date)))
 
@@ -50,7 +51,7 @@ class RecurringEntryTests(unittest.TestCase):
 
     def __get_daily_recurring_entry(self):
         standup_meeting = RecurringEntry("fakeId", "Standup Meeting", "",
-            REMIND, WHERE, UPDATED, daily_recurrence)
+            REMIND, WHERE, UPDATED, daily_recurrence, FEED_TITLE)
         self.assertEqual(1800, standup_meeting.duration)
         self.assertEqual(WHERE, standup_meeting.where)
         return standup_meeting
@@ -78,7 +79,7 @@ class RecurringEntryTests(unittest.TestCase):
 
     def test_daily_recurring_entry_for_one_week(self):
         daily_for_one_week = RecurringEntry("fakeId", "Daily For One Week", "",
-            REMIND, WHERE, UPDATED, daily_recurrence_for_one_week)
+            REMIND, WHERE, UPDATED, daily_recurrence_for_one_week, FEED_TITLE)
         self.assertEqual(3600, daily_for_one_week.duration)
         self.assertEqual(WHERE, daily_for_one_week.where)
         start_date = datetime(2006, 6, 1)
@@ -88,7 +89,7 @@ class RecurringEntryTests(unittest.TestCase):
 
     def test_weekly_all_day_recurrence(self):
         weekly_all_day = RecurringEntry("fakeId", "Weekly All Day", "",
-            REMIND, WHERE, UPDATED, weekly_recurrence_all_day)
+            REMIND, WHERE, UPDATED, weekly_recurrence_all_day, FEED_TITLE)
         self.assertEqual(None, weekly_all_day.duration)
 
         # Event starts on June 5th 2006
@@ -116,7 +117,7 @@ class EventTests(unittest.TestCase):
     def test_event_key(self):
         when = datetime.now()
         entry = SingleOccurrenceEntry("fakeId", TITLE,
-            DESCRIPTION, REMIND, UPDATED, when, 3600, WHERE)
+            DESCRIPTION, REMIND, UPDATED, when, 3600, WHERE, FEED_TITLE)
         event = Event(entry.when, entry)
         self.assertEqual(entry.entry_id + str(when), event.key)
 
