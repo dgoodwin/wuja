@@ -35,7 +35,6 @@ class WujaApplication:
     """ The main Wuja application. """
 
     def __init__(self):
-        raise Exception
         logger.info("Starting application.")
 
         # Maintain a map of events that have alert windows open to ensure
