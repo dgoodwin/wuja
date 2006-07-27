@@ -13,12 +13,9 @@ import gobject
 import sys
 import os
 
-# Used when testing wuja during development from the top level of the
-# source tree:
-sys.path.append('./src/')
-
 from logging import getLogger
 from egg import trayicon
+from datetime import timedelta
 
 from wuja.log import setup_logging
 
@@ -38,6 +35,7 @@ class WujaApplication:
     """ The main Wuja application. """
 
     def __init__(self):
+        raise Exception
         logger.info("Starting application.")
 
         # Maintain a map of events that have alert windows open to ensure
@@ -153,60 +151,53 @@ class WujaApplication:
 class AlertDialog:
     """ Window displayed when an alert is triggered. """
     def __init__(self, event, open_alerts):
+        logger.debug('Opening alert dialog for event: %s', event.entry.title)
+        self.event = event
         # Maintain a reference to the main applications open alerts so we can
         # pop entries when accepted or snoozed.
         self.__open_alerts = open_alerts
-        box = gtk.VBox()
 
-        label = gtk.Label("Wake Up Jackass...")
-        label.show()
-        box.pack_start(label)
+        glade_file = 'wuja/data/alert-window.glade'
+        window_name = 'window1'
+        glade_alert = gtk.glade.XML(find_file_on_path(glade_file))
+        alert_dialog = glade_alert.get_widget('window1')
 
-        label = gtk.Label(event.entry.title)
-        label.show()
-        box.pack_start(label)
+        signals = {
+            'on_accept_button_clicked': self.accept_event,
+        }
+        glade_alert.signal_autoconnect(signals)
 
-        description = ""
-        if event.entry.description != None:
-            description = event.entry.description
-        label = gtk.Label(description)
-        label.show()
-        box.pack_start(label)
+        title = glade_alert.get_widget('title')
+        when = glade_alert.get_widget('when')
+        duration = glade_alert.get_widget('duration')
+        calendar = glade_alert.get_widget('calendar')
+        where = glade_alert.get_widget('where')
+        description = glade_alert.get_widget('description')
 
-        label = gtk.Label(event.when.strftime("%a %b %d %Y - %H:%M%P"))
-        label.show()
-        box.pack_start(label)
+        title.set_text(event.entry.title)
+        when.set_text(event.when.strftime("%a %b %d %Y - %H:%M%P"))
+        calendar.set_text(event.entry.feed_title)
+        if event.entry.where is None:
+            where.set_text("")
+        else:
+            where.set_text(str(event.entry.where))
+        if event.entry.description is None:
+            description.set_text("")
+        else:
+            description.set_text(event.entry.description)
 
-        button_box = gtk.HBox()
-        button = gtk.Button("Accept")
-        button.connect("clicked", self.accept_event, event)
-        button.show()
-        button_box.pack_start(button)
+        duration_delta = timedelta(seconds=event.entry.duration)
+        duration.set_text(str(duration_delta))
 
-        button = gtk.Button("Snooze")
-        button.connect("clicked", self.snooze_event, event)
-        button.show()
-        button_box.pack_start(button)
+        alert_dialog.show_all()
 
-        button_box.show()
-        box.pack_start(button_box)
-
-        box.show()
-
-        alert_window = gtk.Window()
-        alert_window.set_title("Alert")
-        alert_window.add(box)
-        alert_window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG)
-
-        alert_window.show()
-        alert_window.set_urgency_hint(True)
-
-    def accept_event(self, widget, event):
+    def accept_event(self, widget):
         """ Called when the user accepts an alert. """
-        event.accepted = True
-        logger.debug("Accepted event: " + event.entry.title)
+        self.event.accepted = True
+        logger.debug("Accepted event: " + self.event.entry.title)
+        logger.debug("widget = " + str(widget))
         widget.get_parent_window().destroy()
-        self.__open_alerts.pop(event.key)
+        self.__open_alerts.pop(self.event.key)
 
     def snooze_event(self, widget, event):
         """ Called when the user presses snooze. Destroys the alert
@@ -318,8 +309,4 @@ def find_file_on_path(pathname):
             return candidate
     raise Error("Could not find %s on the Python path."
         % `pathname`)
-
-if __name__ == "__main__":
-    wujaApp = WujaApplication()
-    wujaApp.main()
 
