@@ -4,6 +4,7 @@ __revision__ = "$Revision$"
 
 import dateutil.rrule
 import vobject
+import sqlobject
 
 from datetime import datetime
 from dateutil.rrule import rrule
@@ -12,32 +13,17 @@ from logging import getLogger
 
 logger = getLogger("model")
 
-class Entry:
-    """ Parent class of calendar entries. """
-
-    def __init__(self, entry_id, title, desc, remind, where, updated,
-            duration, feed_title):
-        self.entry_id = entry_id
-        self.title = title
-        self.description = desc
-        self.where = where
-        self.updated = updated
-        self.duration = duration
-        self.reminder = remind
-        self.feed_title = feed_title
-
-    def events(self, end_date):
-        """ Returns the events for this entry between now and the end date. """
-        raise Exception("Not implemented.")
-
-class SingleOccurrenceEntry(Entry):
+class SingleOccurrenceEntry(sqlobject.SQLObject):
     """ An entry occurring only once. """
-
-    def __init__(self, entry_id, title, desc, remind, updated, when,
-        duration, where, feed_title):
-        Entry.__init__(self, entry_id, title, desc, remind, where,
-            updated, duration, feed_title)
-        self.when = when
+    entry_id = sqlobject.StringCol()
+    title = sqlobject.StringCol()
+    description = sqlobject.StringCol()
+    location = sqlobject.StringCol()
+    updated = sqlobject.StringCol()
+    duration = sqlobject.IntCol()
+    reminder = sqlobject.IntCol()
+    feed_title = sqlobject.StringCol()
+    time = sqlobject.DateTimeCol()
 
     def events(self, start_date, end_date):
         """ Returns at most one event for this single occurrence
@@ -49,18 +35,28 @@ class SingleOccurrenceEntry(Entry):
         if end_date < start_date:
             return []
         return_me = []
-        if start_date < self.when < end_date:
-            return_me.append(Event(self.when, self))
+        if start_date < self.time < end_date:
+            return_me.append(Event(self.time, self))
         return return_me
 
-class RecurringEntry(Entry):
-    """ An entry with recurrence information. """
+class RecurringEntry(sqlobject.SQLObject):
+    """ An entry with recurrence information.
 
-    def __init__(self, entry_id, title, desc, remind, where,
-        updated, recurrence, feed_title):
-        Entry.__init__(self, entry_id, title, desc, remind, where,
-            updated, None, feed_title)
-        self.__parse_recurrence(recurrence)
+    Note that this object only stores the recurrence text in the database,
+    and is parsed on every load/fetch.
+    """
+    entry_id = sqlobject.StringCol()
+    title = sqlobject.StringCol()
+    description = sqlobject.StringCol()
+    reminder = sqlobject.IntCol()
+    location = sqlobject.StringCol()
+    updated = sqlobject.StringCol()
+    feed_title = sqlobject.StringCol()
+    recurrence = sqlobject.StringCol()
+
+    def _init(self, *args, **kw):
+        sqlobject.SQLObject._init(self, *args, **kw)
+        self.__parse_recurrence(self.recurrence)
 
     def __parse_recurrence(self, recurrence):
         """ Parses the recurrence field. (iCalendar format, see RFC 2445) """
@@ -136,8 +132,8 @@ class RecurringEntry(Entry):
 class Event:
     """ An actual calendar event. Can be associated with an alarm. """
 
-    def __init__(self, when, entry):
-        self.when = when
+    def __init__(self, time, entry):
+        self.time = time
         self.entry = entry
         self.accepted = False # set true once user confirms event
 
@@ -145,7 +141,7 @@ class Event:
         """ Used to simulate an event.key member representing a unique
         string for this event.
         """
-        return str(self.entry.entry_id) + str(self.when)
+        return str(self.entry.entry_id) + str(self.time)
 
     def set_key(self):
         """ Dummy setter for the key property, which doesn't really

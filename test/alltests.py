@@ -4,7 +4,7 @@ import settestpath
 import configureLogging
 
 import feedTests
-import entryTests
+import modelTests
 import notifierTests
 import configTests
 
@@ -14,7 +14,7 @@ def suite():
     # Append all test suites here:
     return TestSuite((
         feedTests.suite(),
-        entryTests.suite(),
+        modelTests.suite(),
         notifierTests.suite(),
         configTests.suite(), # not pure unit tests, candidate for future removal
     ))

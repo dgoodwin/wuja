@@ -12,6 +12,7 @@ import gtk.glade
 import gobject
 import sys
 import os
+import sqlobject
 
 from logging import getLogger
 from egg import trayicon
@@ -30,6 +31,13 @@ from wuja.config import WujaConfiguration
 GCONF_PATH = "/apps/wuja/"
 NOTIFICATION_INTERVAL = 1 # minutes between notification checks
 FEED_UPDATE_INTERVAL = 10 # minutes between feed updates
+
+# TODO: Move this somewhere else:
+from wuja.model import SingleOccurrenceEntry, RecurringEntry
+connection = sqlobject.connectionForURI('sqlite:/:memory:')
+sqlobject.sqlhub.processConnection = connection
+SingleOccurrenceEntry.createTable()
+RecurringEntry.createTable()
 
 class WujaApplication:
     """ The main Wuja application. """

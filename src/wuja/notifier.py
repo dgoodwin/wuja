@@ -29,7 +29,7 @@ class Notifier(gobject.GObject):
         self.feed_source = config.get_feed_source()
 
         self.config.connect("config-changed", self.update_configuration)
-        
+
         self.events = []
         self.calendar_entries = []
 
@@ -103,7 +103,7 @@ class Notifier(gobject.GObject):
             if len(events) > 0:
                 logger.debug("Found events for: " + entry.title)
                 for event in events:
-                    logger.debug("   " + str(event.when))
+                    logger.debug("   " + str(event.time))
                     self.events.append(event)
                     if event.key in accepted_events:
                         logger.debug("Restoring accepted state for entry: " +
@@ -119,16 +119,16 @@ class Notifier(gobject.GObject):
                 continue
             now = datetime.datetime.now()
             # Ignore events in the past:
-            if event.when < now:
+            if event.time < now:
                 continue
             if event.entry.reminder is None:
                 continue
 
-            delta = event.when - now
+            delta = event.time - now
             if delta < datetime.timedelta(minutes=event.entry.reminder):
                 logger.debug("Notifying observers for event: " +
                     event.entry.title)
-                logger.debug("   When: " + str(event.when))
+                logger.debug("   When: " + str(event.time))
                 logger.debug("   Reminder: " + str(event.entry.reminder) +
                     " minutes")
                 self.emit("feeds-updated", event)

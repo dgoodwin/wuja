@@ -131,8 +131,11 @@ def create_entry(elem, feed_title):
         logger.debug("No reminder found for entry: %s" % title)
 
     if recurrence != None:
-        return RecurringEntry(entry_id, title, description, reminder,
-            where, updated, recurrence, feed_title)
-    return SingleOccurrenceEntry(entry_id, title, description, reminder,
-        updated, when, duration, where, feed_title)
+        return RecurringEntry(entry_id=entry_id, title=title,
+            description=description, reminder=reminder, location=where,
+            updated=updated, recurrence=recurrence, feed_title=feed_title)
+    return SingleOccurrenceEntry(entry_id=entry_id, title=title,
+        description=description, reminder=reminder, updated=updated,
+        time=when, duration=int(duration), location=where,
+        feed_title=feed_title)
 
