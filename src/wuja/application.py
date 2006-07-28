@@ -253,10 +253,18 @@ class PreferencesDialog:
         self.prefs_dialog_widget.show_all()
 
     def __add_url(self, widget):
-        """ Add a URL to the list. """
+        """ Add a URL to the list.
+
+        If the user specifies a URL ending with "/basic", switch it for
+        "/full". (basic URL's do not contain enough information for
+        Wuja to work, but basic is what Google Calendar links to by
+        default on the settings page.
+        """
+
         add_url_textfield = self.glade_prefs.get_widget('entry1')
 
         url = add_url_textfield.get_text()
+        url = url.replace('/basic', '/full')
         logger.info("Adding URL: " + url)
         add_url_textfield.set_text('')
 

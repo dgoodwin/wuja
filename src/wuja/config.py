@@ -33,7 +33,11 @@ class WujaConfiguration(gobject.GObject):
         "/full". (basic URL's do not contain enough information for
         Wuja to work, but basic is what Google Calendar links to by
         default on the settings page.
+
+        Ignore empty string URL's.
         """
+        if url == '':
+            return
         url = url.replace('/basic', '/full')
 
         current_urls = self.get_feed_urls()

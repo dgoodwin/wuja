@@ -111,6 +111,7 @@ class RecurringEntry(sqlobject.SQLObject):
 
                 params[str(key)] = val
 
+        logger.debug("params = " + str(params))
         self.rrule = rrule(freq, **params)
 
     def events(self, start_date, end_date):

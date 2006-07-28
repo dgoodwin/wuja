@@ -64,6 +64,14 @@ class WujaConfigurationTests(unittest.TestCase):
         lookup_urls = self.config.get_feed_urls()
         self.assertEqual('url1/full', lookup_urls[0])
 
+    def test_ignore_empty_url(self):
+        """ Add an emptry string URL and ensure it doesn't get added to
+        the configuration.
+        """
+        self.assertEqual(0, len(self.config.get_feed_urls()))
+        self.config.add_feed_url('')
+        self.assertEqual(0, len(self.config.get_feed_urls()))
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(WujaConfigurationTests))
