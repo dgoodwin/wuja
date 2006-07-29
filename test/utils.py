@@ -39,10 +39,19 @@ class TestWujaConfiguration(WujaConfiguration):
         return TestFeedSource()
 
 class TestFeedSource(FeedSource):
-    """ Builds feed objects without ever actually hitting the network. """
+    """ Override FeedSource for testing so we never actually hit the
+    network.
+    """
 
     def __init__(self):
         self.last_update = "a"
+        self.override_calendars = {}
+
+    def get_calendar(self, url):
+        if self.override_calendars.has_key(url):
+            return self.override_calendars[url]
+        else:
+            return FeedSource.get_calendar(self, url)
 
     def _get_feed_last_update(self, url):
         """ Override for fake data and no network communication. """

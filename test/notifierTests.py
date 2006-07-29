@@ -8,15 +8,24 @@ from datetime import datetime, timedelta
 import settestpath
 
 from wuja.notifier import Notifier
-from wuja.model import SingleOccurrenceEntry, Calendar
+from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
 from wuja.config import WujaConfiguration
 
 from utils import TestWujaConfiguration, setupDatabase, teardownDatabase
+from sampledata import weekly_recurrence_all_day
 
 TEST_GCONF_PATH = '/apps/wuja/test'
 REMIND = 10
-FEED_TITLE = "Testing Calendar"
-FEED_URL = "http://fakeurl"
+CAL_TITLE = "Testing Calendar"
+CAL_URL = "http://fakeurl"
+CAL_LAST_UPDATE = "whenever"
+
+TITLE = "Single Occurrence Entry Title"
+RECURRING_TITLE = "Moo"
+DESCRIPTION = "Some event."
+REMIND = 20
+UPDATED = "whenever"
+LOCATION = "somewhere"
 
 class TestNotifier(Notifier):
     """
@@ -28,8 +37,6 @@ class TestNotifier(Notifier):
 
         urls = []
         urls.append("http://fake.url.google.com/blahblahblah")
-        urls.append("http://fake.url.google.com/kasjdhaksdhh")
-        urls.append("http://fake.url.google.com/hshdkjhalsdh")
         config = TestWujaConfiguration(urls)
 
         Notifier.__init__(self, config)
@@ -58,8 +65,8 @@ class NotifierTests(unittest.TestCase):
 
     def setUp(self):
         setupDatabase()
-        self.cal = Calendar(title=FEED_TITLE, last_update="somedate",
-            url=FEED_URL)
+        self.cal = Calendar(title=CAL_TITLE, last_update="somedate",
+            url=CAL_URL)
 
     def tearDown(self):
         teardownDatabase()
@@ -120,6 +127,18 @@ class NotifierTests(unittest.TestCase):
         self.notifier.update_events()
         self.notifier.check_for_notifications()
         self.assertFalse(self.observer.notified)
+
+    def test_calendar_updated_entries_removed(self):
+        # Create a calendar with two entries:
+        cal = Calendar(title=CAL_TITLE, last_update=CAL_LAST_UPDATE,
+            url=CAL_URL)
+        single_entry = SingleOccurrenceEntry(entry_id="fakeId", title=TITLE,
+            description=DESCRIPTION, reminder=REMIND, updated=UPDATED,
+            time=datetime.now(), duration=3600, location=LOCATION, calendar=cal)
+        recur_entry = RecurringEntry(entry_id="fakeId",
+            title=RECURRING_TITLE, description="",
+            reminder=REMIND, location=LOCATION, updated=UPDATED,
+            recurrence=weekly_recurrence_all_day, calendar=cal)
 
     def __create_entry(self, future_time):
         self.entry = SingleOccurrenceEntry(entry_id="fakeId",

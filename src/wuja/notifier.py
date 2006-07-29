@@ -64,6 +64,7 @@ class Notifier(gobject.GObject):
 
                 elif results[0].last_update != \
                     self.feed_source.get_feed_last_update(feed_url):
+                    results[0].destroySelf()
                     logger.debug("Updating feed: " + results[0].title)
                     cal = self.feed_source.get_calendar(feed_url)
                     temporary_entries.extend(cal.entries)

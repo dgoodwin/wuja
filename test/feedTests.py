@@ -10,7 +10,7 @@ from datetime import datetime
 from wuja.feed import FeedSource, parse_timestamp, build_calendar
 from samplefeed import xml
 
-from utils import TestFeedSource, setupDatabase
+from utils import setupDatabase
 
 setupDatabase()
 
