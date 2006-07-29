@@ -33,9 +33,10 @@ NOTIFICATION_INTERVAL = 1 # minutes between notification checks
 FEED_UPDATE_INTERVAL = 10 # minutes between feed updates
 
 # TODO: Move this somewhere else:
-from wuja.model import SingleOccurrenceEntry, RecurringEntry
+from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
 connection = sqlobject.connectionForURI('sqlite:/:memory:')
 sqlobject.sqlhub.processConnection = connection
+Calendar.createTable()
 SingleOccurrenceEntry.createTable()
 RecurringEntry.createTable()
 
@@ -182,12 +183,12 @@ class AlertDialog:
         description = glade_alert.get_widget('description')
 
         title.set_text(event.entry.title)
-        when.set_text(event.when.strftime("%a %b %d %Y - %H:%M%P"))
-        calendar.set_text(event.entry.feed_title)
-        if event.entry.where is None:
+        when.set_text(event.time.strftime("%a %b %d %Y - %I:%M%P"))
+        calendar.set_text(event.entry.calendar.title)
+        if event.entry.location is None:
             where.set_text("")
         else:
-            where.set_text(str(event.entry.where))
+            where.set_text(str(event.entry.location))
         if event.entry.description is None:
             description.set_text("")
         else:
@@ -202,7 +203,6 @@ class AlertDialog:
         """ Called when the user accepts an alert. """
         self.event.accepted = True
         logger.debug("Accepted event: " + self.event.entry.title)
-        logger.debug("widget = " + str(widget))
         widget.get_parent_window().destroy()
         self.__open_alerts.pop(self.event.key)
 

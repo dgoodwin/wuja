@@ -10,7 +10,7 @@ import gobject
 
 from logging import getLogger
 
-from wuja.feed import Feed
+from wuja.model import Calendar
 
 logger = getLogger("notifier")
 
@@ -42,8 +42,8 @@ class Notifier(gobject.GObject):
         self.update()
 
     def update(self):
-        """ Update all feeds from Google's servers and check for
-        upcoming events.
+        """ Update all feeds from Google's servers, check for upcoming
+        events and create appropriate objects if necessary.
         """
         logger.debug("Updating feeds from Google servers.")
         start_time = datetime.datetime.now()
@@ -54,11 +54,27 @@ class Notifier(gobject.GObject):
         temporary_entries = []
         try:
             for feed_url in feeds:
-                feed = self.feed_source.get_feed(feed_url)
-                temporary_entries.extend(feed.entries)
-                self.url_title_dict[feed_url] = feed.title
-                self.title_url_dict[feed.title] = feed_url
-                logger.debug("Processed feed: " + feed.title)
+                results = list(Calendar.select(Calendar.q.url == feed_url))
+                if len(results) == 0:
+                    logger.debug("Found new feed!")
+                    cal = self.feed_source.get_calendar(feed_url)
+                    temporary_entries.extend(cal.entries)
+                    self.url_title_dict[feed_url] = cal.title
+                    self.title_url_dict[cal.title] = feed_url
+
+                elif results[0].last_update != \
+                    self.feed_source.get_feed_last_update(feed_url):
+                    logger.debug("Updating feed: " + results[0].title)
+                    cal = self.feed_source.get_calendar(feed_url)
+                    temporary_entries.extend(cal.entries)
+                    self.url_title_dict[feed_url] = cal.title
+                    self.title_url_dict[cal.title] = feed_url
+
+                else:
+                    logger.debug("Feed already up to date: %s (%s)" % \
+                        (results[0].title, results[0].last_update))
+                    temporary_entries.extend(results[0].entries)
+
         except urllib2.URLError:
             logger.error("Error reaching Google servers.")
             return True
@@ -133,7 +149,6 @@ class Notifier(gobject.GObject):
                     " minutes")
                 self.emit("feeds-updated", event)
         return True
-
 
 gobject.signal_new("feeds-updated", Notifier, gobject.SIGNAL_ACTION,
     gobject.TYPE_BOOLEAN, (gobject.TYPE_PYOBJECT,))

@@ -11,35 +11,19 @@ from logging import getLogger
 
 from wuja.model import SingleOccurrenceEntry
 from wuja.model import RecurringEntry
+from wuja.model import Calendar
 
 logger = getLogger("feed")
 
 class FeedSource:
-    """ Builds feeds objects given a URL and caches feed last updated
-    times to prevent excessive network chatter.
-    """
-    def __init__(self):
-        # Cache the feeds we've fetched thus far so we can compare their
-        # updated times with the latest and avoid redownloading the whole
-        # thing.
-        self._cache = {}
+    """ Builds feeds objects given a URL. """
 
-    def get_feed(self, url):
-        """ Return the feed object for the given URL. First checks the
-        cache and latest updated time.
-        """
-        last_update = self._get_feed_last_update(url)
-        if (self._cache.has_key(url) and self._cache[url].last_update ==
-            last_update):
-            feed = self._cache[url]
-            return feed
+    def get_calendar(self, url):
+        """ Return the calendar for the given URL. """
+        last_update = self.get_feed_last_update(url)
+        return build_calendar(self._get_feed_xml(url), url, last_update)
 
-        feed = Feed(self._get_feed_xml(url), last_update)
-        logger.debug("Updating feed: " + feed.title)
-        self._cache[url] = feed
-        return feed
-
-    def _get_feed_last_update(self, url):
+    def get_feed_last_update(self, url):
         """ Fetch the last updated time for the given feed URL. """
         url_file = urllib2.urlopen(url)
         return url_file.headers['last-modified']
@@ -50,20 +34,22 @@ class FeedSource:
         """
         return urllib2.urlopen(url).read()
 
-class Feed:
-    """ Parses the XML provided and returns a list of calendar entries.
-    """
+def build_calendar(xml, url, last_update):
+    __root_node = ElementTree.XML(xml)
+    title = None
 
-    def __init__(self, xml, last_update):
-        self.__root_node = ElementTree.XML(xml)
-        self.entries = []
-        self.title = None
-        self.last_update = last_update
-        for elem in self.__root_node.getchildren():
-            if parse_tag(elem.tag) == "entry":
-                self.entries.append(create_entry(elem, self.title))
-            elif parse_tag(elem.tag) == "title":
-                self.title = elem.text
+    # Scan once just to gather data so we can create a calendar object:
+    for elem in __root_node.getchildren():
+        if parse_tag(elem.tag) == "title":
+            title = elem.text
+    logger.debug("Building calendar: " + title)
+    cal = Calendar(title=title, last_update=last_update, url=url)
+
+    for elem in __root_node.getchildren():
+        if parse_tag(elem.tag) == "entry":
+            create_entry(elem, cal)
+
+    return cal
 
 def parse_tag(original_tag):
     """ Element Tree tags show up with a {url} prefix. """
@@ -90,7 +76,7 @@ def parse_timestamp(timestamp):
     return datetime(int(year), int(month), int(day), int(hour), int(minute),
         int(second))
 
-def create_entry(elem, feed_title):
+def create_entry(elem, cal):
     """ Parses calender entry XML into an Entry object. """
     entry_id = None
     title = None
@@ -106,6 +92,7 @@ def create_entry(elem, feed_title):
             entry_id = node.text
         elif parse_tag(node.tag) == 'title':
             title = node.text
+            logger.debug("   Entry: " + title)
         elif parse_tag(node.tag) == 'content':
             description = node.text
         elif parse_tag(node.tag) == 'updated':
@@ -133,9 +120,9 @@ def create_entry(elem, feed_title):
     if recurrence != None:
         return RecurringEntry(entry_id=entry_id, title=title,
             description=description, reminder=reminder, location=where,
-            updated=updated, recurrence=recurrence, feed_title=feed_title)
+            updated=updated, recurrence=recurrence, calendar=cal)
     return SingleOccurrenceEntry(entry_id=entry_id, title=title,
         description=description, reminder=reminder, updated=updated,
         time=when, duration=int(duration), location=where,
-        feed_title=feed_title)
+        calendar=cal)
 

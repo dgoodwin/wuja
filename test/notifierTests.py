@@ -8,13 +8,15 @@ from datetime import datetime, timedelta
 import settestpath
 
 from wuja.notifier import Notifier
-from wuja.model import SingleOccurrenceEntry
+from wuja.model import SingleOccurrenceEntry, Calendar
 from wuja.config import WujaConfiguration
 
-from utils import TestWujaConfiguration
+from utils import TestWujaConfiguration, setupDatabase, teardownDatabase
 
 TEST_GCONF_PATH = '/apps/wuja/test'
 REMIND = 10
+FEED_TITLE = "Testing Calendar"
+FEED_URL = "http://fakeurl"
 
 class TestNotifier(Notifier):
     """
@@ -53,6 +55,14 @@ class TestObserver:
         self.trigger_event = event
 
 class NotifierTests(unittest.TestCase):
+
+    def setUp(self):
+        setupDatabase()
+        self.cal = Calendar(title=FEED_TITLE, last_update="somedate",
+            url=FEED_URL)
+
+    def tearDown(self):
+        teardownDatabase()
 
     def testSimpleNotification(self):
         future_time = datetime.now() + timedelta(minutes=10)
@@ -115,8 +125,7 @@ class NotifierTests(unittest.TestCase):
         self.entry = SingleOccurrenceEntry(entry_id="fakeId",
             title="Fake Title", description="",reminder=REMIND,
             updated=datetime.now(), time=future_time, duration=3600,
-            location="Gumdrop Alley",
-            feed_title="fakefeed")
+            location="Gumdrop Alley", calendar=self.cal)
         self.notifier = TestNotifier([self.entry])
         self.observer = TestObserver()
         self.notifier.connect("feeds-updated", self.observer.notify)

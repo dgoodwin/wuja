@@ -2,8 +2,11 @@
 
 __revision__ = "$Revision$"
 
+import sqlobject
+
 from wuja.config import WujaConfiguration
 from wuja.feed import FeedSource
+from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
 
 from samplefeed import xml
 
@@ -39,7 +42,6 @@ class TestFeedSource(FeedSource):
     """ Builds feed objects without ever actually hitting the network. """
 
     def __init__(self):
-        FeedSource.__init__(self)
         self.last_update = "a"
 
     def _get_feed_last_update(self, url):
@@ -49,3 +51,22 @@ class TestFeedSource(FeedSource):
     def _get_feed_xml(self, url):
         return xml
 
+def setupDatabase():
+    """ Configure SQLObject to use an in-memory SQLite database and
+    create the proper tables. Should be called in the setUp() of any
+    test suite using persistent objects.
+    """
+    connection = sqlobject.connectionForURI('sqlite:/:memory:')
+    sqlobject.sqlhub.processConnection = connection
+
+    Calendar.createTable(ifNotExists=True)
+    SingleOccurrenceEntry.createTable(ifNotExists=True)
+    RecurringEntry.createTable(ifNotExists=True)
+
+def teardownDatabase():
+    """ Wipe out database tables. Should be called in the
+    tearDown of any test suite using persistent objects.
+    """
+    Calendar.clearTable()
+    SingleOccurrenceEntry.clearTable()
+    RecurringEntry.clearTable()

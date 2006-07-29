@@ -13,6 +13,49 @@ from logging import getLogger
 
 logger = getLogger("model")
 
+WEEKDAY_MAP = {
+    "MO": 0,
+    "TU": 1,
+    "WE": 2,
+    "TH": 3,
+    "FR": 4,
+    "SA": 5,
+    "SU": 6
+}
+
+class Calendar(sqlobject.SQLObject):
+    """ A representation of a Google Calendar. """
+    title = sqlobject.StringCol()
+    url = sqlobject.StringCol()
+    # Storing last update as a string for now as all were really
+    # interested in is if the value has changed or not.
+    last_update = sqlobject.StringCol()
+    recurring_entries = sqlobject.MultipleJoin('RecurringEntry')
+    single_occurence_entries = sqlobject.MultipleJoin('SingleOccurrenceEntry')
+
+    def get_entries(self):
+        """ We store recurring and single occurence entries seperately,
+        make it appear as if we only store generic entries to callers.
+        """
+        entries = []
+        entries.extend(self.recurring_entries)
+        entries.extend(self.single_occurence_entries)
+        return entries
+
+    def set_entries(self, val):
+        """ Dummy setter, shouldn't ever be called. """
+        raise Exception("Can't set the entries field on a calendar.")
+
+    entries = property(get_entries, set_entries)
+
+    def destroySelf(self):
+        """ Override the SQLObject destroySelf method to delete entries
+        for this calendar as well.
+        """
+        for entry in self.entries:
+            entry.destroySelf()
+        sqlobject.SQLObject.destroySelf(self)
+
 class SingleOccurrenceEntry(sqlobject.SQLObject):
     """ An entry occurring only once. """
     entry_id = sqlobject.StringCol()
@@ -22,8 +65,8 @@ class SingleOccurrenceEntry(sqlobject.SQLObject):
     updated = sqlobject.StringCol()
     duration = sqlobject.IntCol()
     reminder = sqlobject.IntCol()
-    feed_title = sqlobject.StringCol()
     time = sqlobject.DateTimeCol()
+    calendar = sqlobject.ForeignKey('Calendar')
 
     def events(self, start_date, end_date):
         """ Returns at most one event for this single occurrence
@@ -51,8 +94,8 @@ class RecurringEntry(sqlobject.SQLObject):
     reminder = sqlobject.IntCol()
     location = sqlobject.StringCol()
     updated = sqlobject.StringCol()
-    feed_title = sqlobject.StringCol()
     recurrence = sqlobject.StringCol()
+    calendar = sqlobject.ForeignKey('Calendar')
 
     def _init(self, *args, **kw):
         sqlobject.SQLObject._init(self, *args, **kw)
@@ -106,12 +149,14 @@ class RecurringEntry(sqlobject.SQLObject):
                     val = datetime(int(val[0][0:4]), int(val[0][4:6]),
                         int(val[0][6:8]))
 
+                elif key == 'wkst':
+                    val = WEEKDAY_MAP[val[0]]
+
                 else:
                     val = tuple(val)
 
                 params[str(key)] = val
 
-        logger.debug("params = " + str(params))
         self.rrule = rrule(freq, **params)
 
     def events(self, start_date, end_date):
@@ -151,3 +196,4 @@ class Event:
         raise Exception("Keys aren't for setting.")
 
     key = property(get_key, set_key)
+
