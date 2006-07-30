@@ -244,7 +244,8 @@ class PreferencesDialog:
         for url in self.config.get_feed_urls():
             logger.debug("Existing URL: " + url)
             it = urls_list.append()
-            urls_list.set_value(it, 0, self.notifier.url_title_dict[url])
+            cal = list(Calendar.selectBy(url=url))[0]
+            urls_list.set_value(it, 0, cal.title)
         self.prefs_url_list.set_model(urls_list)
         renderer = gtk.CellRendererText()
         column = gtk.TreeViewColumn("Feed URLs", renderer, text=0)
@@ -272,7 +273,8 @@ class PreferencesDialog:
 
         # Update the list:
         urls_list = self.glade_prefs.get_widget('treeview1').get_model()
-        feed_title = self.notifier.url_title_dict[url]
+        cal = list(Calendar.selectBy(url=url))[0]
+        feed_title = cal.title
         urls_list.set_value(urls_list.append(), 0, feed_title)
 
     def __remove_url(self, widget):
@@ -284,7 +286,8 @@ class PreferencesDialog:
             logger.debug("Unable to remove URL, no entry selected.")
             return
         url_to_remove_title = model.get_value(it, 0)
-        url_to_remove = self.notifier.title_url_dict[url_to_remove_title]
+        cal = list(Calendar.selectBy(title=url_to_remove_title))[0]
+        url_to_remove = cal.url
         logger.info("Removing URL for feed %s: %s" % (url_to_remove_title,
             url_to_remove))
         model.remove(it)
@@ -308,13 +311,10 @@ class PreferencesDialog:
         self.prefs_dialog = None
 
 def find_file_on_path(pathname):
-    """ Scan the Python path and locate a file with the appropriate
-    name.
+    """ Scan the Python path and locate a file with the given name.
 
     See:
-
       http://www.linuxjournal.com/xstatic/articles/lj/0087/4702/4702l2.html
-
     """
     if os.path.isabs(pathname):
         return pathname

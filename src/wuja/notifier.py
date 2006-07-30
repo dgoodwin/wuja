@@ -33,12 +33,6 @@ class Notifier(gobject.GObject):
         self.events = []
         self.calendar_entries = []
 
-        # Maps URL's (which is all we store in gconf) to the friendly
-        # feed name. (used by the preferences dialog) Will be populated
-        # during calls to 'update'.
-        self.url_title_dict = {}
-        self.title_url_dict = {}
-
         self.update()
 
     def update(self):
@@ -59,8 +53,6 @@ class Notifier(gobject.GObject):
                     logger.debug("Found new feed!")
                     cal = self.feed_source.get_calendar(feed_url)
                     temporary_entries.extend(cal.entries)
-                    self.url_title_dict[feed_url] = cal.title
-                    self.title_url_dict[cal.title] = feed_url
 
                 elif results[0].last_update != \
                     self.feed_source.get_feed_last_update(feed_url):
@@ -68,8 +60,6 @@ class Notifier(gobject.GObject):
                     logger.debug("Updating feed: " + results[0].title)
                     cal = self.feed_source.get_calendar(feed_url)
                     temporary_entries.extend(cal.entries)
-                    self.url_title_dict[feed_url] = cal.title
-                    self.title_url_dict[cal.title] = feed_url
 
                 else:
                     logger.debug("Feed already up to date: %s (%s)" % \
