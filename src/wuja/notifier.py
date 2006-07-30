@@ -65,7 +65,6 @@ class Notifier(gobject.GObject):
                     logger.debug("Feed already up to date: %s (%s)" % \
                         (results[0].title, results[0].last_update))
                     temporary_entries.extend(results[0].entries)
-
         except urllib2.URLError:
             logger.error("Error reaching Google servers.")
             return True

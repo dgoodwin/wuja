@@ -162,6 +162,53 @@ class NotifierTests(unittest.TestCase):
         self.assertEqual(0, len(list(SingleOccurrenceEntry.select())))
         self.assertEqual(0, len(list(RecurringEntry.select())))
 
+    def test_feed_updated_entries_added(self):
+        test_feed_source = utils.TestFeedSource()
+        cal_data = self.__create_test_calendar_data()
+        test_feed_source.calendars[CAL_URL] = cal_data
+        urls = [CAL_URL]
+        test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
+
+        self.assertEqual(0, len(list(Calendar.select())))
+        self.notifier = Notifier(test_config)
+
+        # Check that our objects were created:
+        self.assertEqual(1, len(list(Calendar.select())))
+        self.assertEqual(1, len(list(SingleOccurrenceEntry.select())))
+        self.assertEqual(1, len(list(RecurringEntry.select())))
+
+        # Add a new entry:
+        cal_data.single_entries.append(utils.SingleOccurrenceEntryData(
+            "Another Entry", datetime.now(), REMIND, "Another location."))
+        cal_data.last_update = "new time" # change last update time
+        self.notifier.update()
+        self.assertEqual(1, len(list(Calendar.select())))
+        self.assertEqual(2, len(list(SingleOccurrenceEntry.select())))
+        self.assertEqual(1, len(list(RecurringEntry.select())))
+
+    def test_feed_updated_entries_removed(self):
+        test_feed_source = utils.TestFeedSource()
+        cal_data = self.__create_test_calendar_data()
+        test_feed_source.calendars[CAL_URL] = cal_data
+        urls = [CAL_URL]
+        test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
+
+        self.assertEqual(0, len(list(Calendar.select())))
+        self.notifier = Notifier(test_config)
+
+        # Check that our objects were created:
+        self.assertEqual(1, len(list(Calendar.select())))
+        self.assertEqual(1, len(list(SingleOccurrenceEntry.select())))
+        self.assertEqual(1, len(list(RecurringEntry.select())))
+
+        # Remove an entry:
+        cal_data.single_entries.pop()
+        cal_data.last_update = "new time" # change last update time
+        self.notifier.update()
+        self.assertEqual(1, len(list(Calendar.select())))
+        self.assertEqual(0, len(list(SingleOccurrenceEntry.select())))
+        self.assertEqual(1, len(list(RecurringEntry.select())))
+
     def __create_test_calendar_data(self):
         # Create a calendar with two entries:
         cal_data = utils.CalendarData(CAL_TITLE, "0", CAL_URL)

@@ -70,9 +70,9 @@ class TestFeedSource(FeedSource):
             entry.build(cal)
         return cal
 
-    def _get_feed_last_update(self, url):
+    def get_feed_last_update(self, url):
         """ Override for fake data and no network communication. """
-        return None
+        return self.calendars[url].last_update
 
 class CalendarData:
     """ Dummy Calendar object, used for configuring the TestFeedSource
