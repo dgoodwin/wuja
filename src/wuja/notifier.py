@@ -42,8 +42,8 @@ class Notifier(gobject.GObject):
         self.update()
 
     def update(self):
-        """ Update all feeds from Google's servers, check for upcoming
-        events and create appropriate objects if necessary.
+        """ Update all feeds, maintain our local cache, and check for
+        upcoming events.
         """
         logger.debug("Updating feeds from Google servers.")
         start_time = datetime.datetime.now()
@@ -79,6 +79,13 @@ class Notifier(gobject.GObject):
         except urllib2.URLError:
             logger.error("Error reaching Google servers.")
             return True
+
+        # Remove calendar's no longer in our config:
+        for cal in list(Calendar.select()):
+            try:
+                feeds.index(cal.url)
+            except ValueError:
+                cal.destroySelf()
 
         self.calendar_entries = temporary_entries
         logger.debug("Found %s calendar entries from %s feeds." %

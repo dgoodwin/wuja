@@ -65,6 +65,5 @@ class WujaConfiguration(gobject.GObject):
         self.client.suggest_sync()
         self.emit("config-changed")
 
-
 gobject.signal_new("config-changed", WujaConfiguration, gobject.SIGNAL_ACTION,
     gobject.TYPE_BOOLEAN, ())

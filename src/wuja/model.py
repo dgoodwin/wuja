@@ -27,9 +27,14 @@ class Calendar(sqlobject.SQLObject):
     """ A representation of a Google Calendar. """
     title = sqlobject.StringCol()
     url = sqlobject.StringCol()
-    # Storing last update as a string for now as all were really
+    # Storing last update as a string for now as all we're really
     # interested in is if the value has changed or not.
     last_update = sqlobject.StringCol()
+
+    # Single occurrence / recurring entries are represented as seperate
+    # objects for the time being. (not sure how well SQLObject will deal
+    # with inheritence) An 'entries' property is added below to combine
+    # the two.
     recurring_entries = sqlobject.MultipleJoin('RecurringEntry')
     single_occurence_entries = sqlobject.MultipleJoin('SingleOccurrenceEntry')
 

@@ -11,6 +11,7 @@ from wuja.notifier import Notifier
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
 from wuja.config import WujaConfiguration
 
+import utils
 from utils import TestWujaConfiguration, setupDatabase, teardownDatabase
 from sampledata import weekly_recurrence_all_day
 
@@ -65,13 +66,11 @@ class NotifierTests(unittest.TestCase):
 
     def setUp(self):
         setupDatabase()
-        self.cal = Calendar(title=CAL_TITLE, last_update="somedate",
-            url=CAL_URL)
 
     def tearDown(self):
         teardownDatabase()
 
-    def testSimpleNotification(self):
+    def test_simple_notification(self):
         future_time = datetime.now() + timedelta(minutes=10)
         self.__create_entry(future_time)
         self.notifier.check_for_notifications()
@@ -128,23 +127,57 @@ class NotifierTests(unittest.TestCase):
         self.notifier.check_for_notifications()
         self.assertFalse(self.observer.notified)
 
-    def test_calendar_updated_entries_removed(self):
+    def test_initial_update(self):
+        test_feed_source = utils.TestFeedSource()
+        cal_data = self.__create_test_calendar_data()
+        test_feed_source.calendars[CAL_URL] = cal_data
+        urls = [CAL_URL]
+        test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
+
+        self.assertEqual(0, len(list(Calendar.select())))
+        self.notifier = Notifier(test_config)
+
+        # Check that our objects were created:
+        self.assertEqual(1, len(list(Calendar.select())))
+        self.assertEqual(1, len(list(SingleOccurrenceEntry.select())))
+        self.assertEqual(1, len(list(RecurringEntry.select())))
+
+    def test_feed_deleted_from_config(self):
+        test_feed_source = utils.TestFeedSource()
+        cal_data = self.__create_test_calendar_data()
+        test_feed_source.calendars[CAL_URL] = cal_data
+        urls = [CAL_URL]
+        test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
+
+        self.assertEqual(0, len(list(Calendar.select())))
+        self.notifier = Notifier(test_config)
+
+        # Check that our objects were created:
+        self.assertEqual(1, len(list(Calendar.select())))
+        self.assertEqual(1, len(list(SingleOccurrenceEntry.select())))
+        self.assertEqual(1, len(list(RecurringEntry.select())))
+
+        test_config.remove_feed_url(CAL_URL)
+        self.assertEqual(0, len(list(Calendar.select())))
+        self.assertEqual(0, len(list(SingleOccurrenceEntry.select())))
+        self.assertEqual(0, len(list(RecurringEntry.select())))
+
+    def __create_test_calendar_data(self):
         # Create a calendar with two entries:
-        cal = Calendar(title=CAL_TITLE, last_update=CAL_LAST_UPDATE,
-            url=CAL_URL)
-        single_entry = SingleOccurrenceEntry(entry_id="fakeId", title=TITLE,
-            description=DESCRIPTION, reminder=REMIND, updated=UPDATED,
-            time=datetime.now(), duration=3600, location=LOCATION, calendar=cal)
-        recur_entry = RecurringEntry(entry_id="fakeId",
-            title=RECURRING_TITLE, description="",
-            reminder=REMIND, location=LOCATION, updated=UPDATED,
-            recurrence=weekly_recurrence_all_day, calendar=cal)
+        cal_data = utils.CalendarData(CAL_TITLE, "0", CAL_URL)
+        cal_data.single_entries.append(utils.SingleOccurrenceEntryData(
+            TITLE, datetime.now(), REMIND, LOCATION))
+        cal_data.recurring_entries.append(utils.RecurringEntryData(TITLE,
+            REMIND, LOCATION, weekly_recurrence_all_day))
+        return cal_data
 
     def __create_entry(self, future_time):
+        cal = Calendar(title=CAL_TITLE, last_update="somedate",
+            url=CAL_URL)
         self.entry = SingleOccurrenceEntry(entry_id="fakeId",
             title="Fake Title", description="",reminder=REMIND,
             updated=datetime.now(), time=future_time, duration=3600,
-            location="Gumdrop Alley", calendar=self.cal)
+            location="Gumdrop Alley", calendar=cal)
         self.notifier = TestNotifier([self.entry])
         self.observer = TestObserver()
         self.notifier.connect("feeds-updated", self.observer.notify)
