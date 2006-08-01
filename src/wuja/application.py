@@ -61,7 +61,8 @@ class WujaApplication:
             self.__open_preferences_dialog),
             ("update_feeds", gtk.STOCK_REFRESH, "Update Feeds", None, None,
                 self.__update_feeds),
-            ("about", gtk.STOCK_ABOUT, None, None, None, None),
+            ("about", gtk.STOCK_ABOUT, None, None, None, 
+                self.__open_about_dialog),
             ("quit", gtk.STOCK_QUIT, None, None, None, self.destroy))
         action_group = gtk.ActionGroup("wuja_menu")
         action_group.add_actions(actions)
@@ -105,6 +106,21 @@ class WujaApplication:
 
     def __close_dialog(self, widget):
         self.prefs_dialog.close()
+
+    def __open_about_dialog(self, widget):
+        glade_file = 'wuja/data/wuja-about.glade'
+        glade_xml = gtk.glade.XML(find_file_on_path(glade_file))
+        about_dialog = glade_xml.get_widget('WujaAbout')
+        
+        signals = {
+            'on_WujaAbout_close': self.__close_about_dialog,
+        }
+        glade_xml.signal_autoconnect(signals)
+
+        about_dialog.show_all()
+
+    def __close_about_dialog(self, widget, response):
+        widget.destroy()
 
     def build_notifier(self):
         """ Builds the notifier object. """

@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
+<!DOCTYPE glade-interface SYSTEM "http://glade.gnome.org/glade-2.0.dtd">
+
+<glade-interface>
+
+<widget class="GtkAboutDialog" id="WujaAbout">
+  <property name="visible">True</property>
+  <property name="destroy_with_parent">True</property>
+  <property name="name" translatable="yes">Wuja</property>
+  <property name="copyright" translatable="yes">Copyright (c) 2006, dangerously incompetent</property>
+  <property name="comments" translatable="yes">Google Calendar (tm) notifications for the GNOME desktop.</property>
+  <property name="license" translatable="yes">GPL or some such.</property>
+  <property name="wrap_license">True</property>
+  <property name="website">http://www.dangerouslyinc.com/</property>
+  <property name="website_label" translatable="yes">dangerously incompetent</property>
+  <property name="authors">Devan Goodwin &lt;dgoodwin@dangerouslyinc.com&gt;
+James Bowes &lt;jbowes@dangerouslyinc.com&gt;</property>
+  <property name="translator_credits" translatable="yes" comments="TRANSLATORS: Replace this string with your names, one name per line.">translator-credits</property>
+  <signal name="response" handler="on_WujaAbout_close" last_modification_time="Tue, 01 Aug 2006 00:51:33 GMT"/>
+</widget>
+
+</glade-interface>
