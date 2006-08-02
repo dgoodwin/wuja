@@ -1,10 +1,33 @@
+#   Wuja - Google Calendar (tm) notifications for the GNOME desktop.
+#
+#   Copyright (C) 2006 Devan Goodwin <dgoodwin@dangerouslyinc.com>
+#   Copyright (C) 2006 James Bowes <jbowes@dangerouslyinc.com> 
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301  USA
+
+""" Tests for the wuja.model module. """
+
 import unittest
 import sqlobject
 
 from datetime import datetime
 
 import settestpath
-from wuja.model import SingleOccurrenceEntry, RecurringEntry, Event, Calendar
+from wuja.model import SingleOccurrenceEntry, RecurringEntry, Event, Calendar, \
+    BadDateRange
 from sampledata import daily_recurrence, daily_recurrence_for_one_week, \
     weekly_recurrence_all_day, wkst_recurrence
 from utils import setupDatabase, teardownDatabase
@@ -93,7 +116,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
             description=DESCRIPTION, reminder=REMIND, updated=UPDATED,
             time=time, duration=3600, location=LOCATION, calendar=self.cal)
 
-        events = distant_event.events(None, end_date)
+        events = distant_event.get_events(None, end_date)
         self.assertEquals(1, len(events))
 
         self.assertEquals(time, events[0].time)
@@ -107,7 +130,8 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
             description=DESCRIPTION, reminder=REMIND, updated=UPDATED,
             time=time, duration=3600, location=LOCATION, calendar=self.cal)
 
-        self.assertEquals(0, len(distant_event.events(None, end_date)))
+        self.assertRaises(BadDateRange, distant_event.get_events, None, 
+            end_date)
 
     def test_event_before_current_time(self):
         time = datetime(1980, 05, 23, 22, 0, 0)
@@ -117,7 +141,28 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
             description=DESCRIPTION, reminder=REMIND, updated=UPDATED,
             time=time, duration=3600, location=LOCATION, calendar=self.cal)
 
-        self.assertEquals(0, len(distant_event.events(None, end_date)))
+        self.assertRaises(BadDateRange, distant_event.get_events, None, 
+            end_date)
+
+    def test_time_equal_to_start_time(self):
+        time = datetime(2006, 8, 1, 8, 42, 0)
+        end_date = datetime(2007, 8, 1, 8, 42, 0)
+        
+        current_event = SingleOccurrenceEntry(entry_id="fakeId", title=TITLE,
+            description=DESCRIPTION, reminder=REMIND, updated=UPDATED,
+            time=time, duration=812, location=LOCATION, calendar=self.cal)
+        
+        self.assertEqual(1, len(current_event.get_events(time, end_date)))
+
+    def test_time_equal_to_end_time(self):
+        start_date = datetime(2006, 8, 1, 8, 42, 0)
+        end_date = datetime(2007, 8, 1, 8, 42, 0)
+        
+        current_event = SingleOccurrenceEntry(entry_id="fakeId", title=TITLE,
+            description=DESCRIPTION, reminder=REMIND, updated=UPDATED,
+            time=end_date, duration=812, location=LOCATION, calendar=self.cal)
+        
+        self.assertEqual(1, len(current_event.get_events(start_date, end_date)))
 
     def test_event_lookup(self):
         # Create an entry:
@@ -166,21 +211,23 @@ class RecurringEntryTests(unittest.TestCase):
         standup_meeting = self.__get_daily_recurring_entry()
         start_date = datetime(2006, 06, 04)
         end_date = datetime(2006, 06, 03)
-        self.assertEqual(0, len(standup_meeting.events(start_date, end_date)))
+        self.assertRaises(BadDateRange, standup_meeting.get_events, start_date,
+            end_date)
 
     def test_query_end_date_before_entries_start_date(self):
         standup_meeting = self.__get_daily_recurring_entry()
         # Event starts on May 18th 2006:
         start_date = datetime(2006, 02, 04)
         end_date = datetime(2006, 02, 05)
-        self.assertEqual(0, len(standup_meeting.events(start_date, end_date)))
+        self.assertEqual(0, len(standup_meeting.get_events(start_date, 
+            end_date)))
 
     def test_daily_recurring_entry(self):
         standup_meeting = self.__get_daily_recurring_entry()
         # Should return five occurences during a standard work week:
         start_date = datetime(2006, 06, 04)
         end_date = datetime(2006, 06, 10)
-        events = standup_meeting.events(start_date, end_date)
+        events = standup_meeting.get_events(start_date, end_date)
         self.assertEqual(5, len(events))
 
     def test_daily_recurring_entry_for_one_week(self):
@@ -192,7 +239,7 @@ class RecurringEntryTests(unittest.TestCase):
         self.assertEqual(LOCATION, daily_for_one_week.location)
         start_date = datetime(2006, 6, 1)
         end_date = datetime(2006, 6, 30)
-        events = daily_for_one_week.events(start_date, end_date)
+        events = daily_for_one_week.get_events(start_date, end_date)
         self.assertEquals(5, len(events))
 
     def test_weekly_all_day_recurrence(self):
@@ -205,7 +252,7 @@ class RecurringEntryTests(unittest.TestCase):
         # Event starts on June 5th 2006
         start_date = datetime(2006, 5, 28)
         end_date = datetime(2006, 6, 30)
-        events = weekly_all_day.events(start_date, end_date)
+        events = weekly_all_day.get_events(start_date, end_date)
         self.assertEquals(4, len(events))
 
         self.assertEquals(2006, events[0].time.year)
@@ -259,4 +306,3 @@ def suite():
 
 if __name__ == "__main__":
     unittest.main(defaultTest="suite")
-

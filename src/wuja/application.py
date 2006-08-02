@@ -1,4 +1,22 @@
-#!/usr/bin/env python
+#   Wuja - Google Calendar (tm) notifications for the GNOME desktop.
+#
+#   Copyright (C) 2006 Devan Goodwin <dgoodwin@dangerouslyinc.com>
+#   Copyright (C) 2006 James Bowes <jbowes@dangerouslyinc.com>
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301  USA
 
 """ The main Wuja GTK application. """
 
@@ -41,6 +59,7 @@ SingleOccurrenceEntry.createTable()
 RecurringEntry.createTable()
 
 class WujaApplication:
+
     """ The main Wuja application. """
 
     def __init__(self):
@@ -61,7 +80,7 @@ class WujaApplication:
             self.__open_preferences_dialog),
             ("update_feeds", gtk.STOCK_REFRESH, "Update Feeds", None, None,
                 self.__update_feeds),
-            ("about", gtk.STOCK_ABOUT, None, None, None, 
+            ("about", gtk.STOCK_ABOUT, None, None, None,
                 self.__open_about_dialog),
             ("quit", gtk.STOCK_QUIT, None, None, None, self.destroy))
         action_group = gtk.ActionGroup("wuja_menu")
@@ -83,7 +102,8 @@ class WujaApplication:
         self.tray_icon.show_all()
 
     def __update_feeds(self, widget):
-        """ Pass call to update feeds along to the notifier and reset
+        """
+        Pass call to update feeds along to the notifier and reset
         timers. """
         # Stop the feed update timer:
         gobject.source_remove(self.feed_update_event_source)
@@ -111,7 +131,7 @@ class WujaApplication:
         glade_file = 'wuja/data/wuja-about.glade'
         glade_xml = gtk.glade.XML(find_file_on_path(glade_file))
         about_dialog = glade_xml.get_widget('WujaAbout')
-        
+
         signals = {
             'on_WujaAbout_close': self.__close_about_dialog,
         }
@@ -155,7 +175,8 @@ class WujaApplication:
         self.display_notification(None, event)
 
     def display_notification(self, widget, event):
-        """ Display a notification for an event.
+        """
+        Display a notification for an event.
 
         Check first to see if we already have a notification open.
         """
@@ -172,8 +193,11 @@ class WujaApplication:
         """ Launches the GTK main loop. """
         gtk.main()
 
+
 class AlertDialog:
+
     """ Window displayed when an alert is triggered. """
+
     def __init__(self, event, open_alerts):
         logger.debug('Opening alert dialog for event: %s', event.entry.title)
         self.event = event
@@ -223,7 +247,8 @@ class AlertDialog:
         self.__open_alerts.pop(self.event.key)
 
     def snooze_event(self, widget, event):
-        """ Called when the user presses snooze. Destroys the alert
+        """
+        Called when the user presses snooze. Destroys the alert
         window and sets appropriate status for the event in question.
         """
         logger.debug("Snoozed event: " + event.entry.title)
@@ -231,7 +256,9 @@ class AlertDialog:
         self.__open_alerts.pop(event.key)
 
 class PreferencesDialog:
-    """ Class to open, maintain, and close the Wuja preferences
+
+    """
+    Class to open, maintain, and close the Wuja preferences
     dialog.
     """
 
@@ -327,7 +354,8 @@ class PreferencesDialog:
         self.prefs_dialog = None
 
 def find_file_on_path(pathname):
-    """ Scan the Python path and locate a file with the given name.
+    """
+    Scan the Python path and locate a file with the given name.
 
     See:
       http://www.linuxjournal.com/xstatic/articles/lj/0087/4702/4702l2.html

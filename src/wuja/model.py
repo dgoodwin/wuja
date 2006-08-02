@@ -1,3 +1,23 @@
+#   Wuja - Google Calendar (tm) notifications for the GNOME desktop.
+#
+#   Copyright (C) 2006 Devan Goodwin <dgoodwin@dangerouslyinc.com>
+#   Copyright (C) 2006 James Bowes <jbowes@dangerouslyinc.com> 
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301  USA
+
 """ Model classes for the Wuja application. """
 
 __revision__ = "$Revision$"
@@ -7,7 +27,6 @@ import vobject
 import sqlobject
 
 from datetime import datetime
-from dateutil.rrule import rrule
 from dateutil.parser import parse
 from logging import getLogger
 
@@ -24,7 +43,9 @@ WEEKDAY_MAP = {
 }
 
 class Calendar(sqlobject.SQLObject):
+
     """ A representation of a Google Calendar. """
+
     title = sqlobject.StringCol()
     url = sqlobject.StringCol()
     # Storing last update as a string for now as all we're really
@@ -39,7 +60,8 @@ class Calendar(sqlobject.SQLObject):
     single_occurence_entries = sqlobject.MultipleJoin('SingleOccurrenceEntry')
 
     def get_entries(self):
-        """ We store recurring and single occurence entries seperately,
+        """ 
+        We store recurring and single occurence entries seperately,
         make it appear as if we only store generic entries to callers.
         """
         entries = []
@@ -47,22 +69,29 @@ class Calendar(sqlobject.SQLObject):
         entries.extend(self.single_occurence_entries)
         return entries
 
-    def set_entries(self, val):
-        """ Dummy setter, shouldn't ever be called. """
-        raise Exception("Can't set the entries field on a calendar.")
-
-    entries = property(get_entries, set_entries)
+    entries = property(get_entries)
 
     def destroySelf(self):
-        """ Override the SQLObject destroySelf method to delete entries
+        """ 
+        Override the SQLObject destroySelf method to delete entries
         for this calendar as well.
         """
         for entry in self.entries:
             entry.destroySelf()
         sqlobject.SQLObject.destroySelf(self)
 
+
+class BadDateRange(Exception):
+
+    """ Exception for messed up date ranges. """
+    
+    pass
+
+
 class SingleOccurrenceEntry(sqlobject.SQLObject):
+
     """ An entry occurring only once. """
+    
     entry_id = sqlobject.StringCol()
     title = sqlobject.StringCol()
     description = sqlobject.StringCol()
@@ -73,26 +102,31 @@ class SingleOccurrenceEntry(sqlobject.SQLObject):
     time = sqlobject.DateTimeCol()
     calendar = sqlobject.ForeignKey('Calendar')
 
-    def events(self, start_date, end_date):
-        """ Returns at most one event for this single occurrence
+    def get_events(self, start_date, end_date):
+        """ 
+        Returns at most one event for this single occurrence
         calendar entry.
         """
         # Assume a start date of now, no point returning past events:
-        if start_date == None:
+        if not start_date:
             start_date = datetime.now()
         if end_date < start_date:
-            return []
+            raise BadDateRange, "Your dates are out of order, fool"
         return_me = []
-        if start_date < self.time < end_date:
+        if start_date <= self.time <= end_date:
             return_me.append(Event(self.time, self))
         return return_me
 
+
 class RecurringEntry(sqlobject.SQLObject):
-    """ An entry with recurrence information.
+
+    """ 
+    An entry with recurrence information.
 
     Note that this object only stores the recurrence text in the database,
     and is parsed on every load/fetch.
     """
+    
     entry_id = sqlobject.StringCol()
     title = sqlobject.StringCol()
     description = sqlobject.StringCol()
@@ -121,10 +155,9 @@ class RecurringEntry(sqlobject.SQLObject):
 
         self.__build_rrule(parsed.rrule.value)
 
-        return recurrence
-
     def __build_rrule(self, rule_text):
-        """ Convert the recurrence data from Google's feed into something
+        """ 
+        Convert the recurrence data from Google's feed into something
         the dateutil library can work with.
         """
         freq = None
@@ -162,17 +195,19 @@ class RecurringEntry(sqlobject.SQLObject):
 
                 params[str(key)] = val
 
-        self.rrule = rrule(freq, **params)
+        self.rrule = dateutil.rrule.rrule(freq, **params)
 
-    def events(self, start_date, end_date):
-        """ Return a list of all events for this recurring entry
+    def get_events(self, start_date, end_date):
+        """ 
+        Return a list of all events for this recurring entry
         between the specified start and end date.
         """
         # Assume a start date of now, no point returning past events:
         if start_date == None:
             start_date = datetime.now()
-        if end_date < start_date or end_date < self.start_date:
-            return []
+            
+        if end_date < start_date:
+            raise BadDateRange, "Your dates are out of order, fool."
 
         event_list = []
         event_date_times = self.rrule.between(start_date, end_date, inc=True)
@@ -180,7 +215,9 @@ class RecurringEntry(sqlobject.SQLObject):
             event_list.append(Event(event_time, self))
         return event_list
 
+
 class Event:
+
     """ An actual calendar event. Can be associated with an alarm. """
 
     def __init__(self, time, entry):
@@ -189,13 +226,15 @@ class Event:
         self.accepted = False # set true once user confirms event
 
     def get_key(self):
-        """ Used to simulate an event.key member representing a unique
+        """ 
+        Used to simulate an event.key member representing a unique
         string for this event.
         """
         return str(self.entry.entry_id) + str(self.time)
 
     def set_key(self):
-        """ Dummy setter for the key property, which doesn't really
+        """ 
+        Dummy setter for the key property, which doesn't really
         exist.
         """
         raise Exception("Keys aren't for setting.")

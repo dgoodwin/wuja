@@ -112,7 +112,7 @@ class Notifier(gobject.GObject):
         logger.debug("   end date: " + str(end_date))
 
         for entry in self.calendar_entries:
-            events = entry.events(start_date, end_date)
+            events = entry.get_events(start_date, end_date)
             if len(events) > 0:
                 logger.debug("Found events for: " + entry.title)
                 for event in events:
