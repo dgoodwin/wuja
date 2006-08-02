@@ -96,8 +96,12 @@ class WujaApplication:
         self.tray_icon = trayicon.TrayIcon("wuja")
         self.tray_icon.connect('button_press_event', self.__clicked)
 
+        tray_image = gtk.Image()
+        tray_image.set_from_file(
+            find_file_on_path("wuja/data/wuja-icon-24x24.png"))
+
         event_box = gtk.EventBox()
-        event_box.add(gtk.Label("Wuja"))
+        event_box.add(tray_image)
         self.tray_icon.add(event_box)
         self.tray_icon.show_all()
 
