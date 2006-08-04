@@ -1,7 +1,7 @@
 #   Wuja - Google Calendar (tm) notifications for the GNOME desktop.
 #
 #   Copyright (C) 2006 Devan Goodwin <dgoodwin@dangerouslyinc.com>
-#   Copyright (C) 2006 James Bowes <jbowes@dangerouslyinc.com> 
+#   Copyright (C) 2006 James Bowes <jbowes@dangerouslyinc.com>
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -130,7 +130,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
             description=DESCRIPTION, reminder=REMIND, updated=UPDATED,
             time=time, duration=3600, location=LOCATION, calendar=self.cal)
 
-        self.assertRaises(BadDateRange, distant_event.get_events, None, 
+        self.assertRaises(BadDateRange, distant_event.get_events, None,
             end_date)
 
     def test_event_before_current_time(self):
@@ -141,27 +141,27 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
             description=DESCRIPTION, reminder=REMIND, updated=UPDATED,
             time=time, duration=3600, location=LOCATION, calendar=self.cal)
 
-        self.assertRaises(BadDateRange, distant_event.get_events, None, 
+        self.assertRaises(BadDateRange, distant_event.get_events, None,
             end_date)
 
     def test_time_equal_to_start_time(self):
         time = datetime(2006, 8, 1, 8, 42, 0)
         end_date = datetime(2007, 8, 1, 8, 42, 0)
-        
+
         current_event = SingleOccurrenceEntry(entry_id="fakeId", title=TITLE,
             description=DESCRIPTION, reminder=REMIND, updated=UPDATED,
             time=time, duration=812, location=LOCATION, calendar=self.cal)
-        
+
         self.assertEqual(1, len(current_event.get_events(time, end_date)))
 
     def test_time_equal_to_end_time(self):
         start_date = datetime(2006, 8, 1, 8, 42, 0)
         end_date = datetime(2007, 8, 1, 8, 42, 0)
-        
+
         current_event = SingleOccurrenceEntry(entry_id="fakeId", title=TITLE,
             description=DESCRIPTION, reminder=REMIND, updated=UPDATED,
             time=end_date, duration=812, location=LOCATION, calendar=self.cal)
-        
+
         self.assertEqual(1, len(current_event.get_events(start_date, end_date)))
 
     def test_event_lookup(self):
@@ -219,7 +219,7 @@ class RecurringEntryTests(unittest.TestCase):
         # Event starts on May 18th 2006:
         start_date = datetime(2006, 02, 04)
         end_date = datetime(2006, 02, 05)
-        self.assertEqual(0, len(standup_meeting.get_events(start_date, 
+        self.assertEqual(0, len(standup_meeting.get_events(start_date,
             end_date)))
 
     def test_daily_recurring_entry(self):
