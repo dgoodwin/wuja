@@ -16,6 +16,7 @@
   <property name="authors">Devan Goodwin &lt;dgoodwin@dangerouslyinc.com&gt;
 James Bowes &lt;jbowes@dangerouslyinc.com&gt;</property>
   <property name="translator_credits" translatable="yes" comments="TRANSLATORS: Replace this string with your names, one name per line.">translator-credits</property>
+  <property name="logo">wuja-icon-128x128.png</property>
   <signal name="response" handler="on_WujaAbout_close" last_modification_time="Tue, 01 Aug 2006 00:51:33 GMT"/>
 </widget>
 
