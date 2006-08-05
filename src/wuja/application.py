@@ -30,12 +30,14 @@ import gtk.glade
 import gobject
 import sys
 import os
+import os.path
 import sqlobject
 
 from logging import getLogger
 from egg import trayicon
 from datetime import timedelta
 
+from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
 from wuja.log import setup_logging
 
 # Configure logging: (needs to be done before importing our modules)
@@ -47,16 +49,28 @@ from wuja.notifier import Notifier
 from wuja.config import WujaConfiguration
 
 GCONF_PATH = "/apps/wuja/"
+WUJA_DIR = os.path.expanduser("~/.wuja")
+WUJA_DB_FILE = "wuja.db"
 NOTIFICATION_INTERVAL = 1 # minutes between notification checks
 FEED_UPDATE_INTERVAL = 10 # minutes between feed updates
 
-# TODO: Move this somewhere else:
-from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
-connection = sqlobject.connectionForURI('sqlite:/:memory:')
-sqlobject.sqlhub.processConnection = connection
-Calendar.createTable()
-SingleOccurrenceEntry.createTable()
-RecurringEntry.createTable()
+def initialize_database():
+    logger.debug("Initializing database.")
+    if not os.path.isdir(WUJA_DIR):
+        logger.debug(WUJA_DIR + " not found, creating.")
+        os.mkdir(WUJA_DIR)
+
+    db_file = os.path.join(WUJA_DIR, WUJA_DB_FILE)
+    logger.debug("Loading wuja database from %s" % db_file)
+    connection = sqlobject.connectionForURI('sqlite://' +
+        db_file)
+    sqlobject.sqlhub.processConnection = connection
+
+    Calendar.createTable(ifNotExists=True)
+    SingleOccurrenceEntry.createTable(ifNotExists=True)
+    RecurringEntry.createTable(ifNotExists=True)
+
+initialize_database()
 
 class WujaApplication:
 
@@ -169,6 +183,7 @@ class WujaApplication:
 
     def destroy(self, widget, data=None):
         """ Quit the application. """
+        sqlobject.sqlhub.processConnection.close()
         gtk.main_quit()
 
     def notify(self, notifier, event):
