@@ -144,7 +144,7 @@ class RecurringEntry(sqlobject.SQLObject):
         """ Parses the recurrence field. (iCalendar format, see RFC 2445) """
         # Parses only the fields that Google Calendar seems to use, and of
         # those just the ones we're interested in. (Sorry, it's a big spec.)
-        parsed = vobject.readOne(recurrence)
+        parsed = vobject.readOne(recurrence, findBegin=False)
 
         self.start_date = parse(parsed.dtstart.value)
 
