@@ -24,7 +24,6 @@ __revision__ = "$Revision$"
 
 import urllib2
 import datetime
-import gtk
 
 import gobject
 
