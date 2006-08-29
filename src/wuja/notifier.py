@@ -112,6 +112,8 @@ class Notifier(gobject.GObject):
                     cal.url)
                 self.cache.delete(cal.url)
 
+        self.cache.sync()
+
         self.calendar_entries = temporary_entries
         logger.debug("Found %s calendar entries from %s feeds." %
             (str(len(self.calendar_entries)), str(len(feeds))))

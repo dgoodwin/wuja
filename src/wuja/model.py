@@ -98,6 +98,9 @@ class Cache:
         """ Delete the calendar with the specified url from the database. """
         self._cache.pop(url)
 
+    def sync(self):
+        self._cache.sync()
+
 
 class Calendar:
 

@@ -91,6 +91,10 @@ class TestCache(Cache):
     def close(self):
         self._cache.clear()
 
+    def sync(self):
+        pass
+
+
 class TestFeedSource(FeedSource):
 
     """
