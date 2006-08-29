@@ -27,7 +27,7 @@ import os.path
 
 from wuja.config import WujaConfiguration
 from wuja.feed import FeedSource
-from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
+from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar, Cache
 from wuja.data import WUJA_DIR
 
 from samplefeed import xml
@@ -35,7 +35,9 @@ from samplefeed import xml
 TEST_DB_FILE = "test.db"
 
 class TestWujaConfiguration(WujaConfiguration):
-    """ A fake configuration object that doesn't actually talk to
+
+    """
+    A fake configuration object that doesn't actually talk to
     gconf.
     """
 
@@ -67,8 +69,26 @@ class TestWujaConfiguration(WujaConfiguration):
     def get_feed_source(self):
         return self.feed_source
 
+    def get_cache(self):
+        return TestCache(self)
+
+
+class TestCache(Cache):
+
+    """ In-memory cache. """
+
+    def __init__(self, db):
+        """
+        Override the Cache contructor to just create an in-memory
+        dictionary instead of hitting the filesystem.
+        """
+        self._cache = {}
+
+
 class TestFeedSource(FeedSource):
-    """ We need to do some fairly tricky things with feeds to test
+
+    """
+    We need to do some fairly tricky things with feeds to test
     certain components. (i.e. return a calendar, add/remove entries
     from the feed, return new calendar with new last update time)
 
@@ -99,10 +119,14 @@ class TestFeedSource(FeedSource):
         """ Override for fake data and no network communication. """
         return self.calendars[url].last_update
 
+
 class CalendarData:
-    """ Dummy Calendar object, used for configuring the TestFeedSource
+
+    """
+    Dummy Calendar object, used for configuring the TestFeedSource
     without actually creating a database object.
     """
+
     def __init__(self, title, last_update, url):
         self.title = title
         self.last_update = last_update
@@ -114,10 +138,14 @@ class CalendarData:
         return Calendar(title=self.title, last_update=self.last_update,
             url=self.url)
 
+
 class SingleOccurrenceEntryData:
-    """ Dummy SingleOccurrenceEntry object, used for configuring the
+
+    """
+    Dummy SingleOccurrenceEntry object, used for configuring the
     TestFeedSource without actually creating a database object.
     """
+
     def __init__(self, title, time, reminder, location):
         self.title = title
         self.time = time
@@ -135,9 +163,12 @@ class SingleOccurrenceEntryData:
             self.duration, self.location)
 
 class RecurringEntryData:
-    """ Dummy RecurringEntry object, used for configuring the
+
+    """
+    Dummy RecurringEntry object, used for configuring the
     TestFeedSource without actually creating a database object.
     """
+
     def __init__(self, title, reminder, location, recurrence):
         self.title = title
         self.reminder = reminder
@@ -154,8 +185,10 @@ class RecurringEntryData:
             self.location, self.updated,
             self.recurrence)
 
+
 def teardownDatabase():
-    """ Wipe out database tables. Should be called in the
+    """
+    Wipe out database tables. Should be called in the
     tearDown of any test suite using persistent objects.
     """
     db_file = os.path.join(WUJA_DIR, TEST_DB_FILE)

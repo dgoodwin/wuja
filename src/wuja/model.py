@@ -55,68 +55,48 @@ class Cache:
     toss the old and create a new one)
     """
 
-    def __init__(self, db=None):
-        # FIXME
-        if db is None:
-            self.__db_file = os.path.join(WUJA_DIR, "newdb")
-        else:
-            self.__db_file = os.path.join(WUJA_DIR, db)
+    def __init__(self, db):
+        self.__db_file = os.path.join(WUJA_DIR, db)
         logger.info("Opening shelve database: " + self.__db_file)
-        self.__cache_db = shelve.open(self.__db_file)
-
-        # Shutdown the object if caller tries to use us after calling close()
-        self.__shutdown = False
-
-    def __shutdown_check(self):
-        """
-        Raise an exception if this calendar manager has had .close()
-        called.
-        """
-        if self.__shutdown:
-            raise Exception("CalendarManager has been .close()'d")
+        self._cache = shelve.open(self.__db_file)
 
     def has_calendar(self, url):
-        return self.__cache_db.has_key(url)
+        return self._cache.has_key(url)
 
     def save(self, cal_to_save):
         """ Save calendar to disk. """
-        self.__shutdown_check()
-
         # Force users to delete a calendar before they try to resave it:
-        if self.__cache_db.has_key(cal_to_save.url):
+        if self._cache.has_key(cal_to_save.url):
             raise Exception("Calendar already exists: " + cal_to_save.url)
 
         logger.debug("Caching calendar: " + cal_to_save.title)
-        self.__cache_db[cal_to_save.url] = cal_to_save
+        self._cache[cal_to_save.url] = cal_to_save
 
     def load(self, url):
         """ Load calendar from disk. """
-        self.__shutdown_check()
-        cal = self.__cache_db[url]
+        cal = self._cache[url]
         logger.debug("Loading calendar: " + cal.title)
         return cal
 
     def load_all(self):
         """ Load all calendars from disk and return as a list. """
-        self.__shutdown_check()
         all_calendars = []
-        for url in self.__cache_db.keys():
-            all_calendars.append(self.__cache_db[url])
+        for url in self._cache.keys():
+            all_calendars.append(self._cache[url])
         return all_calendars
 
     def close(self):
         """ Shutdown this calendar manager. """
-        self.__shutdown_check()
-        self.__cache_db.close()
+        self._cache.close()
 
     def empty(self):
         """ Delete all calendars from the on-disk cache. """
-        for k in self.__cache_db.keys():
-            self.__cache_db.pop(k)
+        for k in self._cache.keys():
+            self._cache.pop(k)
 
     def delete(self, url):
         """ Delete the calendar with the specified url from the database. """
-        self.__cache_db.pop(url)
+        self._cache.pop(url)
 
 
 class Calendar:

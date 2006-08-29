@@ -48,7 +48,7 @@ class Notifier(gobject.GObject):
         self.feed_source = config.get_feed_source()
 
         if cache is None:
-            self.cache = Cache(config.db_file)
+            self.cache = config.get_cache()
         else:
             self.cache = cache
 

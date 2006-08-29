@@ -28,11 +28,11 @@ from datetime import datetime, timedelta
 import settestpath
 
 from wuja.notifier import Notifier
-from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar, Cache
+from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
 from wuja.config import WujaConfiguration
 
 import utils
-from utils import TestWujaConfiguration, teardownDatabase
+from utils import TestWujaConfiguration, teardownDatabase, TestCache
 from sampledata import weekly_recurrence_all_day
 
 TEST_GCONF_PATH = '/apps/wuja/test'
@@ -151,7 +151,7 @@ class NotifierTests(unittest.TestCase):
         urls = [CAL_URL]
         test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
 
-        cache = Cache(test_config.db_file)
+        cache = TestCache(test_config.db_file)
         self.assertEqual(0, len(cache.load_all()))
         self.notifier = Notifier(test_config, cache)
 
@@ -165,7 +165,7 @@ class NotifierTests(unittest.TestCase):
         urls = [CAL_URL]
         test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
 
-        cache = Cache(test_config.db_file)
+        cache = TestCache(test_config.db_file)
         self.assertEqual(0, len(cache.load_all()))
         self.notifier = Notifier(test_config, cache)
 
@@ -182,7 +182,7 @@ class NotifierTests(unittest.TestCase):
         urls = [CAL_URL]
         test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
 
-        cache = Cache(test_config.db_file)
+        cache = TestCache(test_config.db_file)
         self.assertEqual(0, len(cache.load_all()))
         self.notifier = Notifier(test_config, cache)
 
@@ -203,7 +203,7 @@ class NotifierTests(unittest.TestCase):
         urls = [CAL_URL]
         test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
 
-        cache = Cache(test_config.db_file)
+        cache = TestCache(test_config.db_file)
         self.assertEqual(0, len(cache.load_all()))
         self.notifier = Notifier(test_config, cache)
 

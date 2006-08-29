@@ -28,10 +28,10 @@ import os.path
 
 from wuja.feed import FeedSource
 from wuja.data import WUJA_DB_FILE
+from wuja.model import Cache
 
 from logging import getLogger
 logger = getLogger("notifier")
-
 
 class WujaConfiguration(gobject.GObject):
 
@@ -42,7 +42,7 @@ class WujaConfiguration(gobject.GObject):
 
         self.client = gconf.client_get_default()
         self.urls_path = os.path.join(self.__gconf_path, "feed_urls")
-        self.db_file = WUJA_DB_FILE
+        self.__db_file = WUJA_DB_FILE
 
     def get_feed_urls(self):
         """ Return the list of all currently configured feed URLs. """
@@ -77,10 +77,17 @@ class WujaConfiguration(gobject.GObject):
         self.__set_feed_urls([])
 
     def get_feed_source(self):
-        """ Returns the appropriate FeedSource for this type of
+        """
+        Returns the appropriate FeedSource for this type of
         configuration.
         """
         return FeedSource()
+
+    def get_cache(self):
+        """
+        Return a new cache class for this configuration.
+        """
+        return Cache(db=self.__db_file)
 
     def __set_feed_urls(self, urls):
         self.client.set_list(self.urls_path, gconf.VALUE_STRING, urls)
