@@ -27,6 +27,7 @@ import gobject
 import os.path
 
 from wuja.feed import FeedSource
+from wuja.data import WUJA_DB_FILE
 
 from logging import getLogger
 logger = getLogger("notifier")
@@ -41,6 +42,7 @@ class WujaConfiguration(gobject.GObject):
 
         self.client = gconf.client_get_default()
         self.urls_path = os.path.join(self.__gconf_path, "feed_urls")
+        self.db_file = WUJA_DB_FILE
 
     def get_feed_urls(self):
         """ Return the list of all currently configured feed URLs. """

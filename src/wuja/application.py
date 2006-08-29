@@ -31,7 +31,6 @@ import gobject
 import sys
 import os
 import os.path
-import sqlobject
 
 from logging import getLogger
 from egg import trayicon
@@ -47,30 +46,14 @@ logger = getLogger("wuja")
 
 from wuja.notifier import Notifier
 from wuja.config import WujaConfiguration
+from wuja.data import WUJA_DIR, GCONF_PATH, WUJA_DB_FILE
 
-GCONF_PATH = "/apps/wuja/"
-WUJA_DIR = os.path.expanduser("~/.wuja")
-WUJA_DB_FILE = "wuja.db"
 NOTIFICATION_INTERVAL = 1 # minutes between notification checks
 FEED_UPDATE_INTERVAL = 10 # minutes between feed updates
 
-def initialize_database():
-    logger.debug("Initializing database.")
-    if not os.path.isdir(WUJA_DIR):
-        logger.debug(WUJA_DIR + " not found, creating.")
-        os.mkdir(WUJA_DIR)
-
-    db_file = os.path.join(WUJA_DIR, WUJA_DB_FILE)
-    logger.debug("Loading wuja database from %s" % db_file)
-    connection = sqlobject.connectionForURI('sqlite://' +
-        db_file)
-    sqlobject.sqlhub.processConnection = connection
-
-    Calendar.createTable(ifNotExists=True)
-    SingleOccurrenceEntry.createTable(ifNotExists=True)
-    RecurringEntry.createTable(ifNotExists=True)
-
-initialize_database()
+if not os.path.isdir(WUJA_DIR):
+    logger.debug(WUJA_DIR + " not found, creating.")
+    os.mkdir(WUJA_DIR)
 
 class WujaApplication:
 
@@ -183,7 +166,7 @@ class WujaApplication:
 
     def destroy(self, widget, data=None):
         """ Quit the application. """
-        sqlobject.sqlhub.processConnection.close()
+        self.notifier.cache.close()
         gtk.main_quit()
 
     def notify(self, notifier, event):
@@ -303,11 +286,13 @@ class PreferencesDialog:
         # Populate the list of existing URLs:
         self.prefs_url_list = self.glade_prefs.get_widget('treeview1')
         urls_list = gtk.ListStore(gobject.TYPE_STRING)
+        self.__title_index = {}
         for url in self.config.get_feed_urls():
             logger.debug("Existing URL: " + url)
             it = urls_list.append()
-            cal = list(Calendar.selectBy(url=url))[0]
+            cal = self.notifier.cache.load(url)
             urls_list.set_value(it, 0, cal.title)
+            self.__title_index[cal.title] = cal
         self.prefs_url_list.set_model(urls_list)
         renderer = gtk.CellRendererText()
         column = gtk.TreeViewColumn("Feed URLs", renderer, text=0)
@@ -335,7 +320,7 @@ class PreferencesDialog:
 
         # Update the list:
         urls_list = self.glade_prefs.get_widget('treeview1').get_model()
-        cal = list(Calendar.selectBy(url=url))[0]
+        cal = self.notifier.cache.load(url)
         feed_title = cal.title
         urls_list.set_value(urls_list.append(), 0, feed_title)
 
@@ -348,7 +333,7 @@ class PreferencesDialog:
             logger.debug("Unable to remove URL, no entry selected.")
             return
         url_to_remove_title = model.get_value(it, 0)
-        cal = list(Calendar.selectBy(title=url_to_remove_title))[0]
+        cal = self.__title_index[url_to_remove_title]
         url_to_remove = cal.url
         logger.info("Removing URL for feed %s: %s" % (url_to_remove_title,
             url_to_remove))

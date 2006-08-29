@@ -137,12 +137,13 @@ def create_entry(elem, cal):
     if reminder is None:
         logger.debug("No reminder found for entry: %s" % title)
 
+    entry = None
     if recurrence != None:
-        return RecurringEntry(entry_id=entry_id, title=title,
-            description=description, reminder=reminder, location=where,
-            updated=updated, recurrence=recurrence, calendar=cal)
-    return SingleOccurrenceEntry(entry_id=entry_id, title=title,
-        description=description, reminder=reminder, updated=updated,
-        time=when, duration=int(duration), location=where,
-        calendar=cal)
+        entry = RecurringEntry(entry_id, title, description, reminder,
+            where, updated, recurrence)
+    else:
+        entry = SingleOccurrenceEntry(entry_id, title, description, reminder,
+            updated, when, int(duration), where)
+    cal.entries.append(entry)
+    return entry
 

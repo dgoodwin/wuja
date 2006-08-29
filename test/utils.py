@@ -22,13 +22,17 @@
 
 __revision__ = "$Revision$"
 
-import sqlobject
+import os
+import os.path
 
 from wuja.config import WujaConfiguration
 from wuja.feed import FeedSource
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
+from wuja.data import WUJA_DIR
 
 from samplefeed import xml
+
+TEST_DB_FILE = "test.db"
 
 class TestWujaConfiguration(WujaConfiguration):
     """ A fake configuration object that doesn't actually talk to
@@ -43,6 +47,7 @@ class TestWujaConfiguration(WujaConfiguration):
             self.feed_source = TestFeedSource()
         else:
             self.feed_source = feed_source
+        self.db_file = TEST_DB_FILE
 
     def get_feed_urls(self):
         return self.urls
@@ -125,10 +130,9 @@ class SingleOccurrenceEntryData:
         self.duration = 3600
 
     def build(self, cal):
-        return SingleOccurrenceEntry(entry_id=self.entry_id, title=self.title,
-            description=self.description, reminder=self.reminder,
-            updated=self.updated, time=self.time, duration=self.duration,
-            location=self.location, calendar=cal)
+        return SingleOccurrenceEntry(self.entry_id, self.title,
+            self.description, self.reminder, self.updated, self.time,
+            self.duration, self.location)
 
 class RecurringEntryData:
     """ Dummy RecurringEntry object, used for configuring the
@@ -145,27 +149,16 @@ class RecurringEntryData:
         self.updated = "whenever"
 
     def build(self, cal):
-        return RecurringEntry(entry_id=self.entry_id, title=self.title,
-            description=self.description, reminder=self.reminder,
-            location=self.location, updated=self.updated,
-            recurrence=self.recurrence, calendar=cal)
-
-def setupDatabase():
-    """ Configure SQLObject to use an in-memory SQLite database and
-    create the proper tables. Should be called in the setUp() of any
-    test suite using persistent objects.
-    """
-    connection = sqlobject.connectionForURI('sqlite:/:memory:')
-    sqlobject.sqlhub.processConnection = connection
-
-    Calendar.createTable(ifNotExists=True)
-    SingleOccurrenceEntry.createTable(ifNotExists=True)
-    RecurringEntry.createTable(ifNotExists=True)
+        return RecurringEntry(self.entry_id, self.title,
+            self.description, self.reminder,
+            self.location, self.updated,
+            self.recurrence)
 
 def teardownDatabase():
     """ Wipe out database tables. Should be called in the
     tearDown of any test suite using persistent objects.
     """
-    Calendar.clearTable()
-    SingleOccurrenceEntry.clearTable()
-    RecurringEntry.clearTable()
+    db_file = os.path.join(WUJA_DIR, TEST_DB_FILE)
+    if os.path.exists(db_file):
+        os.remove(db_file)
+

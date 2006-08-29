@@ -28,11 +28,11 @@ from datetime import datetime, timedelta
 import settestpath
 
 from wuja.notifier import Notifier
-from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
+from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar, Cache
 from wuja.config import WujaConfiguration
 
 import utils
-from utils import TestWujaConfiguration, setupDatabase, teardownDatabase
+from utils import TestWujaConfiguration, teardownDatabase
 from sampledata import weekly_recurrence_all_day
 
 TEST_GCONF_PATH = '/apps/wuja/test'
@@ -83,9 +83,6 @@ class TestObserver:
         self.trigger_event = event
 
 class NotifierTests(unittest.TestCase):
-
-    def setUp(self):
-        setupDatabase()
 
     def tearDown(self):
         teardownDatabase()
@@ -154,13 +151,12 @@ class NotifierTests(unittest.TestCase):
         urls = [CAL_URL]
         test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
 
-        self.assertEqual(0, len(list(Calendar.select())))
-        self.notifier = Notifier(test_config)
+        cache = Cache(test_config.db_file)
+        self.assertEqual(0, len(cache.load_all()))
+        self.notifier = Notifier(test_config, cache)
 
         # Check that our objects were created:
-        self.assertEqual(1, len(list(Calendar.select())))
-        self.assertEqual(1, len(list(SingleOccurrenceEntry.select())))
-        self.assertEqual(1, len(list(RecurringEntry.select())))
+        self.assertEqual(1, len(cache.load_all()))
 
     def test_feed_deleted_from_config(self):
         test_feed_source = utils.TestFeedSource()
@@ -169,18 +165,15 @@ class NotifierTests(unittest.TestCase):
         urls = [CAL_URL]
         test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
 
-        self.assertEqual(0, len(list(Calendar.select())))
-        self.notifier = Notifier(test_config)
+        cache = Cache(test_config.db_file)
+        self.assertEqual(0, len(cache.load_all()))
+        self.notifier = Notifier(test_config, cache)
 
         # Check that our objects were created:
-        self.assertEqual(1, len(list(Calendar.select())))
-        self.assertEqual(1, len(list(SingleOccurrenceEntry.select())))
-        self.assertEqual(1, len(list(RecurringEntry.select())))
+        self.assertEqual(1, len(cache.load_all()))
 
         test_config.remove_feed_url(CAL_URL)
-        self.assertEqual(0, len(list(Calendar.select())))
-        self.assertEqual(0, len(list(SingleOccurrenceEntry.select())))
-        self.assertEqual(0, len(list(RecurringEntry.select())))
+        self.assertEqual(0, len(cache.load_all()))
 
     def test_feed_updated_entries_added(self):
         test_feed_source = utils.TestFeedSource()
@@ -189,22 +182,19 @@ class NotifierTests(unittest.TestCase):
         urls = [CAL_URL]
         test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
 
-        self.assertEqual(0, len(list(Calendar.select())))
-        self.notifier = Notifier(test_config)
+        cache = Cache(test_config.db_file)
+        self.assertEqual(0, len(cache.load_all()))
+        self.notifier = Notifier(test_config, cache)
 
         # Check that our objects were created:
-        self.assertEqual(1, len(list(Calendar.select())))
-        self.assertEqual(1, len(list(SingleOccurrenceEntry.select())))
-        self.assertEqual(1, len(list(RecurringEntry.select())))
+        self.assertEqual(1, len(cache.load_all()))
 
         # Add a new entry:
         cal_data.single_entries.append(utils.SingleOccurrenceEntryData(
             "Another Entry", datetime.now(), REMIND, "Another location."))
         cal_data.last_update = "new time" # change last update time
         self.notifier.update()
-        self.assertEqual(1, len(list(Calendar.select())))
-        self.assertEqual(2, len(list(SingleOccurrenceEntry.select())))
-        self.assertEqual(1, len(list(RecurringEntry.select())))
+        self.assertEqual(1, len(cache.load_all()))
 
     def test_feed_updated_entries_removed(self):
         test_feed_source = utils.TestFeedSource()
@@ -213,21 +203,18 @@ class NotifierTests(unittest.TestCase):
         urls = [CAL_URL]
         test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
 
-        self.assertEqual(0, len(list(Calendar.select())))
-        self.notifier = Notifier(test_config)
+        cache = Cache(test_config.db_file)
+        self.assertEqual(0, len(cache.load_all()))
+        self.notifier = Notifier(test_config, cache)
 
         # Check that our objects were created:
-        self.assertEqual(1, len(list(Calendar.select())))
-        self.assertEqual(1, len(list(SingleOccurrenceEntry.select())))
-        self.assertEqual(1, len(list(RecurringEntry.select())))
+        self.assertEqual(1, len(cache.load_all()))
 
         # Remove an entry:
         cal_data.single_entries.pop()
         cal_data.last_update = "new time" # change last update time
         self.notifier.update()
-        self.assertEqual(1, len(list(Calendar.select())))
-        self.assertEqual(0, len(list(SingleOccurrenceEntry.select())))
-        self.assertEqual(1, len(list(RecurringEntry.select())))
+        self.assertEqual(1, len(cache.load_all()))
 
     def __create_test_calendar_data(self):
         # Create a calendar with two entries:
@@ -239,12 +226,9 @@ class NotifierTests(unittest.TestCase):
         return cal_data
 
     def __create_entry(self, future_time):
-        cal = Calendar(title=CAL_TITLE, last_update="somedate",
-            url=CAL_URL)
-        self.entry = SingleOccurrenceEntry(entry_id="fakeId",
-            title="Fake Title", description="",reminder=REMIND,
-            updated=datetime.now(), time=future_time, duration=3600,
-            location="Gumdrop Alley", calendar=cal)
+        cal = Calendar(CAL_TITLE, "somedate", CAL_URL)
+        self.entry = SingleOccurrenceEntry("fakeId", "Fake Title", "",REMIND,
+            datetime.now(), future_time, 3600, "Gumdrop Alley")
         self.notifier = TestNotifier([self.entry])
         self.observer = TestObserver()
         self.notifier.connect("feeds-updated", self.observer.notify)

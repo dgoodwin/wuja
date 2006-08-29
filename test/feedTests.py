@@ -26,13 +26,10 @@ import unittest
 import settestpath
 
 from datetime import datetime
+from logging import getLogger
 
 from wuja.feed import FeedSource, parse_timestamp, build_calendar
 from samplefeed import xml
-
-from utils import setupDatabase
-
-setupDatabase()
 
 FEED_URL = "http://whatever.com/feedurl"
 FEED_TITLE = "Wuja Testing Calendar"

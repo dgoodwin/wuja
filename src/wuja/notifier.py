@@ -29,7 +29,7 @@ import gobject
 
 from logging import getLogger
 
-from wuja.model import Calendar
+from wuja.model import Calendar, Cache
 
 logger = getLogger("notifier")
 
@@ -42,10 +42,15 @@ class Notifier(gobject.GObject):
     due.
     """
 
-    def __init__ (self, config):
+    def __init__ (self, config, cache=None):
         gobject.GObject.__init__(self)
         self.config = config
         self.feed_source = config.get_feed_source()
+
+        if cache is None:
+            self.cache = Cache(config.db_file)
+        else:
+            self.cache = cache
 
         self.config.connect("config-changed", self.update_configuration)
 
@@ -67,33 +72,41 @@ class Notifier(gobject.GObject):
         temporary_entries = []
         try:
             for feed_url in feeds:
-                results = list(Calendar.select(Calendar.q.url == feed_url))
-                if len(results) == 0:
+                if not self.cache.has_calendar(feed_url):
                     logger.debug("Found new feed!")
                     cal = self.feed_source.get_calendar(feed_url)
+                    self.cache.save(cal)
                     temporary_entries.extend(cal.entries)
+                    continue
 
-                elif results[0].last_update != \
+                cal = self.cache.load(feed_url)
+
+                if cal.last_update != \
                     self.feed_source.get_feed_last_update(feed_url):
-                    results[0].destroySelf()
-                    logger.debug("Updating feed: " + results[0].title)
+
+                    # Delete the old calendar:
+                    title = cal.title
+                    self.cache.delete(feed_url)
+
+                    logger.debug("Updating feed: " + title)
                     cal = self.feed_source.get_calendar(feed_url)
+                    self.cache.save(cal)
                     temporary_entries.extend(cal.entries)
 
                 else:
                     logger.debug("Feed already up to date: %s (%s)" % \
-                        (results[0].title, results[0].last_update))
-                    temporary_entries.extend(results[0].entries)
+                        (cal.title, cal.last_update))
+                    temporary_entries.extend(cal.entries)
         except urllib2.URLError:
             logger.error("Error reaching Google servers.")
             return True
 
         # Remove calendar's no longer in our config:
-        for cal in list(Calendar.select()):
+        for cal in self.cache.load_all():
             try:
                 feeds.index(cal.url)
             except ValueError:
-                cal.destroySelf()
+                self.cache.delete(cal.url)
 
         self.calendar_entries = temporary_entries
         logger.debug("Found %s calendar entries from %s feeds." %

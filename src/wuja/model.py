@@ -1,7 +1,7 @@
 #   Wuja - Google Calendar (tm) notifications for the GNOME desktop.
 #
 #   Copyright (C) 2006 Devan Goodwin <dgoodwin@dangerouslyinc.com>
-#   Copyright (C) 2006 James Bowes <jbowes@dangerouslyinc.com> 
+#   Copyright (C) 2006 James Bowes <jbowes@dangerouslyinc.com>
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -24,11 +24,14 @@ __revision__ = "$Revision$"
 
 import dateutil.rrule
 import vobject
-import sqlobject
+import shelve
+import os.path
 
 from datetime import datetime
 from dateutil.parser import parse
 from logging import getLogger
+
+from wuja.data import WUJA_DIR
 
 logger = getLogger("model")
 
@@ -42,68 +45,122 @@ WEEKDAY_MAP = {
     "SU": 6
 }
 
-class Calendar(sqlobject.SQLObject):
+
+class Cache:
+
+    """
+    Maintains the persistence and lookup of calendars.
+
+    Supports save, load, and delete. (if a calendar has changed we
+    toss the old and create a new one)
+    """
+
+    def __init__(self, db=None):
+        # FIXME
+        if db is None:
+            self.__db_file = os.path.join(WUJA_DIR, "newdb")
+        else:
+            self.__db_file = os.path.join(WUJA_DIR, db)
+        logger.info("Opening shelve database: " + self.__db_file)
+        self.__cache_db = shelve.open(self.__db_file)
+
+        # Shutdown the object if caller tries to use us after calling close()
+        self.__shutdown = False
+
+    def __shutdown_check(self):
+        """
+        Raise an exception if this calendar manager has had .close()
+        called.
+        """
+        if self.__shutdown:
+            raise Exception("CalendarManager has been .close()'d")
+
+    def has_calendar(self, url):
+        return self.__cache_db.has_key(url)
+
+    def save(self, cal_to_save):
+        """ Save calendar to disk. """
+        self.__shutdown_check()
+
+        # Force users to delete a calendar before they try to resave it:
+        if self.__cache_db.has_key(cal_to_save.url):
+            raise Exception("Calendar already exists: " + cal_to_save.url)
+
+        logger.debug("Caching calendar: " + cal_to_save.title)
+        self.__cache_db[cal_to_save.url] = cal_to_save
+
+    def load(self, url):
+        """ Load calendar from disk. """
+        self.__shutdown_check()
+        cal = self.__cache_db[url]
+        logger.debug("Loading calendar: " + cal.title)
+        return cal
+
+    def load_all(self):
+        """ Load all calendars from disk and return as a list. """
+        self.__shutdown_check()
+        all_calendars = []
+        for url in self.__cache_db.keys():
+            all_calendars.append(self.__cache_db[url])
+        return all_calendars
+
+    def close(self):
+        """ Shutdown this calendar manager. """
+        self.__shutdown_check()
+        self.__cache_db.close()
+
+    def empty(self):
+        """ Delete all calendars from the on-disk cache. """
+        for k in self.__cache_db.keys():
+            self.__cache_db.pop(k)
+
+    def delete(self, url):
+        """ Delete the calendar with the specified url from the database. """
+        self.__cache_db.pop(url)
+
+
+class Calendar:
 
     """ A representation of a Google Calendar. """
 
-    title = sqlobject.StringCol()
-    url = sqlobject.StringCol()
-    # Storing last update as a string for now as all we're really
-    # interested in is if the value has changed or not.
-    last_update = sqlobject.StringCol()
-
-    # Single occurrence / recurring entries are represented as seperate
-    # objects for the time being. (not sure how well SQLObject will deal
-    # with inheritence) An 'entries' property is added below to combine
-    # the two.
-    recurring_entries = sqlobject.MultipleJoin('RecurringEntry')
-    single_occurence_entries = sqlobject.MultipleJoin('SingleOccurrenceEntry')
-
-    def get_entries(self):
-        """ 
-        We store recurring and single occurence entries seperately,
-        make it appear as if we only store generic entries to callers.
-        """
-        entries = []
-        entries.extend(self.recurring_entries)
-        entries.extend(self.single_occurence_entries)
-        return entries
-
-    entries = property(get_entries)
-
-    def destroySelf(self):
-        """ 
-        Override the SQLObject destroySelf method to delete entries
-        for this calendar as well.
-        """
-        for entry in self.entries:
-            entry.destroySelf()
-        sqlobject.SQLObject.destroySelf(self)
+    def __init__(self, title, url, last_update):
+        self.title = title
+        self.url = url
+        self.last_update = last_update
+        self.entries = []
 
 
-class BadDateRange(Exception):
+class Entry:
 
-    """ Exception for messed up date ranges. """
-    
-    pass
+    """ Parent class of calendar entries. Consider it abstract. """
+
+    def __init__(self, entry_id, title, desc, remind, location, updated,
+            duration):
+        self.entry_id = entry_id
+        self.title = title
+        self.description = desc
+        self.location = location
+        self.updated = updated
+        self.duration = duration
+        self.reminder = remind
+
+    def events(self, end_date):
+        """ Returns the events for this entry between now and the end date. """
+        raise Exception("Not implemented.")
 
 
-class SingleOccurrenceEntry(sqlobject.SQLObject):
+class SingleOccurrenceEntry(Entry):
 
     """ An entry occurring only once. """
-    
-    entry_id = sqlobject.StringCol()
-    title = sqlobject.StringCol()
-    description = sqlobject.StringCol()
-    location = sqlobject.StringCol()
-    updated = sqlobject.StringCol()
-    duration = sqlobject.IntCol()
-    reminder = sqlobject.IntCol()
-    time = sqlobject.DateTimeCol()
-    calendar = sqlobject.ForeignKey('Calendar')
+
+    def __init__(self, entry_id, title, desc, remind, updated, time,
+        duration, location):
+        Entry.__init__(self, entry_id, title, desc, remind, location,
+            updated, duration)
+        self.time = time
 
     def get_events(self, start_date, end_date):
-        """ 
+        """
         Returns at most one event for this single occurrence
         calendar entry.
         """
@@ -118,27 +175,20 @@ class SingleOccurrenceEntry(sqlobject.SQLObject):
         return return_me
 
 
-class RecurringEntry(sqlobject.SQLObject):
+class RecurringEntry(Entry):
 
-    """ 
+    """
     An entry with recurrence information.
 
     Note that this object only stores the recurrence text in the database,
     and is parsed on every load/fetch.
     """
-    
-    entry_id = sqlobject.StringCol()
-    title = sqlobject.StringCol()
-    description = sqlobject.StringCol()
-    reminder = sqlobject.IntCol()
-    location = sqlobject.StringCol()
-    updated = sqlobject.StringCol()
-    recurrence = sqlobject.StringCol()
-    calendar = sqlobject.ForeignKey('Calendar')
 
-    def _init(self, *args, **kw):
-        sqlobject.SQLObject._init(self, *args, **kw)
-        self.__parse_recurrence(self.recurrence)
+    def __init__(self, entry_id, title, desc, remind, location,
+        updated, recurrence):
+        Entry.__init__(self, entry_id, title, desc, remind, location,
+            updated, None)
+        self.__parse_recurrence(recurrence)
 
     def __parse_recurrence(self, recurrence):
         """ Parses the recurrence field. (iCalendar format, see RFC 2445) """
@@ -156,7 +206,7 @@ class RecurringEntry(sqlobject.SQLObject):
         self.__build_rrule(parsed.rrule.value)
 
     def __build_rrule(self, rule_text):
-        """ 
+        """
         Convert the recurrence data from Google's feed into something
         the dateutil library can work with.
         """
@@ -198,14 +248,14 @@ class RecurringEntry(sqlobject.SQLObject):
         self.rrule = dateutil.rrule.rrule(freq, **params)
 
     def get_events(self, start_date, end_date):
-        """ 
+        """
         Return a list of all events for this recurring entry
         between the specified start and end date.
         """
         # Assume a start date of now, no point returning past events:
         if start_date == None:
             start_date = datetime.now()
-            
+
         if end_date < start_date:
             raise BadDateRange, "Your dates are out of order, fool."
 
@@ -226,18 +276,26 @@ class Event:
         self.accepted = False # set true once user confirms event
 
     def get_key(self):
-        """ 
+        """
         Used to simulate an event.key member representing a unique
         string for this event.
         """
         return str(self.entry.entry_id) + str(self.time)
 
     def set_key(self):
-        """ 
+        """
         Dummy setter for the key property, which doesn't really
         exist.
         """
         raise Exception("Keys aren't for setting.")
 
     key = property(get_key, set_key)
+
+
+class BadDateRange(Exception):
+
+    """ Exception for messed up date ranges. """
+
+    pass
+
 
