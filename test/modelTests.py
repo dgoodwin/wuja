@@ -28,10 +28,10 @@ from datetime import datetime
 
 import settestpath
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Event, Calendar, \
-    BadDateRange, Cache
+    BadDateRange
 from sampledata import daily_recurrence, daily_recurrence_for_one_week, \
     weekly_recurrence_all_day, wkst_recurrence
-from utils import teardownDatabase, TEST_DB_FILE
+from utils import teardownDatabase, TEST_DB_FILE, TestCache
 
 # Sample data:
 UPDATED = str(datetime(2006, 05, 26, 12, 00, 00))
@@ -54,40 +54,26 @@ class CacheTests(unittest.TestCase):
 
     def test_save(self):
         cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update)
-        mgr = Cache(db=TEST_DB_FILE)
+        mgr = TestCache(db=TEST_DB_FILE)
         mgr.save(cal)
-        mgr.close()
 
-        mgr = Cache(db=TEST_DB_FILE)
         loaded_cal = mgr.load(cal.url)
         self.assertEqual(CAL_TITLE, loaded_cal.title)
         self.assertEqual(CAL_URL, loaded_cal.url)
         self.assertEqual(self.__last_update, loaded_cal.last_update)
 
-    def test_close(self):
-        mgr = Cache(db=TEST_DB_FILE)
-        mgr.close()
-        cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update)
-        self.assertRaises(Exception, mgr.save, cal)
-
     def test_empty_cache(self):
         cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update)
-        mgr = Cache(db=TEST_DB_FILE)
+        mgr = TestCache(db=TEST_DB_FILE)
         mgr.save(cal)
-        mgr.close()
-
-        mgr = Cache(db=TEST_DB_FILE)
         self.assertEqual(1, len(mgr.load_all()))
-        mgr.empty()
-        self.assertEqual(0, len(mgr.load_all()))
-        mgr.close()
 
-        mgr = Cache(db=TEST_DB_FILE)
+        mgr.empty()
         self.assertEqual(0, len(mgr.load_all()))
 
     def test_save_calendar_id_already_exists(self):
         cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update)
-        mgr = Cache(db=TEST_DB_FILE)
+        mgr = TestCache(db=TEST_DB_FILE)
         mgr.save(cal)
         cal = Calendar("", CAL_URL, "")
         self.assertRaises(Exception, mgr.save, cal)
@@ -95,16 +81,14 @@ class CacheTests(unittest.TestCase):
 
     def test_delete(self):
         cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update)
-        mgr = Cache(db=TEST_DB_FILE)
+        mgr = TestCache(db=TEST_DB_FILE)
         mgr.save(cal)
         mgr.delete(cal.url)
-        mgr.close()
-        mgr = Cache(db=TEST_DB_FILE)
         self.assertEqual(0, len(mgr.load_all()))
 
     def test_delete_readd_without_close(self):
         cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update)
-        mgr = Cache(db=TEST_DB_FILE)
+        mgr = TestCache(db=TEST_DB_FILE)
         mgr.save(cal)
         mgr.delete(cal.url)
         mgr.save(cal)

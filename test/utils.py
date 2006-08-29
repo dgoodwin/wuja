@@ -88,6 +88,8 @@ class TestCache(Cache):
         logger.debug("Creating in-memory cache.")
         self._cache = {}
 
+    def close(self):
+        self._cache.clear()
 
 class TestFeedSource(FeedSource):
 
