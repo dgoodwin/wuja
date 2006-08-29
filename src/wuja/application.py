@@ -48,6 +48,8 @@ if not os.path.isdir(WUJA_DIR):
     logger.debug(WUJA_DIR + " not found, creating.")
     os.mkdir(WUJA_DIR)
 
+logger = getLogger("wuja")
+
 class WujaApplication:
 
     """ The main Wuja application. """
