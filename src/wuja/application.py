@@ -367,6 +367,6 @@ def find_file_on_path(pathname):
         candidate = os.path.join(dirname, pathname)
         if os.path.isfile(candidate):
             return candidate
-    raise Error("Could not find %s on the Python path."
-        % `pathname`)
+    raise Exception("Could not find %s on the Python path."
+        % pathname)
 

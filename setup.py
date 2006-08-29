@@ -32,6 +32,6 @@ setup(name="Wuja",
     url='http://dangerouslyinc.com',
     packages=['wuja'],
     package_dir={'wuja': 'src/wuja'},
-    package_data={'wuja': ['data/*.xml', 'data/*.glade']},
+    package_data={'wuja': ['data/*.xml', 'data/*.glade', 'data/*.png']},
     scripts=['bin/wuja'],
 )
