@@ -26,7 +26,6 @@ import unittest
 import settestpath
 
 from datetime import datetime
-from logging import getLogger
 
 from wuja.feed import FeedSource, parse_timestamp, build_calendar
 from samplefeed import xml

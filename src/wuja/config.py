@@ -30,9 +30,6 @@ from wuja.feed import FeedSource
 from wuja.data import WUJA_DB_FILE
 from wuja.model import Cache
 
-from logging import getLogger
-logger = getLogger("notifier")
-
 class WujaConfiguration(gobject.GObject):
 
     def __init__(self, gconf_path):
