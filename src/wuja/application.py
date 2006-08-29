@@ -36,10 +36,9 @@ from logging import getLogger
 from egg import trayicon
 from datetime import timedelta
 
-from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
-from wuja.log import setup_logging
 
 # Configure logging: (needs to be done before importing our modules)
+from wuja.log import setup_logging
 confFileLocations = ["~/.wuja/logging.conf", "./logging.conf"]
 setup_logging(confFileLocations)
 logger = getLogger("wuja")
@@ -47,6 +46,7 @@ logger = getLogger("wuja")
 from wuja.notifier import Notifier
 from wuja.config import WujaConfiguration
 from wuja.data import WUJA_DIR, GCONF_PATH, WUJA_DB_FILE
+from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
 
 NOTIFICATION_INTERVAL = 1 # minutes between notification checks
 FEED_UPDATE_INTERVAL = 10 # minutes between feed updates
