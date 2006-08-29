@@ -36,13 +36,6 @@ from logging import getLogger
 from egg import trayicon
 from datetime import timedelta
 
-
-# Configure logging: (needs to be done before importing our modules)
-from wuja.log import setup_logging
-confFileLocations = ["~/.wuja/logging.conf", "./logging.conf"]
-setup_logging(confFileLocations)
-logger = getLogger("wuja")
-
 from wuja.notifier import Notifier
 from wuja.config import WujaConfiguration
 from wuja.data import WUJA_DIR, GCONF_PATH, WUJA_DB_FILE

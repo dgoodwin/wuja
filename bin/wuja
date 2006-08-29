@@ -4,8 +4,15 @@
 
 __revision__ = "$Revision$"
 
+from wuja.log import setup_logging
+# Configure logging: (needs to be done before importing our modules)
+confFileLocations = ["~/.wuja/logging.conf", "./logging.conf"]
+setup_logging(confFileLocations)
+logger = getLogger("wuja")
+
 from wuja.application import WujaApplication
 
 if __name__ == "__main__":
+
     wujaApp = WujaApplication()
     wujaApp.main()
