@@ -140,10 +140,10 @@ def create_entry(elem, cal):
     entry = None
     if recurrence != None:
         entry = RecurringEntry(entry_id, title, description, reminder,
-            where, updated, recurrence)
+            where, updated, recurrence, cal)
     else:
         entry = SingleOccurrenceEntry(entry_id, title, description, reminder,
-            updated, when, int(duration), where)
+            updated, when, int(duration), where, cal)
     cal.entries.append(entry)
     return entry
 

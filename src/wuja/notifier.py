@@ -75,6 +75,8 @@ class Notifier(gobject.GObject):
                 if not self.cache.has_calendar(feed_url):
                     logger.debug("Found new feed!")
                     cal = self.feed_source.get_calendar(feed_url)
+                    logger.debug("   Feed title: " + cal.title)
+                    logger.debug("   Entries: " + str(len(cal.entries)))
                     self.cache.save(cal)
                     temporary_entries.extend(cal.entries)
                     continue
@@ -106,6 +108,8 @@ class Notifier(gobject.GObject):
             try:
                 feeds.index(cal.url)
             except ValueError:
+                logger.debug("Removing calendar no longer in config: %s" %
+                    cal.url)
                 self.cache.delete(cal.url)
 
         self.calendar_entries = temporary_entries

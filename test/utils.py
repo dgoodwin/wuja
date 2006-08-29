@@ -27,12 +27,15 @@ import os.path
 
 from wuja.config import WujaConfiguration
 from wuja.feed import FeedSource
-from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar, Cache
+from wuja.model import Cache
 from wuja.data import WUJA_DIR
 
 from samplefeed import xml
+from logging import getLogger
 
 TEST_DB_FILE = "test.db"
+
+logger = getLogger("utils")
 
 class TestWujaConfiguration(WujaConfiguration):
 
@@ -82,6 +85,7 @@ class TestCache(Cache):
         Override the Cache contructor to just create an in-memory
         dictionary instead of hitting the filesystem.
         """
+        logger.debug("Creating in-memory cache.")
         self._cache = {}
 
 
@@ -106,84 +110,12 @@ class TestFeedSource(FeedSource):
         if not self.calendars.has_key(url):
             raise Exception("TestFeedSource not configured for url: %s" %
                 url)
-        cal_data = self.calendars[url]
-        cal = cal_data.build()
-        all_entries = []
-        all_entries.extend(cal_data.single_entries)
-        all_entries.extend(cal_data.recurring_entries)
-        for entry in all_entries:
-            entry.build(cal)
+        cal = self.calendars[url]
         return cal
 
     def get_feed_last_update(self, url):
         """ Override for fake data and no network communication. """
         return self.calendars[url].last_update
-
-
-class CalendarData:
-
-    """
-    Dummy Calendar object, used for configuring the TestFeedSource
-    without actually creating a database object.
-    """
-
-    def __init__(self, title, last_update, url):
-        self.title = title
-        self.last_update = last_update
-        self.url = url
-        self.single_entries = [] # single occurrence entry data
-        self.recurring_entries = [] # recurring entry data
-
-    def build(self):
-        return Calendar(title=self.title, last_update=self.last_update,
-            url=self.url)
-
-
-class SingleOccurrenceEntryData:
-
-    """
-    Dummy SingleOccurrenceEntry object, used for configuring the
-    TestFeedSource without actually creating a database object.
-    """
-
-    def __init__(self, title, time, reminder, location):
-        self.title = title
-        self.time = time
-        self.reminder = reminder
-        self.location = location
-
-        self.entry_id = "FakeEntryId"
-        self.description = ""
-        self.updated = "whenever"
-        self.duration = 3600
-
-    def build(self, cal):
-        return SingleOccurrenceEntry(self.entry_id, self.title,
-            self.description, self.reminder, self.updated, self.time,
-            self.duration, self.location)
-
-class RecurringEntryData:
-
-    """
-    Dummy RecurringEntry object, used for configuring the
-    TestFeedSource without actually creating a database object.
-    """
-
-    def __init__(self, title, reminder, location, recurrence):
-        self.title = title
-        self.reminder = reminder
-        self.location = location
-        self.recurrence = recurrence
-
-        self.entry_id = "FakeEntryId"
-        self.description = ""
-        self.updated = "whenever"
-
-    def build(self, cal):
-        return RecurringEntry(self.entry_id, self.title,
-            self.description, self.reminder,
-            self.location, self.updated,
-            self.recurrence)
 
 
 def teardownDatabase():

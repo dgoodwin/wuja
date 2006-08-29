@@ -189,7 +189,6 @@ class WujaApplication:
             return
 
         alert_window = AlertDialog(event, self.__open_alerts)
-        self.__open_alerts[event.key] = alert_window
 
     def main(self):
         """ Launches the GTK main loop. """
@@ -206,6 +205,7 @@ class AlertDialog:
         # Maintain a reference to the main applications open alerts so we can
         # pop entries when accepted or snoozed.
         self.__open_alerts = open_alerts
+        self.__open_alerts[event.key] = self
 
         glade_file = 'wuja/data/alert-window.glade'
         window_name = 'window1'
@@ -226,7 +226,9 @@ class AlertDialog:
 
         title.set_text(event.entry.title)
         when.set_text(event.time.strftime("%a %b %d %Y - %I:%M%P"))
+
         calendar.set_text(event.entry.calendar.title)
+
         if event.entry.location is None:
             where.set_text("")
         else:

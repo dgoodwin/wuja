@@ -146,8 +146,8 @@ class NotifierTests(unittest.TestCase):
 
     def test_initial_update(self):
         test_feed_source = utils.TestFeedSource()
-        cal_data = self.__create_test_calendar_data()
-        test_feed_source.calendars[CAL_URL] = cal_data
+        cal = self.__create_test_calendar_data()
+        test_feed_source.calendars[CAL_URL] = cal
         urls = [CAL_URL]
         test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
 
@@ -160,8 +160,8 @@ class NotifierTests(unittest.TestCase):
 
     def test_feed_deleted_from_config(self):
         test_feed_source = utils.TestFeedSource()
-        cal_data = self.__create_test_calendar_data()
-        test_feed_source.calendars[CAL_URL] = cal_data
+        cal = self.__create_test_calendar_data()
+        test_feed_source.calendars[CAL_URL] = cal
         urls = [CAL_URL]
         test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
 
@@ -177,8 +177,8 @@ class NotifierTests(unittest.TestCase):
 
     def test_feed_updated_entries_added(self):
         test_feed_source = utils.TestFeedSource()
-        cal_data = self.__create_test_calendar_data()
-        test_feed_source.calendars[CAL_URL] = cal_data
+        cal = self.__create_test_calendar_data()
+        test_feed_source.calendars[CAL_URL] = cal
         urls = [CAL_URL]
         test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
 
@@ -190,16 +190,17 @@ class NotifierTests(unittest.TestCase):
         self.assertEqual(1, len(cache.load_all()))
 
         # Add a new entry:
-        cal_data.single_entries.append(utils.SingleOccurrenceEntryData(
-            "Another Entry", datetime.now(), REMIND, "Another location."))
-        cal_data.last_update = "new time" # change last update time
+        cal.entries.append(SingleOccurrenceEntry("singleid",
+            "Another Entry", "desc", REMIND, datetime.now(), datetime.now(),
+            3600, "Another location.", cal))
+        cal.last_update = "new time" # change last update time
         self.notifier.update()
         self.assertEqual(1, len(cache.load_all()))
 
     def test_feed_updated_entries_removed(self):
         test_feed_source = utils.TestFeedSource()
-        cal_data = self.__create_test_calendar_data()
-        test_feed_source.calendars[CAL_URL] = cal_data
+        cal = self.__create_test_calendar_data()
+        test_feed_source.calendars[CAL_URL] = cal
         urls = [CAL_URL]
         test_config = TestWujaConfiguration(urls, feed_source=test_feed_source)
 
@@ -211,24 +212,26 @@ class NotifierTests(unittest.TestCase):
         self.assertEqual(1, len(cache.load_all()))
 
         # Remove an entry:
-        cal_data.single_entries.pop()
-        cal_data.last_update = "new time" # change last update time
+        cal.entries.pop()
+        cal.last_update = "new time" # change last update time
         self.notifier.update()
         self.assertEqual(1, len(cache.load_all()))
 
     def __create_test_calendar_data(self):
         # Create a calendar with two entries:
-        cal_data = utils.CalendarData(CAL_TITLE, "0", CAL_URL)
-        cal_data.single_entries.append(utils.SingleOccurrenceEntryData(
-            TITLE, datetime.now(), REMIND, LOCATION))
-        cal_data.recurring_entries.append(utils.RecurringEntryData(TITLE,
-            REMIND, LOCATION, weekly_recurrence_all_day))
-        return cal_data
+        cal = Calendar(CAL_TITLE, CAL_URL, "0")
+        cal.entries.append(SingleOccurrenceEntry("singleid",
+            TITLE, "desc", REMIND, datetime.now(), datetime.now(), 3600,
+            LOCATION, cal))
+        cal.entries.append(RecurringEntry("id2", TITLE + " Recur",
+            "", REMIND, LOCATION, datetime.now(), weekly_recurrence_all_day,
+            cal))
+        return cal
 
     def __create_entry(self, future_time):
         cal = Calendar(CAL_TITLE, "somedate", CAL_URL)
         self.entry = SingleOccurrenceEntry("fakeId", "Fake Title", "",REMIND,
-            datetime.now(), future_time, 3600, "Gumdrop Alley")
+            datetime.now(), future_time, 3600, "Gumdrop Alley", cal)
         self.notifier = TestNotifier([self.entry])
         self.observer = TestObserver()
         self.notifier.connect("feeds-updated", self.observer.notify)

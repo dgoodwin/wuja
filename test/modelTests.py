@@ -120,7 +120,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         end_date = datetime(2020, 01, 01)
 
         distant_event = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
-            REMIND, UPDATED, time, 3600, LOCATION)
+            REMIND, UPDATED, time, 3600, LOCATION, self.cal)
 
         events = distant_event.get_events(None, end_date)
         self.assertEquals(1, len(events))
@@ -133,7 +133,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         end_date = datetime(2006, 01, 01)
 
         distant_event = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
-            REMIND, UPDATED, time, 3600, LOCATION)
+            REMIND, UPDATED, time, 3600, LOCATION, self.cal)
 
         self.assertRaises(BadDateRange, distant_event.get_events, None,
             end_date)
@@ -143,7 +143,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         end_date = datetime(2006, 05, 26)
 
         distant_event = SingleOccurrenceEntry("fakeId", TITLE,
-            DESCRIPTION, REMIND, UPDATED, time, 3600, LOCATION)
+            DESCRIPTION, REMIND, UPDATED, time, 3600, LOCATION, self.cal)
 
         self.assertRaises(BadDateRange, distant_event.get_events, None,
             end_date)
@@ -153,7 +153,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         end_date = datetime(2007, 8, 1, 8, 42, 0)
 
         current_event = SingleOccurrenceEntry("fakeId", TITLE,
-            DESCRIPTION, REMIND, UPDATED, time, 812, LOCATION)
+            DESCRIPTION, REMIND, UPDATED, time, 812, LOCATION, self.cal)
 
         self.assertEqual(1, len(current_event.get_events(time, end_date)))
 
@@ -162,7 +162,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         end_date = datetime(2007, 8, 1, 8, 42, 0)
 
         current_event = SingleOccurrenceEntry("fakeId", TITLE,
-            DESCRIPTION, REMIND, UPDATED, end_date, 812, LOCATION)
+            DESCRIPTION, REMIND, UPDATED, end_date, 812, LOCATION, self.cal)
 
         self.assertEqual(1, len(current_event.get_events(start_date, end_date)))
 
@@ -174,7 +174,7 @@ class RecurringEntryTests(unittest.TestCase):
 
     def __get_daily_recurring_entry(self):
         standup_meeting = RecurringEntry("fakeId", "Standup Meeting", "",
-            REMIND, LOCATION, UPDATED, daily_recurrence)
+            REMIND, LOCATION, UPDATED, daily_recurrence, self.cal)
         self.assertEqual(1800, standup_meeting.duration)
         self.assertEqual(LOCATION, standup_meeting.location)
         return standup_meeting
@@ -204,7 +204,8 @@ class RecurringEntryTests(unittest.TestCase):
 
     def test_daily_recurring_entry_for_one_week(self):
         daily_for_one_week = RecurringEntry("fakeId", "Daily For One Week",
-            "", REMIND, LOCATION, UPDATED, daily_recurrence_for_one_week)
+            "", REMIND, LOCATION, UPDATED, daily_recurrence_for_one_week,
+            self.cal)
         self.assertEqual(3600, daily_for_one_week.duration)
         self.assertEqual(LOCATION, daily_for_one_week.location)
         start_date = datetime(2006, 6, 1)
@@ -214,7 +215,7 @@ class RecurringEntryTests(unittest.TestCase):
 
     def test_weekly_all_day_recurrence(self):
         weekly_all_day = RecurringEntry("fakeId", "Weekly All Day", "",
-            REMIND, LOCATION, UPDATED, weekly_recurrence_all_day)
+            REMIND, LOCATION, UPDATED, weekly_recurrence_all_day, self.cal)
         self.assertEqual(None, weekly_all_day.duration)
 
         # Event starts on June 5th 2006
@@ -242,15 +243,18 @@ class RecurringEntryTests(unittest.TestCase):
         these at one point in time)
         """
         entry = RecurringEntry("fakeId", "Wkst Entry", "", REMIND, LOCATION,
-            UPDATED, wkst_recurrence)
+            UPDATED, wkst_recurrence, self.cal)
 
 
 class EventTests(unittest.TestCase):
 
+    def setUp(self):
+        self.cal = Calendar(FEED_TITLE, CAL_URL, "somedate")
+
     def test_event_key(self):
         time = datetime.now()
         entry = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION, REMIND,
-                UPDATED, time, 3600, LOCATION)
+            UPDATED, time, 3600, LOCATION, self.cal)
         event = Event(entry.time, entry)
         self.assertEqual(entry.entry_id + str(time),
             event.key)

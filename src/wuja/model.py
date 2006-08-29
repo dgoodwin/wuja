@@ -115,7 +115,7 @@ class Entry:
     """ Parent class of calendar entries. Consider it abstract. """
 
     def __init__(self, entry_id, title, desc, remind, location, updated,
-            duration):
+            duration, cal):
         self.entry_id = entry_id
         self.title = title
         self.description = desc
@@ -123,6 +123,7 @@ class Entry:
         self.updated = updated
         self.duration = duration
         self.reminder = remind
+        self.calendar = cal
 
     def events(self, end_date):
         """ Returns the events for this entry between now and the end date. """
@@ -134,9 +135,9 @@ class SingleOccurrenceEntry(Entry):
     """ An entry occurring only once. """
 
     def __init__(self, entry_id, title, desc, remind, updated, time,
-        duration, location):
+        duration, location, cal):
         Entry.__init__(self, entry_id, title, desc, remind, location,
-            updated, duration)
+            updated, duration, cal)
         self.time = time
 
     def get_events(self, start_date, end_date):
@@ -165,9 +166,9 @@ class RecurringEntry(Entry):
     """
 
     def __init__(self, entry_id, title, desc, remind, location,
-        updated, recurrence):
+        updated, recurrence, cal):
         Entry.__init__(self, entry_id, title, desc, remind, location,
-            updated, None)
+            updated, None, cal)
         self.__parse_recurrence(recurrence)
 
     def __parse_recurrence(self, recurrence):
