@@ -44,11 +44,11 @@ from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
 NOTIFICATION_INTERVAL = 1 # minutes between notification checks
 FEED_UPDATE_INTERVAL = 10 # minutes between feed updates
 
+logger = getLogger("wuja")
+
 if not os.path.isdir(WUJA_DIR):
     logger.debug(WUJA_DIR + " not found, creating.")
     os.mkdir(WUJA_DIR)
-
-logger = getLogger("wuja")
 
 class WujaApplication:
 
