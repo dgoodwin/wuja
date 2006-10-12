@@ -190,7 +190,7 @@ class WujaApplication:
         elif alert_type == "notification":
             alert_window = AlertNotification(event, self.tray_icon)
         else:
-            assert False
+            assert False, "Unknown notification type provided"
 
         alert_window.connect("alert-closed", self.on_alert_closed)
         self.__open_alerts[event.key] = alert_window
