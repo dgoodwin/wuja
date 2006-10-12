@@ -86,6 +86,9 @@ class WujaConfiguration(gobject.GObject):
         """
         return Cache(db=self.__db_file)
 
+    def get_alert_type(self):
+        return "dialog"
+
     def __set_feed_urls(self, urls):
         self.client.set_list(self.urls_path, gconf.VALUE_STRING, urls)
         self.client.suggest_sync()

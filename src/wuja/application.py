@@ -182,8 +182,14 @@ class WujaApplication:
             logger.debug("Alert window already open for event: " + \
                 event.entry.title)
             return
-
-        alert_window = AlertDialog(event, self.__open_alerts)
+        
+        alert_type = self.config.get_alert_type()
+        if alert_type == "dialog":
+            alert_window = AlertDialog(event, self.__open_alerts)
+        elif alert_type == "notification":
+            alert_window = AlertNotification(event, self.__open_alerts)
+        else:
+            assert False
 
     def main(self):
         """ Launches the GTK main loop. """
