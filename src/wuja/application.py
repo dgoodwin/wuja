@@ -204,19 +204,37 @@ class WujaApplication:
 
 
 class AlertDisplay(gobject.GObject):
-    pass
+
+    def __init__(self, event):
+        gobject.GObject.__init__(self)
+
+        logger.debug('Opening alert dialog for event: %s', event.entry.title)
+        self.event = event
+ 
+    def _accept_event(self):
+        """ Called when the user accepts an alert. """
+        self.event.accepted = True
+        logger.debug("Accepted event: " + self.event.entry.title)
+        self.emit('alert-closed')
+    
+    def _snooze_event(self):
+        """
+        Called when the user presses snooze. Destroys the alert
+        window and sets appropriate status for the event in question.
+        """
+        logger.debug("Snoozed event: " + self.event.entry.title)
+        self.emit('alert-closed')
 
 gobject.signal_new("alert-closed", AlertDisplay, gobject.SIGNAL_ACTION,
     gobject.TYPE_BOOLEAN, ())
+
 
 class AlertDialog(AlertDisplay):
 
     """ Window displayed when an alert is triggered. """
 
     def __init__(self, event):
-        gobject.GObject.__init__(self)
-        logger.debug('Opening alert dialog for event: %s', event.entry.title)
-        self.event = event
+        AlertDisplay.__init__(self, event)
 
         glade_file = 'wuja/data/alert-window.glade'
         window_name = 'window1'
@@ -256,24 +274,23 @@ class AlertDialog(AlertDisplay):
 
     def accept_event(self, widget):
         """ Called when the user accepts an alert. """
-        self.event.accepted = True
-        logger.debug("Accepted event: " + self.event.entry.title)
+        self._accept_event()
         widget.get_parent_window().destroy()
-        self.emit('alert-closed')
     
     def snooze_event(self, widget, event):
         """
         Called when the user presses snooze. Destroys the alert
         window and sets appropriate status for the event in question.
         """
-        logger.debug("Snoozed event: " + event.entry.title)
+        self._snooze_event()
         widget.get_parent_window().destroy()
-        self.emit('alert-closed')
 
 
 class AlertNotification(AlertDisplay):
 
     def __init__(self, event, tray_icon):
+        AlertDisplay.__init__(self, event)
+        
         import pynotify
         pynotify.init('wuja')
         
@@ -299,10 +316,10 @@ class AlertNotification(AlertDisplay):
         notif.show()
 
     def accept_event(self, notification, action):
-        self.emit('alert-closed')
+        self._accept_event()
 
     def snooze_event(self, notification, action):
-        self.emit('alert-closed')
+        self._snooze_event()
 
 
 class PreferencesDialog:
