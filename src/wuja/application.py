@@ -191,16 +191,28 @@ class WujaApplication:
         else:
             assert False
 
+        alert_window.connect("alert-closed", self.on_alert_closed)
+
+    def on_alert_closed(self, alert):
+        print "BALALA"
+
     def main(self):
         """ Launches the GTK main loop. """
         gtk.main()
 
 
-class AlertDialog:
+class AlertDisplay(gobject.GObject):
+    pass
+
+gobject.signal_new("alert-closed", AlertDisplay, gobject.SIGNAL_ACTION,
+    gobject.TYPE_BOOLEAN, ())
+
+class AlertDialog(AlertDisplay):
 
     """ Window displayed when an alert is triggered. """
 
     def __init__(self, event, open_alerts):
+        gobject.GObject.__init__(self)
         logger.debug('Opening alert dialog for event: %s', event.entry.title)
         self.event = event
         # Maintain a reference to the main applications open alerts so we can
@@ -250,7 +262,8 @@ class AlertDialog:
         logger.debug("Accepted event: " + self.event.entry.title)
         widget.get_parent_window().destroy()
         self.__open_alerts.pop(self.event.key)
-
+        self.emit('alert-closed')
+    
     def snooze_event(self, widget, event):
         """
         Called when the user presses snooze. Destroys the alert
@@ -259,9 +272,10 @@ class AlertDialog:
         logger.debug("Snoozed event: " + event.entry.title)
         widget.get_parent_window().destroy()
         self.__open_alerts.pop(event.key)
+        self.emit('alert-closed')
 
 
-class AlertNotification:
+class AlertNotification(AlertDisplay):
 
     def __init__(self, event, open_alerts):
         import pynotify
@@ -289,10 +303,10 @@ class AlertNotification:
         notif.show()
 
     def accept_event(self, notification, action):
-        pass
+        self.emit('alert-closed')
 
     def snooze_event(self, notification, action):
-        pass
+        self.emit('alert-closed')
 
 
 class PreferencesDialog:
