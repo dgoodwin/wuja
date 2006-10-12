@@ -66,7 +66,6 @@ class WujaApplication:
         self.notifier = None
         self.prefs_dialog = None
         self.feed_update_event_source = None
-        self.build_notifier()
 
         actions = (("preferences", gtk.STOCK_PREFERENCES, None, None, None,
             self.__open_preferences_dialog),
@@ -96,6 +95,8 @@ class WujaApplication:
         event_box.add(tray_image)
         self.tray_icon.add(event_box)
         self.tray_icon.show_all()
+
+        self.build_notifier()
 
     def __update_feeds(self, widget):
         """
