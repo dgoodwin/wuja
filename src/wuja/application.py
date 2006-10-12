@@ -185,16 +185,17 @@ class WujaApplication:
         
         alert_type = self.config.get_alert_type()
         if alert_type == "dialog":
-            alert_window = AlertDialog(event, self.__open_alerts)
+            alert_window = AlertDialog(event)
         elif alert_type == "notification":
-            alert_window = AlertNotification(event, self.__open_alerts)
+            alert_window = AlertNotification(event)
         else:
             assert False
 
         alert_window.connect("alert-closed", self.on_alert_closed)
+        self.__open_alerts[event.key] = alert_window
 
     def on_alert_closed(self, alert):
-        print "BALALA"
+        self.__open_alerts.pop(alert.event.key)
 
     def main(self):
         """ Launches the GTK main loop. """
@@ -211,14 +212,10 @@ class AlertDialog(AlertDisplay):
 
     """ Window displayed when an alert is triggered. """
 
-    def __init__(self, event, open_alerts):
+    def __init__(self, event):
         gobject.GObject.__init__(self)
         logger.debug('Opening alert dialog for event: %s', event.entry.title)
         self.event = event
-        # Maintain a reference to the main applications open alerts so we can
-        # pop entries when accepted or snoozed.
-        self.__open_alerts = open_alerts
-        self.__open_alerts[event.key] = self
 
         glade_file = 'wuja/data/alert-window.glade'
         window_name = 'window1'
@@ -261,7 +258,6 @@ class AlertDialog(AlertDisplay):
         self.event.accepted = True
         logger.debug("Accepted event: " + self.event.entry.title)
         widget.get_parent_window().destroy()
-        self.__open_alerts.pop(self.event.key)
         self.emit('alert-closed')
     
     def snooze_event(self, widget, event):
@@ -271,13 +267,12 @@ class AlertDialog(AlertDisplay):
         """
         logger.debug("Snoozed event: " + event.entry.title)
         widget.get_parent_window().destroy()
-        self.__open_alerts.pop(event.key)
         self.emit('alert-closed')
 
 
 class AlertNotification(AlertDisplay):
 
-    def __init__(self, event, open_alerts):
+    def __init__(self, event):
         import pynotify
         pynotify.init('wuja')
         
