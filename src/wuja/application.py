@@ -187,7 +187,7 @@ class WujaApplication:
         if alert_type == "dialog":
             alert_window = AlertDialog(event)
         elif alert_type == "notification":
-            alert_window = AlertNotification(event)
+            alert_window = AlertNotification(event, self.tray_icon)
         else:
             assert False
 
@@ -272,7 +272,7 @@ class AlertDialog(AlertDisplay):
 
 class AlertNotification(AlertDisplay):
 
-    def __init__(self, event):
+    def __init__(self, event, tray_icon):
         import pynotify
         pynotify.init('wuja')
         
@@ -292,7 +292,7 @@ class AlertNotification(AlertDisplay):
 
         pynotify.init(title)
         notif = pynotify.Notification(title, body)
-        #flart.attach_to_widget(tray_thing)
+        notif.attach_to_widget(tray_icon)
         notif.add_action('accept', 'Accept', self.accept_event)
         notif.add_action("snooze", 'Snooze', self.snooze_event)
         notif.show()
