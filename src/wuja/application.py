@@ -259,13 +259,13 @@ class AlertNotification:
 
     def __init__(self, event, open_alerts):
         import pynotify
-        pynotify.init(title)
+        pynotify.init('wuja')
         
-        title = event.entry.titel + " - Wuja"
+        title = event.entry.title + " - Wuja"
         start_time = event.time.strftime("%a %b %d %Y - %I:%M%P")
         duration = str(timedelta(seconds=event.entry.duration))
-        calendar = event.entry.calendar.title
-        where = event.entry.location
+        calendar = str(event.entry.calendar.title)
+        where = str(event.entry.location)
         description = event.entry.description
 
 
