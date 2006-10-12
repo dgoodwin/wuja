@@ -254,6 +254,41 @@ class AlertDialog:
         widget.get_parent_window().destroy()
         self.__open_alerts.pop(event.key)
 
+
+class AlertNotification:
+
+    def __init__(self, event, open_alerts):
+        import pynotify
+        pynotify.init(title)
+        
+        title = event.entry.titel + " - Wuja"
+        start_time = event.time.strftime("%a %b %d %Y - %I:%M%P")
+        duration = str(timedelta(seconds=event.entry.duration))
+        calendar = event.entry.calendar.title
+        where = event.entry.location
+        description = event.entry.description
+
+
+        body = start_time + "\n" + \
+            "Duration - " + duration + "\n"  + \
+            "Calendar - " + calendar + "\n" + \
+            "Location - " + where +  "\n" + \
+            description
+
+        pynotify.init(title)
+        notif = pynotify.Notification(title, body)
+        #flart.attach_to_widget(tray_thing)
+        notif.add_action('accept', 'Accept', self.accept_event)
+        notif.add_action("snooze", 'Snooze', self.snooze_event)
+        notif.show()
+
+    def accept_event(self, notification, action):
+        pass
+
+    def snooze_event(self, notification, action):
+        pass
+
+
 class PreferencesDialog:
 
     """
