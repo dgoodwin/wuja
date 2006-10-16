@@ -4,6 +4,7 @@
 
 __revision__ = "$Revision$"
 
+from optparse import OptionParser
 from wuja.log import setup_logging
 # Configure logging: (needs to be done before importing our modules)
 confFileLocations = ["~/.wuja/logging.conf", "./logging.conf"]
@@ -12,5 +13,7 @@ setup_logging(confFileLocations)
 from wuja.application import WujaApplication
 
 if __name__ == "__main__":
+    parser = OptionParser(version='0.0.2')
+    (options, args) = parser.parse_args()
     wujaApp = WujaApplication()
     wujaApp.main()
