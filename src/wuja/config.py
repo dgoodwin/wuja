@@ -88,7 +88,16 @@ class WujaConfiguration(gobject.GObject):
         return Cache(db=self.__db_file)
 
     def get_alert_type(self):
-        return self.client.get_string(self.alert_path)
+        alert_type = self.client.get_string(self.alert_path)
+        if alert_type == 'notification':
+            try:
+                # pynotify isn't available on all platforms yet.
+                # in a few months we can ditch this.
+                import pynotify
+            except ImportError, e:
+                # log.debug("notifications not available. using default")
+                alert_type = 'dialog'
+        return alert_type
 
     def __set_feed_urls(self, urls):
         self.client.set_list(self.urls_path, gconf.VALUE_STRING, urls)
