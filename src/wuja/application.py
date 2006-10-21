@@ -183,7 +183,7 @@ class WujaApplication:
             logger.debug("Alert window already open for event: " + \
                 event.entry.title)
             return
-        
+
         alert_type = self.config.get_alert_type()
         if alert_type == ALERT_NOTIFICATION:
             alert_window = AlertNotification(event, self.tray_icon)
@@ -208,13 +208,13 @@ class AlertDisplay(gobject.GObject):
 
         logger.debug('Opening alert dialog for event: %s', event.entry.title)
         self.event = event
- 
+
     def _accept_event(self):
         """ Called when the user accepts an alert. """
         self.event.accepted = True
         logger.debug("Accepted event: " + self.event.entry.title)
         self.emit('alert-closed')
-    
+
     def _snooze_event(self):
         """
         Called when the user presses snooze. Destroys the alert
@@ -274,7 +274,7 @@ class AlertDialog(AlertDisplay):
         """ Called when the user accepts an alert. """
         self._accept_event()
         widget.get_parent_window().destroy()
-    
+
     def snooze_event(self, widget, event):
         """
         Called when the user presses snooze. Destroys the alert
@@ -288,10 +288,10 @@ class AlertNotification(AlertDisplay):
 
     def __init__(self, event, tray_icon):
         AlertDisplay.__init__(self, event)
-        
+
         import pynotify
         pynotify.init('wuja')
-        
+
         title = event.entry.title + " - Wuja"
         start_time = event.time.strftime("%a %b %d %Y - %I:%M%P")
         duration = str(timedelta(seconds=event.entry.duration))
@@ -299,12 +299,12 @@ class AlertNotification(AlertDisplay):
         where = str(event.entry.location)
         description = event.entry.description
 
-
         body = start_time + "\n" + \
             "Duration - " + duration + "\n"  + \
             "Calendar - " + calendar + "\n" + \
-            "Location - " + where +  "\n" + \
-            description
+            "Location - " + where
+        if description != None:
+            body += "\n" + description
 
         pynotify.init(title)
         notif = pynotify.Notification(title, body)
