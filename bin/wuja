@@ -13,7 +13,7 @@ setup_logging(confFileLocations)
 from wuja.application import WujaApplication
 
 if __name__ == "__main__":
-    parser = OptionParser(version='0.0.2')
+    parser = OptionParser(version='0.0.3')
     (options, args) = parser.parse_args()
     wujaApp = WujaApplication()
     wujaApp.main()
