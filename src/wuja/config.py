@@ -30,6 +30,9 @@ from wuja.feed import FeedSource
 from wuja.data import WUJA_DB_FILE
 from wuja.model import Cache
 
+ALERT_NOTIFICATION = 'notification'
+ALERT_DIALOG = 'dialog'
+
 class WujaConfiguration(gobject.GObject):
 
     def __init__(self, gconf_path):
@@ -89,14 +92,17 @@ class WujaConfiguration(gobject.GObject):
 
     def get_alert_type(self):
         alert_type = self.client.get_string(self.alert_path)
-        if alert_type == 'notification':
+        if alert_type == ALERT_NOTIFICATION: 
             try:
                 # pynotify isn't available on all platforms yet.
                 # in a few months we can ditch this.
                 import pynotify
             except ImportError, e:
                 # log.debug("notifications not available. using default")
-                alert_type = 'dialog'
+                alert_type 
+        elif alert_type != ALERT_DIALOG:
+            # default to the dialog
+            alert_type = ALERT_DIALOG
         return alert_type
 
     def __set_feed_urls(self, urls):

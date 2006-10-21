@@ -37,7 +37,7 @@ from egg import trayicon
 from datetime import timedelta
 
 from wuja.notifier import Notifier
-from wuja.config import WujaConfiguration
+from wuja.config import WujaConfiguration, ALERT_NOTIFICATION
 from wuja.data import WUJA_DIR, GCONF_PATH, WUJA_DB_FILE
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
 
@@ -185,12 +185,10 @@ class WujaApplication:
             return
         
         alert_type = self.config.get_alert_type()
-        if alert_type == "dialog":
-            alert_window = AlertDialog(event)
-        elif alert_type == "notification":
+        if alert_type == ALERT_NOTIFICATION:
             alert_window = AlertNotification(event, self.tray_icon)
         else:
-            assert False, "Unknown notification type provided"
+            alert_window = AlertDialog(event)
 
         alert_window.connect("alert-closed", self.on_alert_closed)
         self.__open_alerts[event.key] = alert_window
