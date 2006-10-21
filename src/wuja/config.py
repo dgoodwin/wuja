@@ -41,8 +41,8 @@ class WujaConfiguration(gobject.GObject):
         self.__gconf_path = gconf_path
 
         self.client = gconf.client_get_default()
-        self.urls_path = self.__gconf_path + "feed_urls"
-        self.alert_path = self.__gconf_path + "alert_type"
+        self.urls_path = os.path.join(self.__gconf_path, "feed_urls")
+        self.alert_path = os.path.join(self.__gconf_path, "alert_type")
         self.__db_file = WUJA_DB_FILE
 
     def get_feed_urls(self):
