@@ -40,6 +40,7 @@ from wuja.notifier import Notifier
 from wuja.config import WujaConfiguration, ALERT_NOTIFICATION
 from wuja.data import WUJA_DIR, GCONF_PATH, WUJA_DB_FILE
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
+from wuja.calendar import CalendarWindow
 
 NOTIFICATION_INTERVAL = 1 # minutes between notification checks
 FEED_UPDATE_INTERVAL = 10 # minutes between feed updates
@@ -65,10 +66,14 @@ class WujaApplication:
         self.config = WujaConfiguration(GCONF_PATH)
         self.notifier = None
         self.prefs_dialog = None
+        self.calendar_window = None
         self.feed_update_event_source = None
 
-        actions = (("preferences", gtk.STOCK_PREFERENCES, None, None, None,
-            self.__open_preferences_dialog),
+        actions = (
+            ("calendar", gtk.STOCK_INDEX, "View Calendar", None, None,
+                self.__open_calendar),
+            ("preferences", gtk.STOCK_PREFERENCES, None, None, None,
+                self.__open_preferences_dialog),
             ("update_feeds", gtk.STOCK_REFRESH, "Update Feeds", None, None,
                 self.__update_feeds),
             ("about", gtk.STOCK_ABOUT, None, None, None,
@@ -120,6 +125,9 @@ class WujaApplication:
 
     def __open_preferences_dialog(self, widget):
         self.prefs_dialog = PreferencesDialog(self.config, self.notifier)
+
+    def __open_calendar(self, widget):
+        self.calendar_window = CalendarWindow()
 
     def __close_dialog(self, widget):
         self.prefs_dialog.close()
@@ -237,7 +245,7 @@ class AlertDialog(AlertDisplay):
         glade_file = 'wuja/data/alert-window.glade'
         window_name = 'window1'
         glade_alert = gtk.glade.XML(find_file_on_path(glade_file))
-        alert_dialog = glade_alert.get_widget('window1')
+        alert_dialog = glade_alert.get_widget(window_name)
 
         signals = {
             'on_accept_button_clicked': self.accept_event,
@@ -419,6 +427,7 @@ class PreferencesDialog:
         """ Close the preferences dialog. """
         self.prefs_dialog_widget.destroy()
         self.prefs_dialog = None
+
 
 def find_file_on_path(pathname):
     """
