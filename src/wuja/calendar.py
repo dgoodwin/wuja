@@ -34,6 +34,7 @@ import os.path
 import sys
 
 from logging import getLogger
+from datetime import datetime
 
 #from wuja.application import find_file_on_path
 
@@ -41,26 +42,53 @@ logger = getLogger("calendar_window")
 
 class CalendarWindow(gobject.GObject):
 
-    def __init__(self):
+    def __init__(self, cache):
         gobject.GObject.__init__(self)
-        logger.debug('Opening calendar window.')
+        self.cache = cache
 
         glade_file = 'wuja/data/calendar.glade'
         window_name = 'calendar'
         glade_calendar = gtk.glade.XML(find_file_on_path(glade_file))
-        calendar_window = glade_calendar.get_widget('calendar')
+        self.calendar_window = glade_calendar.get_widget('calendar')
+        self.textview = glade_calendar.get_widget('textview')
 
         signals = {
             'on_calendar_day_selected': self.display_entries,
-            'on_button_press': self.display_entries,
         }
         glade_calendar.signal_autoconnect(signals)
 
-        calendar_window.show_all()
+        self.calendar_window.show_all()
 
     def display_entries(self, calendar_widget):
-        logger.debug("Changed calendar day.")
-        logger.debug(calendar_widget.get_date())
+        selected = calendar_widget.get_date()
+
+        # Calendar returns months starting from 0:
+        start_date = datetime(selected[0], selected[1] + 1, selected[2])
+        end_date = datetime(selected[0], selected[1] + 1, selected[2], 23, 59)
+
+        # Map event times to event objects for sorting:
+        events_for_date = {}
+
+        # Scan all our calendars for events on the given date:
+        for calendar in self.cache.load_all():
+            for entry in calendar.entries:
+                for event in entry.get_events(start_date, end_date):
+                    # Multiple events could have the same time:
+                    if not events_for_date.has_key(event.time):
+                        events_for_date[event.time] = []
+                    events_for_date[event.time].append(event)
+
+        txt = "Calendar events: " + start_date.strftime("%B %d %Y") + "\n\n"
+        keys = events_for_date.keys()
+        keys.sort()
+        for key in keys:
+            for event in events_for_date[key]:
+                txt += event.time.strftime("%I:%M%p")
+                txt += " - "
+                txt += event.entry.title
+                txt += " (" + event.entry.calendar.title + ")"
+                txt += "\n"
+        self.textview.get_buffer().set_text(txt)
 
 
 # FIXME: Had to duplicate this, import from wuja.application wasn't working.

@@ -127,7 +127,7 @@ class WujaApplication:
         self.prefs_dialog = PreferencesDialog(self.config, self.notifier)
 
     def __open_calendar(self, widget):
-        self.calendar_window = CalendarWindow()
+        self.calendar_window = CalendarWindow(self.notifier.cache)
 
     def __close_dialog(self, widget):
         self.prefs_dialog.close()
