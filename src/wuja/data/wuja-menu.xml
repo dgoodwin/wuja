@@ -3,6 +3,7 @@
         <menuitem action="calendar" />
         <menuitem action="preferences" />
         <menuitem action="update_feeds" />
+        <menuitem action="debug_feeds" />
         <separator />
         <menuitem action="about" />
         <menuitem action="quit" />

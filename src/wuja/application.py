@@ -76,6 +76,8 @@ class WujaApplication:
                 self.__open_preferences_dialog),
             ("update_feeds", gtk.STOCK_REFRESH, "Update Feeds", None, None,
                 self.__update_feeds),
+            ("debug_feeds", gtk.STOCK_EXECUTE, "Debug Feeds", None, None,
+                self.__debug_feeds),
             ("about", gtk.STOCK_ABOUT, None, None, None,
                 self.__open_about_dialog),
             ("quit", gtk.STOCK_QUIT, None, None, None, self.destroy))
@@ -117,6 +119,14 @@ class WujaApplication:
             FEED_UPDATE_INTERVAL * 1000 * 60, self.notifier.update)
         logger.debug("Updating feeds from Google servers every %s minutes."
             % FEED_UPDATE_INTERVAL)
+
+    def __debug_feeds(self, widget):
+        """ Print out debug info on all feeds to the log file. """
+        logger.info("Calendar Debug Info:")
+        for cal in self.notifier.cache.load_all():
+            logger.info(cal.title + ":")
+            for entry in cal.entries:
+                logger.info("   " + entry.get_debug_info())
 
     def __clicked(self, widget, data):
         """ Handle mouse clicks on the tray icon. (pop up the menu) """

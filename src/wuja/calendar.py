@@ -20,7 +20,7 @@
 
 """ The Wuja calendar display window. """
 
-__revision__ = "$Revision$"
+__revision__ = "$Rev$"
 
 
 import pygtk
@@ -63,8 +63,7 @@ class CalendarWindow(gobject.GObject):
         selected = calendar_widget.get_date()
 
         # Calendar returns months starting from 0:
-        start_date = datetime(selected[0], selected[1] + 1, selected[2])
-        end_date = datetime(selected[0], selected[1] + 1, selected[2], 23, 59)
+        query_date = datetime(selected[0], selected[1] + 1, selected[2])
 
         # Map event times to event objects for sorting:
         events_for_date = {}
@@ -72,13 +71,14 @@ class CalendarWindow(gobject.GObject):
         # Scan all our calendars for events on the given date:
         for calendar in self.cache.load_all():
             for entry in calendar.entries:
-                for event in entry.get_events(start_date, end_date):
+                for event in entry.get_events_occurring_on(query_date):
                     # Multiple events could have the same time:
+                    print "woof"
                     if not events_for_date.has_key(event.time):
                         events_for_date[event.time] = []
                     events_for_date[event.time].append(event)
 
-        txt = "Calendar events: " + start_date.strftime("%B %d %Y") + "\n\n"
+        txt = "Calendar events: " + query_date.strftime("%B %d %Y") + "\n\n"
         keys = events_for_date.keys()
         keys.sort()
         for key in keys:

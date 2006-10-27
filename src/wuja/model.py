@@ -27,7 +27,7 @@ import vobject
 import shelve
 import os.path
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.parser import parse
 from logging import getLogger
 
@@ -128,10 +128,16 @@ class Entry:
         self.reminder = remind
         self.calendar = cal
 
-    def events(self, end_date):
-        """ Returns the events for this entry between now and the end date. """
+    def get_events_starting_between(self, start_date, end_date):
+        """
+        Returns the events for this entry starting between the given
+        datetimes.
+        """
         raise Exception("Not implemented.")
 
+    def get_events_occurring_on(self, date):
+        """ Return the events occurring on or throughout the given date. """
+        raise Exception("Not implemented.")
 
 class SingleOccurrenceEntry(Entry):
 
@@ -143,7 +149,16 @@ class SingleOccurrenceEntry(Entry):
             updated, duration, cal)
         self.time = time
 
-    def get_events(self, start_date, end_date):
+    def get_debug_info(self):
+        """ Returns a string of debug information for this entry. """
+        return_str = self.title
+        return_str += " / "
+        return_str += "time = " + str(self.time)
+        return_str += " / "
+        return_str += "duration = " + str(self.duration)
+        return return_str
+
+    def get_events_starting_between(self, start_date, end_date):
         """
         Returns at most one event for this single occurrence
         calendar entry.
@@ -155,6 +170,25 @@ class SingleOccurrenceEntry(Entry):
             raise BadDateRange, "Your dates are out of order, fool"
         return_me = []
         if start_date <= self.time <= end_date:
+            return_me.append(Event(self.time, self))
+        return return_me
+
+    def get_events_occurring_on(self, date):
+        """ Return the events occurring on or throughout the given date. """
+        # Past limit would be the beginning of the date minus the duration
+        # of this event:
+        logger.debug("Checking " + self.title)
+        start_date = date - timedelta(seconds=self.duration)
+        end_date = datetime(date.year, date.month, date.day, 23, 59, 59) + \
+            timedelta(seconds=self.duration)
+        logger.debug("   duration   = " + str(self.duration))
+        logger.debug("   start_date = " + str(start_date))
+        logger.debug("   time       = " + str(self.time))
+        logger.debug("   end_date   = " + str(end_date))
+
+        return_me = []
+        if start_date < self.time < end_date:
+            logger.debug("   FOUND!")
             return_me.append(Event(self.time, self))
         return return_me
 
@@ -173,6 +207,10 @@ class RecurringEntry(Entry):
         Entry.__init__(self, entry_id, title, desc, remind, location,
             updated, None, cal)
         self.__parse_recurrence(recurrence)
+
+    def get_debug_info(self):
+        """ Returns a string of debug information for this entry. """
+        return self.title
 
     def __parse_recurrence(self, recurrence):
         """ Parses the recurrence field. (iCalendar format, see RFC 2445) """
@@ -231,7 +269,7 @@ class RecurringEntry(Entry):
 
         self.rrule = dateutil.rrule.rrule(freq, **params)
 
-    def get_events(self, start_date, end_date):
+    def get_events_starting_between(self, start_date, end_date):
         """
         Return a list of all events for this recurring entry
         between the specified start and end date.
@@ -245,6 +283,26 @@ class RecurringEntry(Entry):
 
         event_list = []
         event_date_times = self.rrule.between(start_date, end_date, inc=True)
+        for event_time in event_date_times:
+            event_list.append(Event(event_time, self))
+        return event_list
+
+    def get_events_occurring_on(self, date):
+        """ Return the events occurring on or throughout the given date. """
+        # Past limit would be the beginning of the date minus the duration
+        # of this event:
+
+        # All day recurring events have no duration:
+        duration = self.duration
+        if duration == None:
+            duration = 86400
+
+        start_date = date - timedelta(seconds=duration)
+        end_date = datetime(date.year, date.month, date.day, 23, 59, 59) + \
+            timedelta(seconds=duration)
+
+        event_list = []
+        event_date_times = self.rrule.between(start_date, end_date, inc=False)
         for event_time in event_date_times:
             event_list.append(Event(event_time, self))
         return event_list

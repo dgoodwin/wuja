@@ -24,7 +24,7 @@ import unittest
 import os
 import os.path
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import settestpath
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Event, Calendar, \
@@ -106,7 +106,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         distant_event = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
             REMIND, UPDATED, time, 3600, LOCATION, self.cal)
 
-        events = distant_event.get_events(None, end_date)
+        events = distant_event.get_events_starting_between(None, end_date)
         self.assertEquals(1, len(events))
 
         self.assertEquals(time, events[0].time)
@@ -119,8 +119,8 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         distant_event = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
             REMIND, UPDATED, time, 3600, LOCATION, self.cal)
 
-        self.assertRaises(BadDateRange, distant_event.get_events, None,
-            end_date)
+        self.assertRaises(BadDateRange, distant_event
+            .get_events_starting_between, None, end_date)
 
     def test_event_before_current_time(self):
         time = datetime(1980, 05, 23, 22, 0, 0)
@@ -129,8 +129,8 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         distant_event = SingleOccurrenceEntry("fakeId", TITLE,
             DESCRIPTION, REMIND, UPDATED, time, 3600, LOCATION, self.cal)
 
-        self.assertRaises(BadDateRange, distant_event.get_events, None,
-            end_date)
+        self.assertRaises(BadDateRange, distant_event
+            .get_events_starting_between, None, end_date)
 
     def test_time_equal_to_start_time(self):
         time = datetime(2006, 8, 1, 8, 42, 0)
@@ -139,7 +139,8 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         current_event = SingleOccurrenceEntry("fakeId", TITLE,
             DESCRIPTION, REMIND, UPDATED, time, 812, LOCATION, self.cal)
 
-        self.assertEqual(1, len(current_event.get_events(time, end_date)))
+        self.assertEqual(1, len(current_event.get_events_starting_between(
+            time, end_date)))
 
     def test_time_equal_to_end_time(self):
         start_date = datetime(2006, 8, 1, 8, 42, 0)
@@ -148,7 +149,43 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         current_event = SingleOccurrenceEntry("fakeId", TITLE,
             DESCRIPTION, REMIND, UPDATED, end_date, 812, LOCATION, self.cal)
 
-        self.assertEqual(1, len(current_event.get_events(start_date, end_date)))
+        self.assertEqual(1, len(current_event.get_events_starting_between(
+            start_date, end_date)))
+
+    def test_occurring_on_with_all_day_event(self):
+        """
+        Test an all-day event is returned for a call to occuring on.
+        """
+        # Start the event yesterday:
+        today = datetime.now()
+        time = datetime(today.year, today.month, today.day)
+
+        all_day = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
+            REMIND, UPDATED, time, 86400, LOCATION, self.cal)
+
+        events = all_day.get_events_occurring_on(time)
+        self.assertEquals(1, len(events))
+
+        events = all_day.get_events_occurring_on(time - timedelta(days=1))
+        self.assertEquals(0, len(events))
+
+        events = all_day.get_events_occurring_on(time + timedelta(days=1))
+        self.assertEquals(0, len(events))
+
+    def test_occurring_on_with_multi_day_event(self):
+        """
+        Test a multi-day event that starts before and ends after the date
+        queried.
+        """
+        query_date = datetime(2006, 10, 26)
+        event_start = datetime(2006, 10, 20)
+        event_duration = 60 * 60 * 24 * 14 # two weeks
+
+        vacation = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
+            REMIND, UPDATED, event_start, event_duration, LOCATION, self.cal)
+
+        events = vacation.get_events_occurring_on(query_date)
+        self.assertEquals(1, len(events))
 
 
 class RecurringEntryTests(unittest.TestCase):
@@ -167,23 +204,24 @@ class RecurringEntryTests(unittest.TestCase):
         standup_meeting = self.__get_daily_recurring_entry()
         start_date = datetime(2006, 06, 04)
         end_date = datetime(2006, 06, 03)
-        self.assertRaises(BadDateRange, standup_meeting.get_events, start_date,
-            end_date)
+        self.assertRaises(BadDateRange, standup_meeting
+            .get_events_starting_between, start_date, end_date)
 
     def test_query_end_date_before_entries_start_date(self):
         standup_meeting = self.__get_daily_recurring_entry()
         # Event starts on May 18th 2006:
         start_date = datetime(2006, 02, 04)
         end_date = datetime(2006, 02, 05)
-        self.assertEqual(0, len(standup_meeting.get_events(start_date,
-            end_date)))
+        self.assertEqual(0, len(standup_meeting.get_events_starting_between(
+            start_date, end_date)))
 
     def test_daily_recurring_entry(self):
         standup_meeting = self.__get_daily_recurring_entry()
         # Should return five occurences during a standard work week:
         start_date = datetime(2006, 06, 04)
         end_date = datetime(2006, 06, 10)
-        events = standup_meeting.get_events(start_date, end_date)
+        events = standup_meeting.get_events_starting_between(start_date,
+            end_date)
         self.assertEqual(5, len(events))
 
     def test_daily_recurring_entry_for_one_week(self):
@@ -194,7 +232,8 @@ class RecurringEntryTests(unittest.TestCase):
         self.assertEqual(LOCATION, daily_for_one_week.location)
         start_date = datetime(2006, 6, 1)
         end_date = datetime(2006, 6, 30)
-        events = daily_for_one_week.get_events(start_date, end_date)
+        events = daily_for_one_week.get_events_starting_between(start_date,
+            end_date)
         self.assertEquals(5, len(events))
 
     def test_weekly_all_day_recurrence(self):
@@ -205,13 +244,13 @@ class RecurringEntryTests(unittest.TestCase):
         # Event starts on June 5th 2006
         start_date = datetime(2006, 5, 28)
         end_date = datetime(2006, 6, 30)
-        events = weekly_all_day.get_events(start_date, end_date)
+        events = weekly_all_day.get_events_starting_between(start_date,
+            end_date)
         self.assertEquals(4, len(events))
 
         self.assertEquals(2006, events[0].time.year)
         self.assertEquals(6, events[0].time.month)
         self.assertEquals(5, events[0].time.day)
-
 
         self.assertEquals(6, events[1].time.month)
         self.assertEquals(12, events[1].time.day)
@@ -221,6 +260,25 @@ class RecurringEntryTests(unittest.TestCase):
 
         self.assertEquals(6, events[3].time.month)
         self.assertEquals(26, events[3].time.day)
+
+    def test_occurring_on_with_weekly_all_day_event(self):
+        """
+        Test an all-day event is returned for a call to occuring on.
+        """
+        weekly_all_day = RecurringEntry("fakeId", "Weekly All Day", "",
+            REMIND, LOCATION, UPDATED, weekly_recurrence_all_day, self.cal)
+
+        time = datetime(2006, 6, 5)
+        events = weekly_all_day.get_events_occurring_on(time)
+        self.assertEquals(1, len(events))
+
+        events = weekly_all_day.get_events_occurring_on(time -
+            timedelta(days=1))
+        self.assertEquals(0, len(events))
+
+        events = weekly_all_day.get_events_occurring_on(time +
+            timedelta(days=1))
+        self.assertEquals(0, len(events))
 
     def test_recurrence_wkst(self):
         """ Test a recurrence with a wkst parameter. (errors parsing
