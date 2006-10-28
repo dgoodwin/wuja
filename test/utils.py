@@ -30,7 +30,6 @@ from wuja.feed import FeedSource
 from wuja.model import Cache
 from wuja.data import WUJA_DIR
 
-from samplefeed import xml
 from logging import getLogger
 
 TEST_DB_FILE = "test.db"
