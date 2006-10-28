@@ -328,13 +328,27 @@ class RecurringEntryTests(unittest.TestCase):
             timedelta(days=1))
         self.assertEquals(0, len(events))
 
-    def test_monthly_multi_day_over_query_date(self):
+    def __multi_day_tester(self, query_date, expected):
         # monthly_multi_day = 25-27th of every month (starting Oct 06):
         entry = RecurringEntry("fakeId", "Montly Multi-Day", "",
             REMIND, LOCATION, UPDATED, monthly_multi_day, self.cal)
-        time = datetime(2006, 10, 26)
-        events = entry.get_events_occurring_on(time)
-        self.assertEquals(1, len(events))
+        events = entry.get_events_occurring_on(query_date)
+        self.assertEquals(expected, len(events))
+
+    def test_monthly_multi_day_over_query_date(self):
+        self.__multi_day_tester(datetime(2006, 10, 26), 1)
+
+    def test_monthly_multi_day_start_of_query_date(self):
+        self.__multi_day_tester(datetime(2006, 10, 25), 1)
+
+    def test_monthly_multi_day_end_of_query_date(self):
+        self.__multi_day_tester(datetime(2006, 10, 27), 1)
+
+    def test_monthly_multi_day_misses_query_date(self):
+        self.__multi_day_tester(datetime(2006, 10, 24), 0)
+
+    def test_monthly_multi_day_misses_query_date_again(self):
+        self.__multi_day_tester(datetime(2006, 10, 28), 0)
 
 
 def suite():
