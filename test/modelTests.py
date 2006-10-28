@@ -30,7 +30,7 @@ import settestpath
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Event, Calendar, \
     BadDateRange
 from sampledata import daily_recurrence, daily_recurrence_for_one_week, \
-    weekly_recurrence_all_day, wkst_recurrence
+    weekly_recurrence_all_day, monthly_multi_day, wkst_recurrence
 from utils import teardownDatabase, TEST_DB_FILE, TestCache
 
 # Sample data:
@@ -92,6 +92,20 @@ class CacheTests(unittest.TestCase):
         mgr.save(cal)
         mgr.delete(cal.url)
         mgr.save(cal)
+
+
+class EventTests(unittest.TestCase):
+
+    def setUp(self):
+        self.cal = Calendar(FEED_TITLE, CAL_URL, "somedate")
+
+    def test_event_key(self):
+        time = datetime.now()
+        entry = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION, REMIND,
+            UPDATED, time, 3600, LOCATION, self.cal)
+        event = Event(entry.time, entry)
+        self.assertEqual(entry.entry_id + str(time),
+            event.key)
 
 
 class SingleOccurrenceEntryTests(unittest.TestCase):
@@ -156,20 +170,35 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         """
         Test an all-day event is returned for a call to occuring on.
         """
-        # Start the event yesterday:
-        today = datetime.now()
-        time = datetime(today.year, today.month, today.day)
-
+        time = datetime(2006, 10, 28)
         all_day = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
             REMIND, UPDATED, time, 86400, LOCATION, self.cal)
 
         events = all_day.get_events_occurring_on(time)
         self.assertEquals(1, len(events))
 
-        events = all_day.get_events_occurring_on(time - timedelta(days=1))
-        self.assertEquals(0, len(events))
+    def test_occurring_on_all_day_event_yesterday(self):
+        """
+        Test that an all day event is not returned when querying the next
+        day.
+        """
+        time = datetime(2006, 10, 28)
+        all_day = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
+            REMIND, UPDATED, time, 86400, LOCATION, self.cal)
 
         events = all_day.get_events_occurring_on(time + timedelta(days=1))
+        self.assertEquals(0, len(events))
+
+    def test_occurring_on_all_day_event_tomorrow(self):
+        """
+        Test that an all day event is not returned when querying the previous
+        day.
+        """
+        time = datetime(2006, 10, 28)
+        all_day = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
+            REMIND, UPDATED, time, 86400, LOCATION, self.cal)
+
+        events = all_day.get_events_occurring_on(time - timedelta(days=1))
         self.assertEquals(0, len(events))
 
     def test_occurring_on_with_multi_day_event(self):
@@ -239,7 +268,7 @@ class RecurringEntryTests(unittest.TestCase):
     def test_weekly_all_day_recurrence(self):
         weekly_all_day = RecurringEntry("fakeId", "Weekly All Day", "",
             REMIND, LOCATION, UPDATED, weekly_recurrence_all_day, self.cal)
-        self.assertEqual(None, weekly_all_day.duration)
+        self.assertEqual(86400, weekly_all_day.duration)
 
         # Event starts on June 5th 2006
         start_date = datetime(2006, 5, 28)
@@ -261,7 +290,14 @@ class RecurringEntryTests(unittest.TestCase):
         self.assertEquals(6, events[3].time.month)
         self.assertEquals(26, events[3].time.day)
 
-    def test_occurring_on_with_weekly_all_day_event(self):
+    def test_recurrence_wkst(self):
+        """ Test a recurrence with a wkst parameter. (errors parsing
+        these at one point in time)
+        """
+        entry = RecurringEntry("fakeId", "Wkst Entry", "", REMIND, LOCATION,
+            UPDATED, wkst_recurrence, self.cal)
+
+    def test_weekly_all_day_occuring_today(self):
         """
         Test an all-day event is returned for a call to occuring on.
         """
@@ -272,34 +308,33 @@ class RecurringEntryTests(unittest.TestCase):
         events = weekly_all_day.get_events_occurring_on(time)
         self.assertEquals(1, len(events))
 
-        events = weekly_all_day.get_events_occurring_on(time -
-            timedelta(days=1))
-        self.assertEquals(0, len(events))
+    def test_weekly_all_day_occurring_yesterday(self):
+        weekly_all_day = RecurringEntry("fakeId", "Weekly All Day", "",
+            REMIND, LOCATION, UPDATED, weekly_recurrence_all_day, self.cal)
+
+        time = datetime(2006, 6, 5)
 
         events = weekly_all_day.get_events_occurring_on(time +
             timedelta(days=1))
         self.assertEquals(0, len(events))
 
-    def test_recurrence_wkst(self):
-        """ Test a recurrence with a wkst parameter. (errors parsing
-        these at one point in time)
-        """
-        entry = RecurringEntry("fakeId", "Wkst Entry", "", REMIND, LOCATION,
-            UPDATED, wkst_recurrence, self.cal)
+    def test_weekly_all_day_occurring_tomorrow(self):
+        weekly_all_day = RecurringEntry("fakeId", "Weekly All Day", "",
+            REMIND, LOCATION, UPDATED, weekly_recurrence_all_day, self.cal)
 
+        time = datetime(2006, 6, 5)
 
-class EventTests(unittest.TestCase):
+        events = weekly_all_day.get_events_occurring_on(time -
+            timedelta(days=1))
+        self.assertEquals(0, len(events))
 
-    def setUp(self):
-        self.cal = Calendar(FEED_TITLE, CAL_URL, "somedate")
-
-    def test_event_key(self):
-        time = datetime.now()
-        entry = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION, REMIND,
-            UPDATED, time, 3600, LOCATION, self.cal)
-        event = Event(entry.time, entry)
-        self.assertEqual(entry.entry_id + str(time),
-            event.key)
+    def test_monthly_multi_day_over_query_date(self):
+        # monthly_multi_day = 25-27th of every month (starting Oct 06):
+        entry = RecurringEntry("fakeId", "Montly Multi-Day", "",
+            REMIND, LOCATION, UPDATED, monthly_multi_day, self.cal)
+        time = datetime(2006, 10, 26)
+        events = entry.get_events_occurring_on(time)
+        self.assertEquals(1, len(events))
 
 
 def suite():

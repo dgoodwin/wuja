@@ -102,6 +102,39 @@ class Cache:
         self._cache.sync()
 
 
+class Event:
+
+    """ An actual calendar event. Can be associated with an alarm. """
+
+    def __init__(self, time, entry):
+        self.time = time
+        self.entry = entry
+        self.accepted = False # set true once user confirms event
+
+    def get_key(self):
+        """
+        Used to simulate an event.key member representing a unique
+        string for this event.
+        """
+        return str(self.entry.entry_id) + str(self.time)
+
+    def set_key(self):
+        """
+        Dummy setter for the key property, which doesn't really
+        exist.
+        """
+        raise Exception("Keys aren't for setting.")
+
+    key = property(get_key, set_key)
+
+
+class BadDateRange(Exception):
+
+    """ Exception for messed up date ranges. """
+
+    pass
+
+
 class Calendar:
 
     """ A representation of a Google Calendar. """
@@ -139,6 +172,51 @@ class Entry:
         """ Return the events occurring on or throughout the given date. """
         raise Exception("Not implemented.")
 
+    def _event_occurs_on(self, event, duration, query_date):
+        """
+        Checks if the given event occurs on the date queried.
+
+        Used by both single occurrence and recurring entries.
+        """
+        logger.debug("Checking " + self.title)
+        start_of_query_date = datetime(query_date.year, query_date.month,
+            query_date.day)
+        end_of_query_date = datetime(query_date.year, query_date.month,
+            query_date.day, 23, 59, 59)
+
+        # Removing one second from the duration here to prevent problems
+        # with calendar events that claim to end on the first second of the
+        # next day instead of the last second of the actual day.
+        event_end_time = event.time + timedelta(seconds=duration - 1)
+
+        logger.debug("   query start    = " + str(start_of_query_date))
+        logger.debug("   query end      = " + str(end_of_query_date))
+        logger.debug("   event start    = " + str(event.time))
+        logger.debug("   event end      = " + str(event_end_time))
+
+        return_me = []
+        # Does the event start within the queried date:
+        if start_of_query_date <= event.time <= end_of_query_date:
+            logger.debug("   Event started within the given date.")
+            return True
+
+        # Does the event end within the queried date:
+        elif start_of_query_date <= event_end_time <= end_of_query_date:
+            logger.debug("   Event ended within the given date.")
+            return True
+
+        # Does the event overlap the queried date:
+        # NOTE: The <='s below might need some more thought:
+        elif event.time <= start_of_query_date and end_of_query_date <= \
+            event_end_time:
+            logger.debug("   Event overlapped the given date.")
+            return True
+
+        # Event must not occur on the queried date:
+        logger.debug("   Event did not occur on the given date.")
+        return False
+
+
 class SingleOccurrenceEntry(Entry):
 
     """ An entry occurring only once. """
@@ -175,21 +253,10 @@ class SingleOccurrenceEntry(Entry):
 
     def get_events_occurring_on(self, date):
         """ Return the events occurring on or throughout the given date. """
-        # Past limit would be the beginning of the date minus the duration
-        # of this event:
-        logger.debug("Checking " + self.title)
-        start_date = date - timedelta(seconds=self.duration)
-        end_date = datetime(date.year, date.month, date.day, 23, 59, 59) + \
-            timedelta(seconds=self.duration)
-        logger.debug("   duration   = " + str(self.duration))
-        logger.debug("   start_date = " + str(start_date))
-        logger.debug("   time       = " + str(self.time))
-        logger.debug("   end_date   = " + str(end_date))
-
+        event = Event(self.time, self)
         return_me = []
-        if start_date < self.time < end_date:
-            logger.debug("   FOUND!")
-            return_me.append(Event(self.time, self))
+        if self._event_occurs_on(event, self.duration, date):
+            return_me.append(event)
         return return_me
 
 
@@ -222,8 +289,20 @@ class RecurringEntry(Entry):
 
         # Seems to arrive as something like PT1800S:
         self.duration = None
+
         if parsed.contents.has_key('duration'):
             self.duration = int(parsed.duration.value[2:-1])
+        else:
+            dtstart = parsed.contents['dtstart'][0].value
+            start_date = datetime(int(dtstart[0:4]), int(dtstart[4:6]),
+                int(dtstart[6:8]))
+
+            dtend = parsed.contents['dtend'][0].value
+            end_date = datetime(int(dtend[0:4]), int(dtend[4:6]),
+                int(dtend[6:8]))
+
+            duration = end_date - start_date
+            self.duration = (duration.days * 60 * 60 * 24) + duration.seconds
 
         self.__build_rrule(parsed.rrule.value)
 
@@ -289,55 +368,22 @@ class RecurringEntry(Entry):
 
     def get_events_occurring_on(self, date):
         """ Return the events occurring on or throughout the given date. """
-        # Past limit would be the beginning of the date minus the duration
-        # of this event:
+        return_me = []
 
-        # All day recurring events have no duration:
-        duration = self.duration
-        if duration == None:
-            duration = 86400
+        # Check each possible event that could start or end in this range:
+        start_range = datetime(date.year, date.month, date.day) - \
+            timedelta(seconds=self.duration)
+        end_range = datetime(date.year, date.month, date.day, 23, 59, 59) + \
+            timedelta(seconds=self.duration)
 
-        start_date = date - timedelta(seconds=duration)
-        end_date = datetime(date.year, date.month, date.day, 23, 59, 59) + \
-            timedelta(seconds=duration)
+        # Do any events start within the queried date:
+        possible_events = self.rrule.between(start_range, end_range,
+            inc=True)
+        for time in possible_events:
+            event = Event(time, self)
+            if self._event_occurs_on(event, self.duration, date):
+                return_me.append(event)
 
-        event_list = []
-        event_date_times = self.rrule.between(start_date, end_date, inc=False)
-        for event_time in event_date_times:
-            event_list.append(Event(event_time, self))
-        return event_list
-
-
-class Event:
-
-    """ An actual calendar event. Can be associated with an alarm. """
-
-    def __init__(self, time, entry):
-        self.time = time
-        self.entry = entry
-        self.accepted = False # set true once user confirms event
-
-    def get_key(self):
-        """
-        Used to simulate an event.key member representing a unique
-        string for this event.
-        """
-        return str(self.entry.entry_id) + str(self.time)
-
-    def set_key(self):
-        """
-        Dummy setter for the key property, which doesn't really
-        exist.
-        """
-        raise Exception("Keys aren't for setting.")
-
-    key = property(get_key, set_key)
-
-
-class BadDateRange(Exception):
-
-    """ Exception for messed up date ranges. """
-
-    pass
+        return return_me
 
 

@@ -73,7 +73,6 @@ class CalendarWindow(gobject.GObject):
             for entry in calendar.entries:
                 for event in entry.get_events_occurring_on(query_date):
                     # Multiple events could have the same time:
-                    print "woof"
                     if not events_for_date.has_key(event.time):
                         events_for_date[event.time] = []
                     events_for_date[event.time].append(event)
