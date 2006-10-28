@@ -327,6 +327,7 @@ class AlertNotification(AlertDisplay):
         pynotify.init(title)
         notif = pynotify.Notification(title, body)
         notif.attach_to_widget(tray_icon)
+        notif.set_timeout(0)
         notif.add_action('accept', 'Accept', self.accept_event)
         notif.add_action("snooze", 'Snooze', self.snooze_event)
         notif.show()
