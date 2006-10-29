@@ -394,7 +394,7 @@ class PreferencesDialog:
         add_url_textfield = self.glade_prefs.get_widget('entry1')
 
         url = add_url_textfield.get_text()
-        url = url.replace('/basic', '/full')
+        url = processUrl(url)
         logger.info("Adding URL: " + url)
         add_url_textfield.set_text('')
 
@@ -456,3 +456,13 @@ def find_file_on_path(pathname):
     raise Exception("Could not find %s on the Python path."
         % pathname)
 
+def processUrl(url):
+    """
+    Convert the URL specified by the user into what we need for wuja.
+    """
+
+    url = url.replace('/basic', '/full')
+    # Set the max results to 10000 until we figure out an intelligent way
+    # to cache this, Google defaults to just 25.
+    url += "?max-results=10000"
+    return url
