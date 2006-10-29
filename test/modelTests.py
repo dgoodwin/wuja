@@ -30,7 +30,8 @@ import settestpath
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Event, Calendar, \
     BadDateRange
 from sampledata import daily_recurrence, daily_recurrence_for_one_week, \
-    weekly_recurrence_all_day, monthly_multi_day, wkst_recurrence
+    weekly_recurrence_all_day, monthly_multi_day, wkst_recurrence, \
+    recurring_with_interval
 from utils import teardownDatabase, TEST_DB_FILE, TestCache
 
 # Sample data:
@@ -296,6 +297,11 @@ class RecurringEntryTests(unittest.TestCase):
         """
         entry = RecurringEntry("fakeId", "Wkst Entry", "", REMIND, LOCATION,
             UPDATED, wkst_recurrence, self.cal)
+
+    def test_interval(self):
+        """ Test a problem reported with entries containing an interval. """
+        entry = RecurringEntry("fakeId", "Wkst Entry", "", REMIND, LOCATION,
+            UPDATED, recurring_with_interval, self.cal)
 
     def test_weekly_all_day_occuring_today(self):
         """

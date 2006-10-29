@@ -341,6 +341,9 @@ class RecurringEntry(Entry):
                 elif key == 'wkst':
                     val = WEEKDAY_MAP[val[0]]
 
+                elif key == 'count' or key == 'interval':
+                    val = int(val[0])
+
                 else:
                     val = tuple(val)
 
