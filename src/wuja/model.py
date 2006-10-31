@@ -160,6 +160,7 @@ class Entry:
         self.duration = duration
         self.reminder = remind
         self.calendar = cal
+        self.exceptions = []
 
     def get_events_starting_between(self, start_date, end_date):
         """
@@ -178,7 +179,6 @@ class Entry:
 
         Used by both single occurrence and recurring entries.
         """
-        logger.debug("Checking " + self.title)
         start_of_query_date = datetime(query_date.year, query_date.month,
             query_date.day)
         end_of_query_date = datetime(query_date.year, query_date.month,
@@ -189,31 +189,22 @@ class Entry:
         # next day instead of the last second of the actual day.
         event_end_time = event.time + timedelta(seconds=duration - 1)
 
-        logger.debug("   query start    = " + str(start_of_query_date))
-        logger.debug("   query end      = " + str(end_of_query_date))
-        logger.debug("   event start    = " + str(event.time))
-        logger.debug("   event end      = " + str(event_end_time))
-
         return_me = []
         # Does the event start within the queried date:
         if start_of_query_date <= event.time <= end_of_query_date:
-            logger.debug("   Event started within the given date.")
             return True
 
         # Does the event end within the queried date:
         elif start_of_query_date <= event_end_time <= end_of_query_date:
-            logger.debug("   Event ended within the given date.")
             return True
 
         # Does the event overlap the queried date:
         # NOTE: The <='s below might need some more thought:
         elif event.time <= start_of_query_date and end_of_query_date <= \
             event_end_time:
-            logger.debug("   Event overlapped the given date.")
             return True
 
         # Event must not occur on the queried date:
-        logger.debug("   Event did not occur on the given date.")
         return False
 
 
@@ -366,7 +357,8 @@ class RecurringEntry(Entry):
         event_list = []
         event_date_times = self.rrule.between(start_date, end_date, inc=True)
         for event_time in event_date_times:
-            event_list.append(Event(event_time, self))
+            if event_time not in self.exceptions:
+                event_list.append(Event(event_time, self))
         return event_list
 
     def get_events_occurring_on(self, date):

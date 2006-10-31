@@ -54,6 +54,7 @@ class FeedSource:
         """
         return urllib2.urlopen(url).read()
 
+
 def build_calendar(xml, url, last_update):
     __root_node = ElementTree.XML(xml)
     title = None
@@ -65,9 +66,17 @@ def build_calendar(xml, url, last_update):
     logger.debug("Building calendar: " + title)
     cal = Calendar(title=title, last_update=last_update, url=url)
 
+    # Maintain a running list of exceptions, map entry id to list of
+    # exceptions:
+    exceptions = {}
     for elem in __root_node.getchildren():
         if parse_tag(elem.tag) == "entry":
-            create_entry(elem, cal)
+            create_entry(elem, cal, exceptions)
+
+    # Tack on the exceptions:
+    for entry in cal.entries:
+        if exceptions.has_key(entry.entry_id):
+            entry.exceptions.extend(exceptions[entry.entry_id])
 
     return cal
 
@@ -96,7 +105,7 @@ def parse_timestamp(timestamp):
     return datetime(int(year), int(month), int(day), int(hour), int(minute),
         int(second))
 
-def create_entry(elem, cal):
+def create_entry(elem, cal, exceptions):
     """ Parses calender entry XML into an Entry object. """
     entry_id = None
     title = None
@@ -133,6 +142,15 @@ def create_entry(elem, cal):
             reminder = int(node.get('minutes'))
         elif parse_tag(node.tag) == 'where':
             where = node.text
+        elif parse_tag(node.tag) == 'originalEvent':
+            original_entry = node.attrib["href"]
+            for child_element in node.getchildren():
+                if parse_tag(child_element.tag) == 'when':
+                    start_time = child_element.get('startTime')
+
+            if not exceptions.has_key(original_entry):
+                exceptions[original_entry] = []
+            exceptions[original_entry].append(parse_timestamp(start_time))
 
     if reminder is None:
         logger.debug("No reminder found for entry: %s" % title)
