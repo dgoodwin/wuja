@@ -38,7 +38,7 @@ class FeedSourceTests(unittest.TestCase):
 
     def test_simple_entry(self):
         cal = build_calendar(xml, FEED_LAST_UPDATE, FEED_URL)
-        distant_event = find_entry(cal.entries, "Distant Event")
+        distant_event = find_entries(cal.entries, "Distant Event")[0]
         self.assertTrue(distant_event != None)
 
     def test_timestamp_parsing(self):
@@ -49,11 +49,39 @@ class FeedSourceTests(unittest.TestCase):
         self.assertEquals(24, date.minute)
         self.assertEquals(41, date.second)
 
-def find_entry(entries, title):
+    def test_recurring_exception_changed_time(self):
+        cal = build_calendar(xml, FEED_LAST_UPDATE, FEED_URL)
+        events = find_entries(cal.entries, "Recurring With Exception")
+        self.assertEqual(2, len(events))
+
+        # Find the parent event:
+        original_event = None
+        exception_event = None
+        if len(events[0].exceptions) > 0:
+            self.assertEqual(0, len(events[1].exceptions))
+            original_event = events[0]
+            exception_event = events[1]
+        else:
+            self.assertEqual(1, len(events[1].exceptions))
+            original_event = events[1]
+            exception_event = events[0]
+
+        # Check that only 4 of the 5 entries are returned for the week:
+        start = datetime(2006, 11, 20)
+        end = datetime(2006, 11, 26)
+        events = original_event.get_events_starting_between(start, end)
+        self.assertEqual(4, len(events))
+
+
+def find_entries(entries, title):
+    """ Returns the entries with the given title. """
+    found_entries = []
     for entry in entries:
         if entry.title == title:
-            return entry
-    raise Exception('Unable to find calendar event: "' + title + '"')
+            found_entries.append(entry)
+    if len(found_entries) == 0:
+        raise Exception('Unable to find calendar event: "' + title + '"')
+    return found_entries
 
 def suite():
     suite = unittest.TestSuite()
