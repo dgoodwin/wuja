@@ -58,13 +58,17 @@ class FeedSource:
 def build_calendar(xml, url, last_update):
     __root_node = ElementTree.XML(xml)
     title = None
+    timezone = None
 
     # Scan once just to gather data so we can create a calendar object:
     for elem in __root_node.getchildren():
         if parse_tag(elem.tag) == "title":
             title = elem.text
+        elif parse_tag(elem.tag) == 'timezone':
+            timezone = elem.text
     logger.debug("Building calendar: " + title)
-    cal = Calendar(title=title, last_update=last_update, url=url)
+    cal = Calendar(title=title, last_update=last_update, url=url,
+        timezone=timezone)
 
     # Maintain a running list of exceptions, map entry id to list of
     # exceptions:

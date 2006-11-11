@@ -38,6 +38,7 @@ from utils import teardownDatabase, TEST_DB_FILE, TestCache
 UPDATED = str(datetime(2006, 05, 26, 12, 00, 00))
 CAL_TITLE = "Test Calendar"
 CAL_URL = "http://fakecalurl"
+CAL_TZ = "America/Halifax"
 TITLE = "Super Important Meeting"
 RECURRING_TITLE = "Super Important Every Day Meeting"
 DESCRIPTION = "In the future, there will be robots."
@@ -54,7 +55,7 @@ class CacheTests(unittest.TestCase):
         teardownDatabase()
 
     def test_save(self):
-        cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update)
+        cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update, CAL_TZ)
         mgr = TestCache(db=TEST_DB_FILE)
         mgr.save(cal)
 
@@ -64,7 +65,7 @@ class CacheTests(unittest.TestCase):
         self.assertEqual(self.__last_update, loaded_cal.last_update)
 
     def test_empty_cache(self):
-        cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update)
+        cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update, CAL_TZ)
         mgr = TestCache(db=TEST_DB_FILE)
         mgr.save(cal)
         self.assertEqual(1, len(mgr.load_all()))
@@ -73,22 +74,22 @@ class CacheTests(unittest.TestCase):
         self.assertEqual(0, len(mgr.load_all()))
 
     def test_save_calendar_id_already_exists(self):
-        cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update)
+        cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update, CAL_TZ)
         mgr = TestCache(db=TEST_DB_FILE)
         mgr.save(cal)
-        cal = Calendar("", CAL_URL, "")
+        cal = Calendar("", CAL_URL, "", CAL_TZ)
         self.assertRaises(Exception, mgr.save, cal)
         mgr.close()
 
     def test_delete(self):
-        cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update)
+        cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update, CAL_TZ)
         mgr = TestCache(db=TEST_DB_FILE)
         mgr.save(cal)
         mgr.delete(cal.url)
         self.assertEqual(0, len(mgr.load_all()))
 
     def test_delete_readd_without_close(self):
-        cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update)
+        cal = Calendar(CAL_TITLE, CAL_URL, self.__last_update, CAL_TZ)
         mgr = TestCache(db=TEST_DB_FILE)
         mgr.save(cal)
         mgr.delete(cal.url)
@@ -98,7 +99,7 @@ class CacheTests(unittest.TestCase):
 class EventTests(unittest.TestCase):
 
     def setUp(self):
-        self.cal = Calendar(FEED_TITLE, CAL_URL, "somedate")
+        self.cal = Calendar(FEED_TITLE, CAL_URL, "somedate", CAL_TZ)
 
     def test_event_key(self):
         time = datetime.now()
@@ -112,7 +113,7 @@ class EventTests(unittest.TestCase):
 class SingleOccurrenceEntryTests(unittest.TestCase):
 
     def setUp(self):
-        self.cal = Calendar(FEED_TITLE, CAL_URL, "somedate")
+        self.cal = Calendar(FEED_TITLE, CAL_URL, "somedate", CAL_TZ)
 
     def test_event_within_end_time(self):
         time = datetime(2015, 05, 23, 22, 0, 0)
@@ -221,7 +222,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
 class RecurringEntryTests(unittest.TestCase):
 
     def setUp(self):
-        self.cal = Calendar(FEED_TITLE, CAL_URL, "somedate")
+        self.cal = Calendar(FEED_TITLE, CAL_URL, "somedate", CAL_TZ)
 
     def __get_daily_recurring_entry(self):
         standup_meeting = RecurringEntry("fakeId", "Standup Meeting", "",

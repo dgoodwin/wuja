@@ -40,6 +40,7 @@ REMIND = 10
 CAL_TITLE = "Testing Calendar"
 CAL_URL = "http://fakeurl"
 CAL_LAST_UPDATE = "whenever"
+CAL_TZ = "America/Halifax"
 
 TITLE = "Single Occurrence Entry Title"
 RECURRING_TITLE = "Moo"
@@ -219,7 +220,7 @@ class NotifierTests(unittest.TestCase):
 
     def __create_test_calendar_data(self):
         # Create a calendar with two entries:
-        cal = Calendar(CAL_TITLE, CAL_URL, "0")
+        cal = Calendar(CAL_TITLE, CAL_URL, "0", CAL_TZ)
         cal.entries.append(SingleOccurrenceEntry("singleid",
             TITLE, "desc", REMIND, datetime.now(), datetime.now(), 3600,
             LOCATION, cal))
@@ -229,7 +230,7 @@ class NotifierTests(unittest.TestCase):
         return cal
 
     def __create_entry(self, future_time):
-        cal = Calendar(CAL_TITLE, "somedate", CAL_URL)
+        cal = Calendar(CAL_TITLE, "somedate", CAL_URL, CAL_TZ)
         self.entry = SingleOccurrenceEntry("fakeId", "Fake Title", "",REMIND,
             datetime.now(), future_time, 3600, "Gumdrop Alley", cal)
         self.notifier = TestNotifier([self.entry])

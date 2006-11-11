@@ -139,11 +139,12 @@ class Calendar:
 
     """ A representation of a Google Calendar. """
 
-    def __init__(self, title, url, last_update):
+    def __init__(self, title, url, last_update, timezone):
         self.title = title
         self.url = url
         self.last_update = last_update
         self.entries = []
+        self.timezone = timezone # string like 'America/Halifax'
 
 
 class Entry:

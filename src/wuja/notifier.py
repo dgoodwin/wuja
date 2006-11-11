@@ -28,7 +28,7 @@ import datetime
 import gobject
 
 from logging import getLogger
-
+from dateutil.tz import tzlocal
 from wuja.model import Calendar, Cache
 
 logger = getLogger("notifier")
@@ -144,6 +144,7 @@ class Notifier(gobject.GObject):
 
         self.events = []
 
+#        start_date = datetime.datetime.now(tzlocal())
         start_date = datetime.datetime.now()
         end_date = start_date + datetime.timedelta(hours=1)
         logger.debug("   start date: " + str(start_date))
