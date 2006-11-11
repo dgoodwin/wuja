@@ -28,6 +28,7 @@ import shelve
 import os.path
 
 from datetime import datetime, timedelta
+from dateutil.tz import tzlocal, gettz
 from dateutil.parser import parse
 from logging import getLogger
 
@@ -181,9 +182,9 @@ class Entry:
         Used by both single occurrence and recurring entries.
         """
         start_of_query_date = datetime(query_date.year, query_date.month,
-            query_date.day)
+            query_date.day, tzinfo=tzlocal())
         end_of_query_date = datetime(query_date.year, query_date.month,
-            query_date.day, 23, 59, 59)
+            query_date.day, 23, 59, 59, tzinfo=tzlocal())
 
         # Removing one second from the duration here to prevent problems
         # with calendar events that claim to end on the first second of the
@@ -235,7 +236,7 @@ class SingleOccurrenceEntry(Entry):
         """
         # Assume a start date of now, no point returning past events:
         if not start_date:
-            start_date = datetime.now()
+            start_date = datetime.now(tzlocal())
         if end_date < start_date:
             raise BadDateRange, "Your dates are out of order, fool"
         return_me = []
@@ -277,7 +278,24 @@ class RecurringEntry(Entry):
         # those just the ones we're interested in. (Sorry, it's a big spec.)
         parsed = vobject.readOne(recurrence, findBegin=False)
 
-        self.start_date = parse(parsed.dtstart.value)
+        # If the recurrence specifies a timezone, use it, otherwise default
+        # to the calendar's timezone:
+        tz = None
+        if parsed.dtstart.params.has_key('TZID'):
+            logger.debug("Got timezone from recurrence: " +
+                parsed.dtstart.params['TZID'][0])
+            tz = gettz(parsed.dtstart.params['TZID'][0])
+        else:
+            logger.debug("Got timezone from calendar: " +
+                self.calendar.timezone)
+            tz = gettz(self.calendar.timezone)
+
+        # Timezone info isn't being returned by this call to parse, so for now
+        # we'll copy the date and include it ourselves:
+        temp_date = parse(parsed.dtstart.value)
+        self.start_date = datetime(temp_date.year, temp_date.month,
+            temp_date.day, temp_date.hour, temp_date.minute, temp_date.second,
+            temp_date.microsecond, tzinfo=tz)
 
         # Seems to arrive as something like PT1800S:
         self.duration = None
@@ -287,18 +305,18 @@ class RecurringEntry(Entry):
         else:
             dtstart = parsed.contents['dtstart'][0].value
             start_date = datetime(int(dtstart[0:4]), int(dtstart[4:6]),
-                int(dtstart[6:8]))
+                int(dtstart[6:8]), tzinfo=tz)
 
             dtend = parsed.contents['dtend'][0].value
             end_date = datetime(int(dtend[0:4]), int(dtend[4:6]),
-                int(dtend[6:8]))
+                int(dtend[6:8]), tzinfo=tz)
 
             duration = end_date - start_date
             self.duration = (duration.days * 60 * 60 * 24) + duration.seconds
 
-        self.__build_rrule(parsed.rrule.value)
+        self.__build_rrule(parsed.rrule.value, tz)
 
-    def __build_rrule(self, rule_text):
+    def __build_rrule(self, rule_text, tz):
         """
         Convert the recurrence data from Google's feed into something
         the dateutil library can work with.
@@ -328,7 +346,7 @@ class RecurringEntry(Entry):
 
                 elif key == 'until':
                     val = datetime(int(val[0][0:4]), int(val[0][4:6]),
-                        int(val[0][6:8]))
+                        int(val[0][6:8]), tzinfo=tz)
 
                 elif key == 'wkst':
                     val = WEEKDAY_MAP[val[0]]
@@ -350,7 +368,7 @@ class RecurringEntry(Entry):
         """
         # Assume a start date of now, no point returning past events:
         if start_date == None:
-            start_date = datetime.now()
+            start_date = datetime.now(tzlocal())
 
         if end_date < start_date:
             raise BadDateRange, "Your dates are out of order, fool."
@@ -367,10 +385,10 @@ class RecurringEntry(Entry):
         return_me = []
 
         # Check each possible event that could start or end in this range:
-        start_range = datetime(date.year, date.month, date.day) - \
-            timedelta(seconds=self.duration)
-        end_range = datetime(date.year, date.month, date.day, 23, 59, 59) + \
-            timedelta(seconds=self.duration)
+        start_range = datetime(date.year, date.month, date.day,
+            tzinfo=tzlocal()) - timedelta(seconds=self.duration)
+        end_range = datetime(date.year, date.month, date.day, 23, 59, 59,
+            tzinfo=tzlocal()) + timedelta(seconds=self.duration)
 
         # Do any events start within the queried date:
         possible_events = self.rrule.between(start_range, end_range,

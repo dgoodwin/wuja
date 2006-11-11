@@ -33,6 +33,7 @@ from sampledata import daily_recurrence, daily_recurrence_for_one_week, \
     weekly_recurrence_all_day, monthly_multi_day, wkst_recurrence, \
     recurring_with_interval
 from utils import teardownDatabase, TEST_DB_FILE, TestCache
+from dateutil.tz import tzlocal
 
 # Sample data:
 UPDATED = str(datetime(2006, 05, 26, 12, 00, 00))
@@ -102,7 +103,7 @@ class EventTests(unittest.TestCase):
         self.cal = Calendar(FEED_TITLE, CAL_URL, "somedate", CAL_TZ)
 
     def test_event_key(self):
-        time = datetime.now()
+        time = datetime.now(tzlocal())
         entry = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION, REMIND,
             UPDATED, time, 3600, LOCATION, self.cal)
         event = Event(entry.time, entry)
@@ -116,8 +117,8 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         self.cal = Calendar(FEED_TITLE, CAL_URL, "somedate", CAL_TZ)
 
     def test_event_within_end_time(self):
-        time = datetime(2015, 05, 23, 22, 0, 0)
-        end_date = datetime(2020, 01, 01)
+        time = datetime(2015, 05, 23, 22, 0, 0, tzinfo=tzlocal())
+        end_date = datetime(2020, 01, 01, tzinfo=tzlocal())
 
         distant_event = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
             REMIND, UPDATED, time, 3600, LOCATION, self.cal)
@@ -129,8 +130,8 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         self.assertEquals(3600, events[0].entry.duration)
 
     def test_event_beyond_end_time(self):
-        time = datetime(2015, 05, 23, 22, 0, 0)
-        end_date = datetime(2006, 01, 01)
+        time = datetime(2015, 05, 23, 22, 0, 0, tzinfo=tzlocal())
+        end_date = datetime(2006, 01, 01, tzinfo=tzlocal())
 
         distant_event = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
             REMIND, UPDATED, time, 3600, LOCATION, self.cal)
@@ -139,8 +140,8 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
             .get_events_starting_between, None, end_date)
 
     def test_event_before_current_time(self):
-        time = datetime(1980, 05, 23, 22, 0, 0)
-        end_date = datetime(2006, 05, 26)
+        time = datetime(1980, 05, 23, 22, 0, 0, tzinfo=tzlocal())
+        end_date = datetime(2006, 05, 26, tzinfo=tzlocal())
 
         distant_event = SingleOccurrenceEntry("fakeId", TITLE,
             DESCRIPTION, REMIND, UPDATED, time, 3600, LOCATION, self.cal)
@@ -149,8 +150,8 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
             .get_events_starting_between, None, end_date)
 
     def test_time_equal_to_start_time(self):
-        time = datetime(2006, 8, 1, 8, 42, 0)
-        end_date = datetime(2007, 8, 1, 8, 42, 0)
+        time = datetime(2006, 8, 1, 8, 42, 0, tzinfo=tzlocal())
+        end_date = datetime(2007, 8, 1, 8, 42, 0, tzinfo=tzlocal())
 
         current_event = SingleOccurrenceEntry("fakeId", TITLE,
             DESCRIPTION, REMIND, UPDATED, time, 812, LOCATION, self.cal)
@@ -159,8 +160,8 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
             time, end_date)))
 
     def test_time_equal_to_end_time(self):
-        start_date = datetime(2006, 8, 1, 8, 42, 0)
-        end_date = datetime(2007, 8, 1, 8, 42, 0)
+        start_date = datetime(2006, 8, 1, 8, 42, 0, tzinfo=tzlocal())
+        end_date = datetime(2007, 8, 1, 8, 42, 0, tzinfo=tzlocal())
 
         current_event = SingleOccurrenceEntry("fakeId", TITLE,
             DESCRIPTION, REMIND, UPDATED, end_date, 812, LOCATION, self.cal)
@@ -172,7 +173,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         """
         Test an all-day event is returned for a call to occuring on.
         """
-        time = datetime(2006, 10, 28)
+        time = datetime(2006, 10, 28, tzinfo=tzlocal())
         all_day = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
             REMIND, UPDATED, time, 86400, LOCATION, self.cal)
 
@@ -184,7 +185,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         Test that an all day event is not returned when querying the next
         day.
         """
-        time = datetime(2006, 10, 28)
+        time = datetime(2006, 10, 28, tzinfo=tzlocal())
         all_day = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
             REMIND, UPDATED, time, 86400, LOCATION, self.cal)
 
@@ -196,7 +197,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         Test that an all day event is not returned when querying the previous
         day.
         """
-        time = datetime(2006, 10, 28)
+        time = datetime(2006, 10, 28, tzinfo=tzlocal())
         all_day = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
             REMIND, UPDATED, time, 86400, LOCATION, self.cal)
 
@@ -208,8 +209,8 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
         Test a multi-day event that starts before and ends after the date
         queried.
         """
-        query_date = datetime(2006, 10, 26)
-        event_start = datetime(2006, 10, 20)
+        query_date = datetime(2006, 10, 26, tzinfo=tzlocal())
+        event_start = datetime(2006, 10, 20, tzinfo=tzlocal())
         event_duration = 60 * 60 * 24 * 14 # two weeks
 
         vacation = SingleOccurrenceEntry("fakeId", TITLE, DESCRIPTION,
@@ -233,24 +234,24 @@ class RecurringEntryTests(unittest.TestCase):
 
     def test_query_end_date_before_start_date(self):
         standup_meeting = self.__get_daily_recurring_entry()
-        start_date = datetime(2006, 06, 04)
-        end_date = datetime(2006, 06, 03)
+        start_date = datetime(2006, 06, 04, tzinfo=tzlocal())
+        end_date = datetime(2006, 06, 03, tzinfo=tzlocal())
         self.assertRaises(BadDateRange, standup_meeting
             .get_events_starting_between, start_date, end_date)
 
     def test_query_end_date_before_entries_start_date(self):
         standup_meeting = self.__get_daily_recurring_entry()
         # Event starts on May 18th 2006:
-        start_date = datetime(2006, 02, 04)
-        end_date = datetime(2006, 02, 05)
+        start_date = datetime(2006, 02, 04, tzinfo=tzlocal())
+        end_date = datetime(2006, 02, 05, tzinfo=tzlocal())
         self.assertEqual(0, len(standup_meeting.get_events_starting_between(
             start_date, end_date)))
 
     def test_daily_recurring_entry(self):
         standup_meeting = self.__get_daily_recurring_entry()
         # Should return five occurences during a standard work week:
-        start_date = datetime(2006, 06, 04)
-        end_date = datetime(2006, 06, 10)
+        start_date = datetime(2006, 06, 04, tzinfo=tzlocal())
+        end_date = datetime(2006, 06, 10, tzinfo=tzlocal())
         events = standup_meeting.get_events_starting_between(start_date,
             end_date)
         self.assertEqual(5, len(events))
@@ -261,8 +262,8 @@ class RecurringEntryTests(unittest.TestCase):
             self.cal)
         self.assertEqual(3600, daily_for_one_week.duration)
         self.assertEqual(LOCATION, daily_for_one_week.location)
-        start_date = datetime(2006, 6, 1)
-        end_date = datetime(2006, 6, 30)
+        start_date = datetime(2006, 6, 1, tzinfo=tzlocal())
+        end_date = datetime(2006, 6, 30, tzinfo=tzlocal())
         events = daily_for_one_week.get_events_starting_between(start_date,
             end_date)
         self.assertEquals(5, len(events))
@@ -273,8 +274,8 @@ class RecurringEntryTests(unittest.TestCase):
         self.assertEqual(86400, weekly_all_day.duration)
 
         # Event starts on June 5th 2006
-        start_date = datetime(2006, 5, 28)
-        end_date = datetime(2006, 6, 30)
+        start_date = datetime(2006, 5, 28, tzinfo=tzlocal())
+        end_date = datetime(2006, 6, 30, tzinfo=tzlocal())
         events = weekly_all_day.get_events_starting_between(start_date,
             end_date)
         self.assertEquals(4, len(events))
@@ -319,7 +320,7 @@ class RecurringEntryTests(unittest.TestCase):
         weekly_all_day = RecurringEntry("fakeId", "Weekly All Day", "",
             REMIND, LOCATION, UPDATED, weekly_recurrence_all_day, self.cal)
 
-        time = datetime(2006, 6, 5)
+        time = datetime(2006, 6, 5, tzinfo=tzlocal())
 
         events = weekly_all_day.get_events_occurring_on(time +
             timedelta(days=1))

@@ -144,8 +144,7 @@ class Notifier(gobject.GObject):
 
         self.events = []
 
-#        start_date = datetime.datetime.now(tzlocal())
-        start_date = datetime.datetime.now()
+        start_date = datetime.datetime.now(tzlocal())
         end_date = start_date + datetime.timedelta(hours=1)
         logger.debug("   start date: " + str(start_date))
         logger.debug("   end date: " + str(end_date))
@@ -169,7 +168,7 @@ class Notifier(gobject.GObject):
             # Ignore previously accepted event alerts:
             if event.accepted:
                 continue
-            now = datetime.datetime.now()
+            now = datetime.datetime.now(tzlocal())
             # Ignore events in the past:
             if event.time < now:
                 continue

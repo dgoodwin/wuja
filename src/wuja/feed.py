@@ -32,6 +32,7 @@ from logging import getLogger
 from wuja.model import SingleOccurrenceEntry
 from wuja.model import RecurringEntry
 from wuja.model import Calendar
+from dateutil.tz import gettz
 
 logger = getLogger("feed")
 
@@ -65,7 +66,7 @@ def build_calendar(xml, url, last_update):
         if parse_tag(elem.tag) == "title":
             title = elem.text
         elif parse_tag(elem.tag) == 'timezone':
-            timezone = elem.text
+            timezone = elem.attrib['value']
     logger.debug("Building calendar: " + title)
     cal = Calendar(title=title, last_update=last_update, url=url,
         timezone=timezone)
@@ -88,7 +89,7 @@ def parse_tag(original_tag):
     """ Element Tree tags show up with a {url} prefix. """
     return original_tag.split("}")[1]
 
-def parse_timestamp(timestamp):
+def parse_timestamp(timestamp, tz):
     """ Convert internet timestamp (RFC 3339) into a Python datetime
     object.
     """
@@ -107,7 +108,7 @@ def parse_timestamp(timestamp):
 
     year, month, day = date_str.split('-')
     return datetime(int(year), int(month), int(day), int(hour), int(minute),
-        int(second))
+        int(second), tzinfo=tz)
 
 def create_entry(elem, cal, exceptions):
     """ Parses calender entry XML into an Entry object. """
@@ -120,6 +121,9 @@ def create_entry(elem, cal, exceptions):
     where = None
     duration = None
     reminder = None
+
+    tz = gettz(cal.timezone)
+
     for node in elem.getchildren():
         if parse_tag(node.tag) == 'id':
             entry_id = node.text
@@ -129,12 +133,12 @@ def create_entry(elem, cal, exceptions):
         elif parse_tag(node.tag) == 'content':
             description = node.text
         elif parse_tag(node.tag) == 'updated':
-            updated = parse_timestamp(node.text)
+            updated = parse_timestamp(node.text, tz)
         elif parse_tag(node.tag) == 'recurrence':
             recurrence = node.text
         elif parse_tag(node.tag) == 'when':
-            when = parse_timestamp(node.attrib["startTime"])
-            end_time = parse_timestamp(node.attrib["endTime"])
+            when = parse_timestamp(node.attrib["startTime"], tz)
+            end_time = parse_timestamp(node.attrib["endTime"], tz)
             duration = time.mktime(end_time.timetuple()) - \
                 time.mktime(when.timetuple())
 
@@ -154,7 +158,7 @@ def create_entry(elem, cal, exceptions):
 
             if not exceptions.has_key(original_entry):
                 exceptions[original_entry] = []
-            exceptions[original_entry].append(parse_timestamp(start_time))
+            exceptions[original_entry].append(parse_timestamp(start_time, tz))
 
     if reminder is None:
         logger.debug("No reminder found for entry: %s" % title)

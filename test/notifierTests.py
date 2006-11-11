@@ -34,6 +34,7 @@ from wuja.config import WujaConfiguration
 import utils
 from utils import TestWujaConfiguration, teardownDatabase, TestCache
 from sampledata import weekly_recurrence_all_day
+from dateutil.tz import tzlocal
 
 TEST_GCONF_PATH = '/apps/wuja/test'
 REMIND = 10
@@ -41,6 +42,7 @@ CAL_TITLE = "Testing Calendar"
 CAL_URL = "http://fakeurl"
 CAL_LAST_UPDATE = "whenever"
 CAL_TZ = "America/Halifax"
+TZ = tzlocal()
 
 TITLE = "Single Occurrence Entry Title"
 RECURRING_TITLE = "Moo"
@@ -89,14 +91,14 @@ class NotifierTests(unittest.TestCase):
         teardownDatabase()
 
     def test_simple_notification(self):
-        future_time = datetime.now() + timedelta(minutes=10)
+        future_time = datetime.now(TZ) + timedelta(minutes=10)
         self.__create_entry(future_time)
         self.notifier.check_for_notifications()
         self.assertTrue(self.observer.notified)
         self.assertEqual(self.entry, self.observer.trigger_entry)
 
     def test_notification_beyond_threshold(self):
-        future_time = datetime.now() + timedelta(minutes=REMIND,
+        future_time = datetime.now(TZ) + timedelta(minutes=REMIND,
             seconds=1)
         self.__create_entry(future_time)
         self.notifier.check_for_notifications()
@@ -104,14 +106,14 @@ class NotifierTests(unittest.TestCase):
         self.assertEqual(None, self.observer.trigger_entry)
 
     def test_past_event(self):
-        past_time = datetime.now() - timedelta(minutes=30)
+        past_time = datetime.now(TZ) - timedelta(minutes=30)
         self.__create_entry(past_time)
         self.notifier.check_for_notifications()
         self.assertFalse(self.observer.notified)
         self.assertEqual(None, self.observer.trigger_entry)
 
     def test_event_confirmed(self):
-        event_time = datetime.now() + timedelta(minutes=2)
+        event_time = datetime.now(TZ) + timedelta(minutes=2)
         self.__create_entry(event_time)
         self.notifier.check_for_notifications()
         self.assertTrue(self.observer.notified)
@@ -126,7 +128,7 @@ class NotifierTests(unittest.TestCase):
         self.assertFalse(self.observer.notified)
 
     def test_confirm_event_and_update_feeds(self):
-        event_time = datetime.now() + timedelta(minutes=2)
+        event_time = datetime.now(TZ) + timedelta(minutes=2)
         self.__create_entry(event_time)
         self.notifier.check_for_notifications()
         self.assertTrue(self.observer.notified)
@@ -192,7 +194,7 @@ class NotifierTests(unittest.TestCase):
 
         # Add a new entry:
         cal.entries.append(SingleOccurrenceEntry("singleid",
-            "Another Entry", "desc", REMIND, datetime.now(), datetime.now(),
+            "Another Entry", "desc", REMIND, datetime.now(TZ), datetime.now(TZ),
             3600, "Another location.", cal))
         cal.last_update = "new time" # change last update time
         self.notifier.update()
@@ -222,17 +224,17 @@ class NotifierTests(unittest.TestCase):
         # Create a calendar with two entries:
         cal = Calendar(CAL_TITLE, CAL_URL, "0", CAL_TZ)
         cal.entries.append(SingleOccurrenceEntry("singleid",
-            TITLE, "desc", REMIND, datetime.now(), datetime.now(), 3600,
+            TITLE, "desc", REMIND, datetime.now(TZ), datetime.now(TZ), 3600,
             LOCATION, cal))
         cal.entries.append(RecurringEntry("id2", TITLE + " Recur",
-            "", REMIND, LOCATION, datetime.now(), weekly_recurrence_all_day,
+            "", REMIND, LOCATION, datetime.now(TZ), weekly_recurrence_all_day,
             cal))
         return cal
 
     def __create_entry(self, future_time):
         cal = Calendar(CAL_TITLE, "somedate", CAL_URL, CAL_TZ)
         self.entry = SingleOccurrenceEntry("fakeId", "Fake Title", "",REMIND,
-            datetime.now(), future_time, 3600, "Gumdrop Alley", cal)
+            datetime.now(TZ), future_time, 3600, "Gumdrop Alley", cal)
         self.notifier = TestNotifier([self.entry])
         self.observer = TestObserver()
         self.notifier.connect("feeds-updated", self.observer.notify)

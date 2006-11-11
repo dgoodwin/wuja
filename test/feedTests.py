@@ -29,10 +29,12 @@ from datetime import datetime
 
 from wuja.feed import FeedSource, parse_timestamp, build_calendar
 from samplefeed import xml
+from dateutil.tz import tzlocal
 
 FEED_URL = "http://whatever.com/feedurl"
 FEED_TITLE = "Wuja Testing Calendar"
 FEED_LAST_UPDATE = "Doesn't matter."
+CAL_TZ = "America/Halifax"
 
 class FeedSourceTests(unittest.TestCase):
 
@@ -43,7 +45,7 @@ class FeedSourceTests(unittest.TestCase):
 
     def test_timestamp_parsing(self):
         timestamp = "2006-05-18T15:24:41.000Z"
-        date = parse_timestamp(timestamp)
+        date = parse_timestamp(timestamp, tzlocal())
         self.assertEquals(2006, date.year)
         self.assertEquals(15, date.hour)
         self.assertEquals(24, date.minute)
@@ -67,8 +69,8 @@ class FeedSourceTests(unittest.TestCase):
             exception_event = events[0]
 
         # Check that only 4 of the 5 entries are returned for the week:
-        start = datetime(2006, 11, 20)
-        end = datetime(2006, 11, 26)
+        start = datetime(2006, 11, 20, tzinfo=tzlocal())
+        end = datetime(2006, 11, 26, tzinfo=tzlocal())
         events = original_event.get_events_starting_between(start, end)
         self.assertEqual(4, len(events))
 
