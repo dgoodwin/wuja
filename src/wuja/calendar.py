@@ -86,7 +86,14 @@ class CalendarWindow(gobject.GObject):
         keys.sort()
         for key in keys:
             for event in events_for_date[key]:
-                txt += event.time.strftime("%I:%M%p")
+
+                # Display all-day events differently:
+                if event.time.hour == 0 and event.time.minute == 0 \
+                    and event.entry.duration % 86400 == 0:
+                    txt += "ALL DAY"
+                else:
+                    txt += event.time.strftime("%I:%M%p")
+
                 txt += " - "
                 txt += event.entry.title
                 txt += " (" + event.entry.calendar.title + ")"
