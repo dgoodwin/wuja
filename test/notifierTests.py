@@ -34,7 +34,7 @@ from wuja.config import WujaConfiguration
 import utils
 from utils import TestWujaConfiguration, teardownDatabase, TestCache
 from sampledata import weekly_recurrence_all_day
-from dateutil.tz import tzlocal
+from dateutil.tz import gettz
 
 TEST_GCONF_PATH = '/apps/wuja/test'
 REMIND = 10
@@ -42,7 +42,7 @@ CAL_TITLE = "Testing Calendar"
 CAL_URL = "http://fakeurl"
 CAL_LAST_UPDATE = "whenever"
 CAL_TZ = "America/Halifax"
-TZ = tzlocal()
+TZ = gettz(CAL_TZ)
 
 TITLE = "Single Occurrence Entry Title"
 RECURRING_TITLE = "Moo"
