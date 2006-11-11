@@ -330,7 +330,7 @@ class RecurringEntryTests(unittest.TestCase):
         weekly_all_day = RecurringEntry("fakeId", "Weekly All Day", "",
             REMIND, LOCATION, UPDATED, weekly_recurrence_all_day, self.cal)
 
-        time = datetime(2006, 6, 5)
+        time = datetime(2006, 6, 5, tzinfo=tzlocal())
 
         events = weekly_all_day.get_events_occurring_on(time -
             timedelta(days=1))
@@ -344,19 +344,19 @@ class RecurringEntryTests(unittest.TestCase):
         self.assertEquals(expected, len(events))
 
     def test_monthly_multi_day_over_query_date(self):
-        self.__multi_day_tester(datetime(2006, 10, 26), 1)
+        self.__multi_day_tester(datetime(2006, 10, 26, tzinfo=tzlocal()), 1)
 
     def test_monthly_multi_day_start_of_query_date(self):
-        self.__multi_day_tester(datetime(2006, 10, 25), 1)
+        self.__multi_day_tester(datetime(2006, 10, 25, tzinfo=tzlocal()), 1)
 
     def test_monthly_multi_day_end_of_query_date(self):
-        self.__multi_day_tester(datetime(2006, 10, 27), 1)
+        self.__multi_day_tester(datetime(2006, 10, 27, tzinfo=tzlocal()), 1)
 
     def test_monthly_multi_day_misses_query_date(self):
-        self.__multi_day_tester(datetime(2006, 10, 24), 0)
+        self.__multi_day_tester(datetime(2006, 10, 24, tzinfo=tzlocal()), 0)
 
     def test_monthly_multi_day_misses_query_date_again(self):
-        self.__multi_day_tester(datetime(2006, 10, 28), 0)
+        self.__multi_day_tester(datetime(2006, 10, 28, tzinfo=tzlocal()), 0)
 
 
 def suite():
