@@ -34,9 +34,8 @@ import os.path
 import sys
 
 from logging import getLogger
-from datetime import datetime, date
-
-#from wuja.application import find_file_on_path
+from datetime import datetime
+from dateutil.tz import tzlocal
 
 logger = getLogger("calendar_window")
 
@@ -58,13 +57,14 @@ class CalendarWindow(gobject.GObject):
         glade_calendar.signal_autoconnect(signals)
 
         self.calendar_window.show_all()
-        self.update_text_for_date(date.today())
+        self.update_text_for_date(datetime.now(tzlocal()))
 
     def display_entries(self, calendar_widget):
         selected = calendar_widget.get_date()
 
         # Calendar returns months starting from 0:
-        query_date = datetime(selected[0], selected[1] + 1, selected[2])
+        query_date = datetime(selected[0], selected[1] + 1, selected[2],
+            tzinfo=tzlocal())
         self.update_text_for_date(query_date)
 
     def update_text_for_date(self, query_date):

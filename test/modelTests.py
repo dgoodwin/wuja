@@ -313,7 +313,7 @@ class RecurringEntryTests(unittest.TestCase):
         weekly_all_day = RecurringEntry("fakeId", "Weekly All Day", "",
             REMIND, LOCATION, UPDATED, weekly_recurrence_all_day, self.cal)
 
-        time = datetime(2006, 6, 5)
+        time = datetime(2006, 6, 5, tzinfo=TZ)
         events = weekly_all_day.get_events_occurring_on(time)
         self.assertEquals(1, len(events))
 

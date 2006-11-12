@@ -182,9 +182,9 @@ class Entry:
         Used by both single occurrence and recurring entries.
         """
         start_of_query_date = datetime(query_date.year, query_date.month,
-            query_date.day, tzinfo=tzlocal())
+            query_date.day, tzinfo=query_date.tzinfo)
         end_of_query_date = datetime(query_date.year, query_date.month,
-            query_date.day, 23, 59, 59, tzinfo=tzlocal())
+            query_date.day, 23, 59, 59, tzinfo=query_date.tzinfo)
 
         # Removing one second from the duration here to prevent problems
         # with calendar events that claim to end on the first second of the
@@ -386,9 +386,9 @@ class RecurringEntry(Entry):
 
         # Check each possible event that could start or end in this range:
         start_range = datetime(date.year, date.month, date.day,
-            tzinfo=tzlocal()) - timedelta(seconds=self.duration)
-        end_range = datetime(date.year, date.month, date.day, 23, 59, 59,
-            tzinfo=tzlocal()) + timedelta(seconds=self.duration)
+            tzinfo=date.tzinfo) - timedelta(seconds=self.duration)
+        end_range = datetime(date.year, date.month, date.day, 0, 0, 0,
+            tzinfo=date.tzinfo) + timedelta(seconds=self.duration - 1)
 
         # Do any events start within the queried date:
         possible_events = self.rrule.between(start_range, end_range,
