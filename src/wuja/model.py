@@ -76,7 +76,6 @@ class Cache:
     def load(self, url):
         """ Load calendar from disk. """
         cal = self._cache[url]
-        logger.debug("Loading calendar: " + cal.title)
         return cal
 
     def load_all(self):
@@ -386,9 +385,9 @@ class RecurringEntry(Entry):
 
         # Check each possible event that could start or end in this range:
         start_range = datetime(date.year, date.month, date.day,
-            tzinfo=date.tzinfo) - timedelta(seconds=self.duration)
-        end_range = datetime(date.year, date.month, date.day, 0, 0, 0,
-            tzinfo=date.tzinfo) + timedelta(seconds=self.duration - 1)
+            tzinfo=tzlocal()) - timedelta(seconds=self.duration)
+        end_range = datetime(date.year, date.month, date.day, 23, 59, 59,
+            tzinfo=tzlocal()) + timedelta(seconds=self.duration)
 
         # Do any events start within the queried date:
         possible_events = self.rrule.between(start_range, end_range,

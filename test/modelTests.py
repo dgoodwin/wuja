@@ -31,7 +31,7 @@ from wuja.model import SingleOccurrenceEntry, RecurringEntry, Event, Calendar, \
     BadDateRange
 from sampledata import daily_recurrence, daily_recurrence_for_one_week, \
     weekly_recurrence_all_day, monthly_multi_day, wkst_recurrence, \
-    recurring_with_interval
+    recurring_with_interval, weekly_tv_show
 from utils import teardownDatabase, TEST_DB_FILE, TestCache
 from dateutil.tz import gettz
 
@@ -358,6 +358,13 @@ class RecurringEntryTests(unittest.TestCase):
 
     def test_monthly_multi_day_misses_query_date_again(self):
         self.__multi_day_tester(datetime(2006, 10, 28, tzinfo=TZ), 0)
+
+    def test_weekly_tv_show(self):
+        entry = RecurringEntry("fakeId", "CSI", "",
+            REMIND, LOCATION, UPDATED, weekly_tv_show, self.cal)
+        events = entry.get_events_occurring_on(
+            datetime(2006,11, 16, tzinfo=TZ))
+        self.assertEquals(1, len(events))
 
 
 def suite():

@@ -63,7 +63,7 @@ class Notifier(gobject.GObject):
         """ Update all feeds, maintain our local cache, and check for
         upcoming events.
         """
-        logger.debug("Updating feeds from Google servers.")
+        logger.info("Updating feeds from Google servers.")
         start_time = datetime.datetime.now()
         feeds = self.config.get_feed_urls()
 
@@ -96,7 +96,7 @@ class Notifier(gobject.GObject):
                     temporary_entries.extend(cal.entries)
 
                 else:
-                    logger.debug("Feed already up to date: %s (%s)" % \
+                    logger.info("Feed already up to date: %s (%s)" % \
                         (cal.title, cal.last_update))
                     temporary_entries.extend(cal.entries)
         except urllib2.URLError:
@@ -115,17 +115,18 @@ class Notifier(gobject.GObject):
         self.cache.sync()
 
         self.calendar_entries = temporary_entries
-        logger.debug("Found %s calendar entries from %s feeds." %
+        logger.info("Found %s calendar entries from %s feeds." %
             (str(len(self.calendar_entries)), str(len(feeds))))
+
         self.update_events()
         end_time = datetime.datetime.now()
         delta = end_time - start_time
-        logger.debug("Updated feeds in: %s" % delta)
+        logger.info("Updated feeds in: %s" % delta)
         return True
 
     def update_configuration(self, config):
         """ Configuration has changed, update our feeds. """
-        logger.debug("Configuration change.")
+        logger.info("Configuration change.")
         self.update()
 
     def update_events(self):
@@ -146,20 +147,19 @@ class Notifier(gobject.GObject):
 
         start_date = datetime.datetime.now(tzlocal())
         end_date = start_date + datetime.timedelta(hours=1)
-        logger.debug("   start date: " + str(start_date))
-        logger.debug("   end date: " + str(end_date))
 
         for entry in self.calendar_entries:
             events = entry.get_events_starting_between(start_date, end_date)
             if len(events) > 0:
-                logger.debug("Found events for: " + entry.title)
+                logger.debug("   " + entry.title)
                 for event in events:
-                    logger.debug("   " + str(event.time))
+                    logger.debug("      " + str(event.time))
                     self.events.append(event)
                     if event.key in accepted_events:
                         logger.debug("Restoring accepted state for entry: " +
                             event.key)
                         event.accepted = True
+        logger.debug("Found: " + str(len(self.events)) + " events")
 
     def check_for_notifications(self):
         """ Check for any pending notifications that need to be sent. """

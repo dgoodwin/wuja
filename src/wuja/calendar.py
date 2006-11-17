@@ -71,6 +71,7 @@ class CalendarWindow(gobject.GObject):
 
         # Map event times to event objects for sorting:
         events_for_date = {}
+        logger.debug("Displaying calendar for: " + str(query_date))
 
         # Scan all our calendars for events on the given date:
         for calendar in self.cache.load_all():
