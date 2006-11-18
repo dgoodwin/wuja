@@ -26,6 +26,9 @@ import gconf
 import gobject
 import os.path
 
+from logging import getLogger
+logger = getLogger("config")
+
 from wuja.feed import FeedSource
 from wuja.data import WUJA_DB_FILE
 from wuja.model import Cache
@@ -42,7 +45,6 @@ class WujaConfiguration(gobject.GObject):
 
         self.client = gconf.client_get_default()
         self.urls_path = os.path.join(self.__gconf_path, "feed_urls")
-        self.alert_path = os.path.join(self.__gconf_path, "alert_type")
         self.__db_file = WUJA_DB_FILE
 
     def get_feed_urls(self):
@@ -91,18 +93,17 @@ class WujaConfiguration(gobject.GObject):
         return Cache(db=self.__db_file)
 
     def get_alert_type(self):
-        alert_type = self.client.get_string(self.alert_path)
-        if alert_type == ALERT_NOTIFICATION: 
-            try:
-                # pynotify isn't available on all platforms yet.
-                # in a few months we can ditch this.
-                import pynotify
-            except ImportError, e:
-                # log.debug("notifications not available. using default")
-                alert_type 
-        elif alert_type != ALERT_DIALOG:
-            # default to the dialog
-            alert_type = ALERT_DIALOG
+        # default to the dialog
+        alert_type = ALERT_DIALOG
+        # pynotify isn't available on all platforms yet, use it if we can.
+        # in a few months we can ditch this.
+        try:
+            import pynotify
+            alert_type = ALERT_NOTIFICATION
+            logger.debug("Using pynotify for alert notification.")
+        except ImportError, e:
+            logger.debug("Pynotify not installed on system, using dialogs " +
+                "for alert notification")
         return alert_type
 
     def __set_feed_urls(self, urls):

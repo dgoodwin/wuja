@@ -36,6 +36,7 @@ WUJA_VERSION = "0.0.4" # Must be updated each time a release is published.
 
 RELEASES = ["0.0.3", "0.0.4"]
 
+
 class UpgradeManager:
 
     def __init__(self):
@@ -106,9 +107,10 @@ class UpgradeManager:
 
     def is_fresh_install(self):
         """ Is this the first time wuja was run on this system? """
-        if self.gconf_client.dir_exists(GCONF_PATH):
+        if self.gconf_client.dir_exists(GCONF_PATH) or os.path.exists(WUJA_DIR):
             return False
         return True
+
 
 class DeleteCacheAction:
 
