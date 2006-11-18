@@ -41,6 +41,7 @@ from wuja.config import WujaConfiguration, ALERT_NOTIFICATION
 from wuja.data import WUJA_DIR, GCONF_PATH, WUJA_DB_FILE
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
 from wuja.calendar import CalendarWindow
+from wuja.upgrade import UpgradeManager
 
 NOTIFICATION_INTERVAL = 1 # minutes between notification checks
 FEED_UPDATE_INTERVAL = 10 # minutes between feed updates
@@ -57,6 +58,8 @@ class WujaApplication:
 
     def __init__(self):
         logger.info("Starting application.")
+        upgrade_manager = UpgradeManager()
+        upgrade_manager.check()
 
         # Maintain a map of events that have alert windows open to ensure
         # we don't popup multiple windows for the same event that hasn't
@@ -394,7 +397,7 @@ class PreferencesDialog:
         add_url_textfield = self.glade_prefs.get_widget('entry1')
 
         url = add_url_textfield.get_text()
-        url = processUrl(url)
+        url = process_url(url)
         logger.info("Adding URL: " + url)
         add_url_textfield.set_text('')
 
@@ -456,13 +459,10 @@ def find_file_on_path(pathname):
     raise Exception("Could not find %s on the Python path."
         % pathname)
 
-def processUrl(url):
+def process_url(url):
     """
     Convert the URL specified by the user into what we need for wuja.
     """
 
     url = url.replace('/basic', '/full')
-    # Set the max results to 10000 until we figure out an intelligent way
-    # to cache this, Google defaults to just 25.
-    url += "?max-results=10000"
     return url

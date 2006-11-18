@@ -25,5 +25,5 @@ __revision__ = "$Revision: 206 $"
 import os.path
 
 WUJA_DIR = os.path.expanduser("~/.wuja")
-GCONF_PATH = "/apps/wuja/"
+GCONF_PATH = "/apps/wuja"
 WUJA_DB_FILE = "wuja.db"

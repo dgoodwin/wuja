@@ -50,10 +50,10 @@ class FeedSource:
         return url_file.headers['last-modified']
 
     def _get_feed_xml(self, url):
-        """ Fetches the full XML source for the feed from Google's
-        servers.
+        """ Append any custom parameters to the url and fetch the full
+        XML source for the feed from Google's servers.
         """
-        return urllib2.urlopen(url).read()
+        return urllib2.urlopen(url + "?max-results=10000").read()
 
 
 def build_calendar(xml, url, last_update):
