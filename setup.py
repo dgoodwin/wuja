@@ -34,4 +34,51 @@ setup(name="wuja",
     package_dir={'wuja': 'src/wuja'},
     package_data={'wuja': ['data/*.xml', 'data/*.glade', 'data/*.png']},
     scripts=['bin/wuja'],
+    # TODO: This sucks.
+    data_files=[('../etc/gconf/schemas', ['data/wuja.schema'])]
 )
+
+
+################################################################################
+#
+#							GConf Installation
+#
+################################################################################
+from commands import getstatusoutput
+from os import putenv
+# Get gconf's default source
+cmd = "gconftool-2 --get-default-source"
+err, out = getstatusoutput(cmd)
+
+# Set up the gconf environment variable.
+putenv('GCONF_CONFIG_SOURCE', out)
+
+# Install gconf to the default source
+cmd = "gconftool-2 --makefile-install-rule data/wuja.schema"
+err, out = getstatusoutput(cmd)
+
+if out:
+
+	print "installing GConf schema files"
+
+if err:
+
+    print 'Error: installation of gconf schema files failed: %s' % out
+
+# Kill the GConf daemon
+cmd = "killall gconfd-2"
+err, out = getstatusoutput(cmd)
+
+if err:
+
+	print "Problem shutting down gconf."
+
+# Start the GConf daemon
+cmd = "gconftool-2 --spawn"
+err, out = getstatusoutput(cmd)
+
+if err:
+
+	print "Problem restarting down gconf."
+
+print "wuja installation complete"

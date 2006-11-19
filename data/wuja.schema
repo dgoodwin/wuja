@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gconfschemafile>
+    <schemalist>
+        <schema>
+            <key>/schemas/apps/wuja/alert_type</key>
+            <applyto>/apps/wuja/alert_type</applyto>
+            <owner>wuja</owner>
+            <type>string</type>
+            <default>notification</default>
+            <locale name="C">
+                <short>Use libnotify popups or dialogs.</short>
+                <long>
+                    Configure wuja to use either libnotify popups
+                    ('notification') or GTK+ dialog windows ('dialog').
+                </long>
+            </locale>
+        </schema>
+        <schema>
+            <key>/schemas/apps/wuja/feed_urls</key>
+            <applyto>/apps/wuja/feed_urls</applyto>
+            <owner>wuja</owner>
+            <type>list</type>
+            <list_type>string</list_type>
+            <locale name="C">
+                <short>A list of calendar feed urls.</short>
+                <long>
+                    A list of calendar feed urls in Google's Calendar format.
+                </long>
+            </locale>
+        </schema>
+    </schemalist>
+</gconfschemafile>
