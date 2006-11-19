@@ -36,6 +36,9 @@ from dateutil.tz import gettz
 
 logger = getLogger("feed")
 
+class FeedOpenError(Exception):
+    pass
+
 class FeedSource:
     """ Builds feeds objects given a URL. """
 
@@ -46,7 +49,10 @@ class FeedSource:
 
     def get_feed_last_update(self, url):
         """ Fetch the last updated time for the given feed URL. """
-        url_file = urllib2.urlopen(url)
+        try:
+            url_file = urllib2.urlopen(url)
+        except urllib2.URLError, e:
+            raise FeedOpenError, str(e)
         return url_file.headers['last-modified']
 
     def _get_feed_xml(self, url):

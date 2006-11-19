@@ -22,7 +22,6 @@
 
 __revision__ = "$Revision$"
 
-import urllib2
 import datetime
 
 import gobject
@@ -30,6 +29,7 @@ import gobject
 from logging import getLogger
 from dateutil.tz import tzlocal
 from wuja.model import Calendar, Cache
+from wuja.feed import FeedOpenError
 
 logger = getLogger("notifier")
 
@@ -99,7 +99,7 @@ class Notifier(gobject.GObject):
                     logger.info("Feed already up to date: %s (%s)" % \
                         (cal.title, cal.last_update))
                     temporary_entries.extend(cal.entries)
-        except urllib2.URLError:
+        except FeedOpenError:
             logger.error("Error reaching Google servers.")
             return True
 
