@@ -30,6 +30,7 @@ from logging import getLogger
 from dateutil.tz import tzlocal
 from wuja.model import Calendar, Cache
 from wuja.feed import FeedOpenError
+from wuja.decorators import as_idle, threaded
 
 logger = getLogger("notifier")
 
@@ -187,3 +188,10 @@ class Notifier(gobject.GObject):
 
 gobject.signal_new("feeds-updated", Notifier, gobject.SIGNAL_ACTION,
     gobject.TYPE_BOOLEAN, (gobject.TYPE_PYOBJECT,))
+
+class AsyncNotifier(Notifier):
+    """ A Notifier that uses threads to be asyncronous. """ 
+
+    @threaded
+    def update(self):
+        return Notifier.update(self)

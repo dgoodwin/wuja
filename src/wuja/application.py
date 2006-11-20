@@ -36,7 +36,7 @@ from logging import getLogger
 from egg import trayicon
 from datetime import timedelta
 
-from wuja.notifier import Notifier
+from wuja.notifier import AsyncNotifier
 from wuja.config import WujaConfiguration, ALERT_NOTIFICATION
 from wuja.data import WUJA_DIR, GCONF_PATH, WUJA_DB_FILE
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
@@ -70,6 +70,7 @@ class WujaApplication:
         self.notifier = None
         self.prefs_dialog = None
         self.calendar_window = None
+        self.updating = False
         self.feed_update_event_source = None
 
         actions = (
@@ -108,20 +109,20 @@ class WujaApplication:
 
         self.build_notifier()
 
-    def __update_feeds(self, widget):
-        """
-        Pass call to update feeds along to the notifier and reset
-        timers. """
-        # Stop the feed update timer:
-        gobject.source_remove(self.feed_update_event_source)
-
-        self.notifier.update()
-
+    def _reset_feed_update(self):
         # Restart the feed update timer from now:
         self.feed_update_event_source = gobject.timeout_add(
             FEED_UPDATE_INTERVAL * 1000 * 60, self.notifier.update)
         logger.debug("Updating feeds from Google servers every %s minutes."
             % FEED_UPDATE_INTERVAL)
+
+    def __update_feeds(self, widget):
+        """
+        Pass call to update feeds along to the notifier and reset
+        timers. """
+        gobject.source_remove(self.feed_update_event_source)
+        self.notifier.update()
+        self._reset_feed_update()
 
     def __debug_feeds(self, widget):
         """ Print out debug info on all feeds to the log file. """
@@ -162,7 +163,7 @@ class WujaApplication:
 
     def build_notifier(self):
         """ Builds the notifier object. """
-        self.notifier = Notifier(self.config)
+        self.notifier = AsyncNotifier(self.config)
         # register ourselves as an observer
         self.notifier.connect("feeds-updated", self.notify)
 
@@ -172,10 +173,7 @@ class WujaApplication:
         logger.debug("Checking for notifications every %s minutes."
             % NOTIFICATION_INTERVAL)
 
-        self.feed_update_event_source = gobject.timeout_add(
-            FEED_UPDATE_INTERVAL * 1000 * 60, self.notifier.update)
-        logger.debug("Updating feeds from Google servers every %s minutes."
-            % FEED_UPDATE_INTERVAL)
+        self._reset_feed_update()
 
     def delete_event(self, widget, event, data=None):
         """ GTK function. """
