@@ -118,14 +118,7 @@ class Event:
         """
         return str(self.entry.entry_id) + str(self.time)
 
-    def set_key(self):
-        """
-        Dummy setter for the key property, which doesn't really
-        exist.
-        """
-        raise Exception("Keys aren't for setting.")
-
-    key = property(get_key, set_key)
+    key = property(get_key)
 
 
 class BadDateRange(Exception):
