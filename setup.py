@@ -38,7 +38,6 @@ setup(name="wuja",
     data_files=[('../etc/gconf/schemas', ['data/wuja.schema'])]
 )
 
-
 ################################################################################
 #
 #							GConf Installation
