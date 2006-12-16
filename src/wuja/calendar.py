@@ -34,7 +34,7 @@ import os.path
 import sys
 
 from logging import getLogger
-from datetime import datetime
+from datetime import datetime,timedelta
 from dateutil.tz import tzlocal
 
 logger = getLogger("calendar_window")
@@ -53,11 +53,40 @@ class CalendarWindow(gobject.GObject):
 
         signals = {
             'on_calendar_day_selected': self.display_entries,
+            'on_calendar_month_change': self.mark_month
         }
         glade_calendar.signal_autoconnect(signals)
 
         self.calendar_window.show_all()
         self.update_text_for_date(datetime.now(tzlocal()))
+        self.mark_month(self.calendar_window)
+
+
+    def mark_month(self,calendar_window):
+        """
+        Marks every date that has an entry this month.
+        """
+        # Prepare first and last date in this month, a bit awkward:
+        # Get current month from the calendar widget:
+        year, month, day = calendar_window.get_date()
+        start_date = datetime(year,month + 1, 1, tzinfo=tzlocal())
+        tmp_date = start_date + timedelta(days=31)
+        end_date = datetime(tmp_date.year, tmp_date.month, 1,
+            tzinfo=tzlocal()) - timedelta(days=1)
+
+        # Freeze to reduce flicker:
+        calendar_window.freeze()
+        calendar_window.clear_marks()
+
+        # Find all entries and mark them:
+        for calendar in self.cache.load_all():
+            for entry in calendar.entries:
+                map(
+                     lambda e: calendar_window.mark_day(e.time.day),
+                     entry.get_events_starting_between(start_date, end_date)
+                   )
+
+        calendar_window.thaw()
 
     def display_entries(self, calendar_widget):
         selected = calendar_widget.get_date()
