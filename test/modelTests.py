@@ -25,6 +25,7 @@ import os
 import os.path
 
 from datetime import datetime, timedelta
+from sqlalchemy import *
 
 import settestpath
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Event, Calendar, \
@@ -96,6 +97,37 @@ class CacheTests(unittest.TestCase):
         mgr.save(cal)
         mgr.delete(cal.url)
         mgr.save(cal)
+
+
+
+class NewCalendar(object):
+    def __repr__(self):
+        return self.title
+
+
+
+class CalendarTests(unittest.TestCase):
+
+    def setUp(self):
+        self.db = create_engine('sqlite:///:memory:')
+        self.metadata = BoundMetaData(self.db)
+        calendar_table = Table('calendars', self.metadata,
+            Column('url', String(255), nullable=False, primary_key=True),
+            Column('title', String(255), nullable=False),
+            Column('timezone', String(255))
+            )
+        calendar_table.create()
+        calendar_mapper = mapper(NewCalendar, calendar_table)
+
+    def test_create(self):
+        new_cal = NewCalendar()
+        session = create_session()
+        new_cal.url = CAL_URL
+        new_cal.title = CAL_TITLE
+        new_cal.timezone = CAL_TZ
+        session.save(new_cal)
+        session.flush()
+
 
 
 class EventTests(unittest.TestCase):
@@ -370,6 +402,7 @@ class RecurringEntryTests(unittest.TestCase):
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(CacheTests))
+    suite.addTest(unittest.makeSuite(CalendarTests))
     suite.addTest(unittest.makeSuite(SingleOccurrenceEntryTests))
     suite.addTest(unittest.makeSuite(RecurringEntryTests))
     suite.addTest(unittest.makeSuite(EventTests))

@@ -27,7 +27,6 @@ import feedTests
 import modelTests
 import notifierTests
 import configTests
-import sqlalchemyTests
 
 from unittest import TestSuite
 
@@ -38,7 +37,6 @@ def suite():
         modelTests.suite(),
         notifierTests.suite(),
         configTests.suite(), # not pure unit tests, candidate for future removal
-        sqlalchemyTests.suite(),
     ))
 
 if __name__ == "__main__":
