@@ -41,6 +41,7 @@ UPDATED = str(datetime(2006, 05, 26, 12, 00, 00))
 CAL_TITLE = "Test Calendar"
 CAL_URL = "http://fakecalurl"
 CAL_TZ = "America/Halifax"
+LAST_UPDATE = "whenever"
 TZ = gettz(CAL_TZ)
 TITLE = "Super Important Meeting"
 RECURRING_TITLE = "Super Important Every Day Meeting"
@@ -101,6 +102,13 @@ class CacheTests(unittest.TestCase):
 
 
 class NewCalendar(object):
+
+    def __init__(self, title, url, last_update, timezone):
+        self.title = title
+        self.url = url
+        self.last_update = last_update
+        self.timezone = timezone
+
     def __repr__(self):
         return self.title
 
@@ -114,19 +122,27 @@ class CalendarTests(unittest.TestCase):
         calendar_table = Table('calendars', self.metadata,
             Column('url', String(255), nullable=False, primary_key=True),
             Column('title', String(255), nullable=False),
+            Column('last_update', String(255), nullable=False),
             Column('timezone', String(255))
             )
-        calendar_table.create()
+        self.metadata.create_all()
         calendar_mapper = mapper(NewCalendar, calendar_table)
 
+    def tearDown(self):
+        self.metadata.drop_all(checkfirst=True)
+        clear_mappers()
+
     def test_create(self):
-        new_cal = NewCalendar()
         session = create_session()
-        new_cal.url = CAL_URL
-        new_cal.title = CAL_TITLE
-        new_cal.timezone = CAL_TZ
+        new_cal = NewCalendar(CAL_TITLE, CAL_URL, LAST_UPDATE, CAL_TZ)
         session.save(new_cal)
         session.flush()
+
+    #def test_unique_urls(self):
+    #    session = create_session()
+    #    new_cal = NewCalendar(CAL_TITLE, CAL_URL, LAST_UPDATE, CAL_TZ)
+    #    session.save(new_cal)
+    #    session.flush()
 
 
 
