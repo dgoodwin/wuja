@@ -54,11 +54,6 @@ class WujaConfiguration(gobject.GObject):
     def add_feed_url(self, url):
         """ Add a feed URL to the configuration.
 
-        If the user specifies a URL ending with "/basic", switch it for
-        "/full". (basic URL's do not contain enough information for
-        Wuja to work, but basic is what Google Calendar links to by
-        default on the settings page.
-
         Ignore empty string URL's.
         """
         if url == '':
