@@ -60,6 +60,7 @@ class WujaApplication:
         upgrade_manager = UpgradeManager()
         upgrade_manager.check()
 
+        gtk.gdk.threads_init()
         # Maintain a map of events that have alert windows open to ensure
         # we don't popup multiple windows for the same event that hasn't
         # been confirmed by the user:
