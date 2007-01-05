@@ -39,8 +39,7 @@ from datetime import timedelta
 
 from wuja.notifier import AsyncNotifier
 from wuja.config import WujaConfiguration, ALERT_NOTIFICATION
-from wuja.data import WUJA_DIR, GCONF_PATH, WUJA_DB_FILE
-from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
+from wuja.data import WUJA_DIR, GCONF_PATH
 from wuja.calendar import CalendarWindow
 from wuja.upgrade import UpgradeManager
 
@@ -62,6 +61,7 @@ class WujaApplication:
         upgrade_manager = UpgradeManager()
         upgrade_manager.check()
 
+        gtk.gdk.threads_init()
         # Maintain a map of events that have alert windows open to ensure
         # we don't popup multiple windows for the same event that hasn't
         # been confirmed by the user:

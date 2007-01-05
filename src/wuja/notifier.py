@@ -28,9 +28,8 @@ import gobject
 
 from logging import getLogger
 from dateutil.tz import tzlocal
-from wuja.model import Calendar, Cache
 from wuja.feed import FeedOpenError
-from wuja.decorators import as_idle, threaded
+from wuja.decorators import threaded
 
 logger = getLogger("notifier")
 
