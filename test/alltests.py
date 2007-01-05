@@ -19,7 +19,6 @@
 #   02110-1301  USA
 
 import unittest
-import sys
 import settestpath
 import configureLogging
 

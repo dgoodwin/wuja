@@ -28,7 +28,6 @@ version.
 __revision__ = "$Revision"
 
 import sys
-from logging import getLogger
 sys.path.insert(0, './src/')
 
 from wuja.log import setup_logging
