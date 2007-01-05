@@ -31,6 +31,7 @@ import gobject
 import sys
 import os
 import os.path
+import urllib2
 
 from logging import getLogger
 from egg import trayicon
@@ -390,13 +391,28 @@ class PreferencesDialog:
         "/full". (basic URL's do not contain enough information for
         Wuja to work, but basic is what Google Calendar links to by
         default on the settings page.
+
+        If the URL is not valid or unreachable, display an error dialog
+        and skip adding the URL.
         """
 
         add_url_textfield = self.glade_prefs.get_widget('entry1')
 
         url = add_url_textfield.get_text()
         url = process_url(url)
-        logger.info("Adding URL: " + url)
+
+        # Check if the URL is valid before we try to add it:
+        logger.info("Verifying URL: " + url)
+        try:
+            url_file = urllib2.urlopen(url)
+        except urllib2.URLError, e:
+            logger.error("URL not valid!")
+            error_dialog = gtk.MessageDialog(type=gtk.MESSAGE_ERROR,
+                message_format="Invalid URL", buttons=gtk.BUTTONS_OK)
+            error_dialog.run()
+            error_dialog.destroy()
+            return
+
         add_url_textfield.set_text('')
 
         self.config.add_feed_url(url)

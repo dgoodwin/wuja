@@ -136,11 +136,14 @@ class CalendarTests(unittest.TestCase):
         session.save(new_cal)
         session.flush()
 
-    #def test_unique_urls(self):
-    #    session = create_session()
-    #    new_cal = NewCalendar(CAL_TITLE, CAL_URL, LAST_UPDATE, CAL_TZ)
-    #    session.save(new_cal)
-    #    session.flush()
+    def test_unique_urls(self):
+        session = create_session()
+        new_cal = NewCalendar(CAL_TITLE, CAL_URL, LAST_UPDATE, CAL_TZ)
+        session.save(new_cal)
+        new_cal2 = NewCalendar("a", CAL_URL, "b", "c")
+        session.save(new_cal2)
+
+        self.assertRaises(Exception, session.flush)
 
 
 
