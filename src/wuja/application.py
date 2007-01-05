@@ -405,7 +405,7 @@ class PreferencesDialog:
         logger.info("Verifying URL: " + url)
         try:
             url_file = urllib2.urlopen(url)
-        except urllib2.URLError, e:
+        except Exception:
             logger.error("URL not valid!")
             error_dialog = gtk.MessageDialog(type=gtk.MESSAGE_ERROR,
                 message_format="Invalid URL", buttons=gtk.BUTTONS_OK)
