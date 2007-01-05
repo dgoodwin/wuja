@@ -21,8 +21,6 @@
 """ Tests for the wuja.model module. """
 
 import unittest
-import os
-import os.path
 
 from datetime import datetime, timedelta
 from sqlalchemy import *

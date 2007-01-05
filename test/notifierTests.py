@@ -29,7 +29,6 @@ import settestpath
 
 from wuja.notifier import Notifier
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Calendar
-from wuja.config import WujaConfiguration
 
 import utils
 from utils import TestWujaConfiguration, teardownDatabase, TestCache

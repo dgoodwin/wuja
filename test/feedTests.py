@@ -27,7 +27,7 @@ import settestpath
 
 from datetime import datetime
 
-from wuja.feed import FeedSource, parse_timestamp, build_calendar
+from wuja.feed import parse_timestamp, build_calendar
 from samplefeed import xml
 from dateutil.tz import gettz
 
