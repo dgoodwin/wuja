@@ -102,6 +102,7 @@ class Cache:
         self._cache.sync()
 
 
+
 class Event:
 
     """ An actual calendar event. Can be associated with an alarm. """
@@ -121,11 +122,13 @@ class Event:
     key = property(get_key)
 
 
+
 class BadDateRange(Exception):
 
     """ Exception for messed up date ranges. """
 
     pass
+
 
 
 class Calendar:
@@ -138,6 +141,7 @@ class Calendar:
         self.last_update = last_update
         self.entries = []
         self.timezone = timezone # string like 'America/Halifax'
+
 
 
 class Entry(object):
@@ -202,6 +206,7 @@ class Entry(object):
         return False
 
 
+
 class SingleOccurrenceEntry(Entry):
 
     """ An entry occurring only once. """
@@ -243,6 +248,7 @@ class SingleOccurrenceEntry(Entry):
         if self._event_occurs_on(event, self.duration, date):
             return_me.append(event)
         return return_me
+
 
 
 class RecurringEntry(Entry):

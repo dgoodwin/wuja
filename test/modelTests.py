@@ -23,7 +23,6 @@
 import unittest
 
 from datetime import datetime, timedelta
-from sqlalchemy import *
 
 import settestpath
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Event, Calendar, \
@@ -47,43 +46,7 @@ DESCRIPTION = "In the future, there will be robots."
 LOCATION = "Main Boardroom"
 REMIND = 10
 FEED_TITLE = "fakefeed"
-
-def setup_database(db):
-    metadata = BoundMetaData(db)
-    calendar_table = Table('calendars', metadata,
-        Column('url', String(255), nullable=False, primary_key=True),
-        Column('title', String(255), nullable=False),
-        Column('last_update', String(255), nullable=False),
-        Column('timezone', String(255))
-    )
-
-    entry_table = Table('entries', metadata,
-        Column('entry_id', String(255), nullable=False, primary_key=True),
-        Column('title', String(255), nullable=False),
-        Column('description', String()),
-        Column('location', String(255)),
-        Column('updated', String(255)),
-        Column('duration', Integer()),
-        Column('reminder', Integer()),
-        Column('time', DateTime()),
-        Column('start_date', DateTime()),
-        Column('type', Integer()), # discriminator column
-        # TODO: Exceptions
-        # TODO: Calendar association
-    )
-
-    metadata.create_all()
-    calendar_mapper = mapper(NewCalendar, calendar_table)
-    entry_mapper = mapper(Entry, entry_table,
-        polymorphic_on=entry_table.c.type)
-    single_occurrence_entry_mapper = mapper(SingleOccurrenceEntry,
-        inherits=entry_mapper, polymorphic_identity=0)
-
-    return metadata
-
-def teardown_database(metadata):
-    metadata.drop_all(checkfirst=True)
-    clear_mappers()
+ENTRY_ID = "http://www.google.com/calendar/feeds/user6543%40gmail.com/private-21c1b7bacde29db1866435dlfk437180/basic/pki60p7lg4g6hapoqmc5nindnc"
 
 # TODO: Rename
 # TODO: Stop hitting the filesystem:
@@ -136,45 +99,6 @@ class CacheTests(unittest.TestCase):
 
 
 
-class NewCalendar(object):
-
-    def __init__(self, title, url, last_update, timezone):
-        self.title = title
-        self.url = url
-        self.last_update = last_update
-        self.timezone = timezone
-
-    def __repr__(self):
-        return self.title
-
-
-
-class CalendarTests(unittest.TestCase):
-
-    def setUp(self):
-        self.db = create_engine('sqlite:///:memory:')
-        self.metadata = setup_database(self.db)
-
-    def tearDown(self):
-        teardown_database(self.metadata)
-
-    def test_create(self):
-        session = create_session()
-        new_cal = NewCalendar(CAL_TITLE, CAL_URL, LAST_UPDATE, CAL_TZ)
-        session.save(new_cal)
-        session.flush()
-
-    def test_unique_urls(self):
-        session = create_session()
-        new_cal = NewCalendar(CAL_TITLE, CAL_URL, LAST_UPDATE, CAL_TZ)
-        session.save(new_cal)
-        new_cal2 = NewCalendar("a", CAL_URL, "b", "c")
-        session.save(new_cal2)
-
-        self.assertRaises(Exception, session.flush)
-
-
-
 class EventTests(unittest.TestCase):
 
     def setUp(self):
@@ -189,19 +113,11 @@ class EventTests(unittest.TestCase):
             event.key)
 
 
+
 class SingleOccurrenceEntryTests(unittest.TestCase):
 
     def setUp(self):
-        self.db = create_engine('sqlite:///:memory:')
-        self.metadata = setup_database(self.db)
-
-        session = create_session()
-        self.cal = NewCalendar(CAL_TITLE, CAL_URL, LAST_UPDATE, CAL_TZ)
-        session.save(self.cal)
-        session.flush()
-
-    def tearDown(self):
-        teardown_database(self.metadata)
+        self.cal = Calendar(CAL_TITLE, CAL_URL, LAST_UPDATE, CAL_TZ)
 
     def test_event_within_end_time(self):
         time = datetime(2015, 05, 23, 22, 0, 0, tzinfo=TZ)
@@ -454,10 +370,10 @@ class RecurringEntryTests(unittest.TestCase):
         self.assertEquals(1, len(events))
 
 
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(CacheTests))
-    suite.addTest(unittest.makeSuite(CalendarTests))
     suite.addTest(unittest.makeSuite(SingleOccurrenceEntryTests))
     suite.addTest(unittest.makeSuite(RecurringEntryTests))
     suite.addTest(unittest.makeSuite(EventTests))
