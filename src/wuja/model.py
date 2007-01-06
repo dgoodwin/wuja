@@ -140,7 +140,7 @@ class Calendar:
         self.timezone = timezone # string like 'America/Halifax'
 
 
-class Entry:
+class Entry(object):
 
     """ Parent class of calendar entries. Consider it abstract. """
 

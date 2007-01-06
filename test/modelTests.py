@@ -27,7 +27,7 @@ from sqlalchemy import *
 
 import settestpath
 from wuja.model import SingleOccurrenceEntry, RecurringEntry, Event, Calendar, \
-    BadDateRange
+    BadDateRange, Entry
 from sampledata import daily_recurrence, daily_recurrence_for_one_week, \
     weekly_recurrence_all_day, monthly_multi_day, wkst_recurrence, \
     recurring_with_interval, weekly_tv_show
@@ -47,6 +47,43 @@ DESCRIPTION = "In the future, there will be robots."
 LOCATION = "Main Boardroom"
 REMIND = 10
 FEED_TITLE = "fakefeed"
+
+def setup_database(db):
+    metadata = BoundMetaData(db)
+    calendar_table = Table('calendars', metadata,
+        Column('url', String(255), nullable=False, primary_key=True),
+        Column('title', String(255), nullable=False),
+        Column('last_update', String(255), nullable=False),
+        Column('timezone', String(255))
+    )
+
+    entry_table = Table('entries', metadata,
+        Column('entry_id', String(255), nullable=False, primary_key=True),
+        Column('title', String(255), nullable=False),
+        Column('description', String()),
+        Column('location', String(255)),
+        Column('updated', String(255)),
+        Column('duration', Integer()),
+        Column('reminder', Integer()),
+        Column('time', DateTime()),
+        Column('start_date', DateTime()),
+        Column('type', Integer()), # discriminator column
+        # TODO: Exceptions
+        # TODO: Calendar association
+    )
+
+    metadata.create_all()
+    calendar_mapper = mapper(NewCalendar, calendar_table)
+    entry_mapper = mapper(Entry, entry_table,
+        polymorphic_on=entry_table.c.type)
+    single_occurrence_entry_mapper = mapper(SingleOccurrenceEntry,
+        inherits=entry_mapper, polymorphic_identity=0)
+
+    return metadata
+
+def teardown_database(metadata):
+    metadata.drop_all(checkfirst=True)
+    clear_mappers()
 
 # TODO: Rename
 # TODO: Stop hitting the filesystem:
@@ -116,19 +153,10 @@ class CalendarTests(unittest.TestCase):
 
     def setUp(self):
         self.db = create_engine('sqlite:///:memory:')
-        self.metadata = BoundMetaData(self.db)
-        calendar_table = Table('calendars', self.metadata,
-            Column('url', String(255), nullable=False, primary_key=True),
-            Column('title', String(255), nullable=False),
-            Column('last_update', String(255), nullable=False),
-            Column('timezone', String(255))
-            )
-        self.metadata.create_all()
-        calendar_mapper = mapper(NewCalendar, calendar_table)
+        self.metadata = setup_database(self.db)
 
     def tearDown(self):
-        self.metadata.drop_all(checkfirst=True)
-        clear_mappers()
+        teardown_database(self.metadata)
 
     def test_create(self):
         session = create_session()
@@ -164,7 +192,16 @@ class EventTests(unittest.TestCase):
 class SingleOccurrenceEntryTests(unittest.TestCase):
 
     def setUp(self):
-        self.cal = Calendar(FEED_TITLE, CAL_URL, "somedate", CAL_TZ)
+        self.db = create_engine('sqlite:///:memory:')
+        self.metadata = setup_database(self.db)
+
+        session = create_session()
+        self.cal = NewCalendar(CAL_TITLE, CAL_URL, LAST_UPDATE, CAL_TZ)
+        session.save(self.cal)
+        session.flush()
+
+    def tearDown(self):
+        teardown_database(self.metadata)
 
     def test_event_within_end_time(self):
         time = datetime(2015, 05, 23, 22, 0, 0, tzinfo=TZ)
@@ -268,6 +305,7 @@ class SingleOccurrenceEntryTests(unittest.TestCase):
 
         events = vacation.get_events_occurring_on(query_date)
         self.assertEquals(1, len(events))
+
 
 
 class RecurringEntryTests(unittest.TestCase):
