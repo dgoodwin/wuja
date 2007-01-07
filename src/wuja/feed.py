@@ -36,8 +36,12 @@ from dateutil.tz import gettz
 
 logger = getLogger("feed")
 
+STATUS_CANCELLED = "http://schemas.google.com/g/2005#event.canceled"
+
 class FeedOpenError(Exception):
     pass
+
+
 
 class FeedSource:
     """ Builds feeds objects given a URL. """
@@ -60,6 +64,7 @@ class FeedSource:
         XML source for the feed from Google's servers.
         """
         return urllib2.urlopen(url + "?max-results=10000").read()
+
 
 
 def build_calendar(xml, url, last_update):
@@ -128,20 +133,27 @@ def create_entry(elem, cal, exceptions):
     duration = None
     reminder = None
 
+    cancelled = False
+
     tz = gettz(cal.timezone)
 
     for node in elem.getchildren():
         if parse_tag(node.tag) == 'id':
             entry_id = node.text
+
         elif parse_tag(node.tag) == 'title':
             title = node.text
             logger.debug("   Entry: " + title)
+
         elif parse_tag(node.tag) == 'content':
             description = node.text
+
         elif parse_tag(node.tag) == 'updated':
             updated = parse_timestamp(node.text, tz)
+
         elif parse_tag(node.tag) == 'recurrence':
             recurrence = node.text
+
         elif parse_tag(node.tag) == 'when':
             when = parse_timestamp(node.attrib["startTime"], tz)
             end_time = parse_timestamp(node.attrib["endTime"], tz)
@@ -152,10 +164,18 @@ def create_entry(elem, cal, exceptions):
             for child_element in node.getchildren():
                 if parse_tag(child_element.tag) == 'reminder':
                     reminder = int(child_element.get('minutes'))
+
         elif parse_tag(node.tag) == 'reminder':
             reminder = int(node.get('minutes'))
+
         elif parse_tag(node.tag) == 'where':
             where = node.text
+
+        elif parse_tag(node.tag) == 'eventStatus':
+            status = node.attrib["value"]
+            if status == STATUS_CANCELLED:
+                cancelled = True
+
         elif parse_tag(node.tag) == 'originalEvent':
             original_entry = node.attrib["href"]
             for child_element in node.getchildren():
@@ -169,6 +189,11 @@ def create_entry(elem, cal, exceptions):
     if reminder is None:
         logger.debug("No reminder found for entry: %s" % title)
 
+    # If the event being processed is a recurrence cancellation, skip the
+    # actual event creation:
+    if cancelled:
+        return
+
     entry = None
     if recurrence != None:
         entry = RecurringEntry(entry_id, title, description, reminder,
@@ -177,5 +202,4 @@ def create_entry(elem, cal, exceptions):
         entry = SingleOccurrenceEntry(entry_id, title, description, reminder,
             updated, when, int(duration), where, cal)
     cal.entries.append(entry)
-    return entry
 

@@ -343,8 +343,11 @@ class RecurringEntry(Entry):
                     val = tuple(val)
 
                 elif key == 'until':
+                    # until parameter always UTC according to RFC 2445:
                     val = datetime(int(val[0][0:4]), int(val[0][4:6]),
-                        int(val[0][6:8]), tzinfo=tz)
+                        int(val[0][6:8]), int(val[0][9:11]),
+                        int(val[0][11:13]), int(val[0][13:15]),
+                        tzinfo=gettz('UTC'))
 
                 elif key == 'wkst':
                     val = WEEKDAY_MAP[val[0]]

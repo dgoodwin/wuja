@@ -54,26 +54,42 @@ class FeedSourceTests(unittest.TestCase):
 
     def test_recurring_exception_changed_time(self):
         cal = build_calendar(xml, FEED_LAST_UPDATE, FEED_URL)
-        events = find_entries(cal.entries, "Recurring With Exception")
-        self.assertEqual(2, len(events))
+        entries = find_entries(cal.entries, "Recurring With Exception")
+        self.assertEqual(2, len(entries))
 
         # Find the parent event:
         original_event = None
         exception_event = None
-        if len(events[0].exceptions) > 0:
-            self.assertEqual(0, len(events[1].exceptions))
-            original_event = events[0]
-            exception_event = events[1]
+        if len(entries[0].exceptions) > 0:
+            self.assertEqual(0, len(entries[1].exceptions))
+            original_event = entries[0]
+            exception_event = entries[1]
         else:
-            self.assertEqual(1, len(events[1].exceptions))
-            original_event = events[1]
-            exception_event = events[0]
+            self.assertEqual(1, len(entries[1].exceptions))
+            original_event = entries[1]
+            exception_event = entries[0]
 
-        # Check that only 4 of the 5 entries are returned for the week:
+        # Check that only 4 of the 5 events are returned for the week:
         start = datetime(2006, 11, 20, tzinfo=TZ)
         end = datetime(2006, 11, 26, tzinfo=TZ)
         events = original_event.get_events_starting_between(start, end)
         self.assertEqual(4, len(events))
+
+    def test_recurrence_cancellation_exception(self):
+        cal = build_calendar(xml, FEED_LAST_UPDATE, FEED_URL)
+        entries = find_entries(cal.entries, "Recurring With Cancellation")
+        self.assertEquals(1, len(entries))
+
+        e = entries[0]
+        self.assertEquals(1, len(e.exceptions))
+
+        # Check that only 4 events are returned for the week:
+        start = datetime(2007, 1, 1, tzinfo=TZ)
+        end = datetime(2007, 1, 8, tzinfo=TZ)
+        events = e.get_events_starting_between(start, end)
+
+        self.assertEqual(4, len(events))
+
 
 
 def find_entries(entries, title):
