@@ -25,7 +25,7 @@ from logging import getLogger
 
 logger = getLogger("wuja")
 
-from wuja.calendar import find_file_on_path
+from wuja.utils import find_file_on_path
 
 class PreferencesDialog:
 

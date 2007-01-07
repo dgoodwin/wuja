@@ -43,6 +43,7 @@ from wuja.data import WUJA_DIR, GCONF_PATH
 from wuja.calendar import CalendarWindow
 from wuja.upgrade import UpgradeManager
 from wuja.preferences import PreferencesDialog
+from wuja.utils import find_file_on_path
 
 NOTIFICATION_INTERVAL = 1 # minutes between notification checks
 FEED_UPDATE_INTERVAL = 10 # minutes between feed updates
@@ -345,22 +346,6 @@ class AlertNotification(AlertDisplay):
         self._snooze_event()
 
 
-
-def find_file_on_path(pathname):
-    """
-    Scan the Python path and locate a file with the given name.
-
-    See:
-      http://www.linuxjournal.com/xstatic/articles/lj/0087/4702/4702l2.html
-    """
-    if os.path.isabs(pathname):
-        return pathname
-    for dirname in sys.path:
-        candidate = os.path.join(dirname, pathname)
-        if os.path.isfile(candidate):
-            return candidate
-    raise Exception("Could not find %s on the Python path."
-        % pathname)
 
 def process_url(url):
     """

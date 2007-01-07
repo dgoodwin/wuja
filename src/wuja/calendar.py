@@ -26,13 +26,12 @@ pygtk.require('2.0')
 import gtk
 import gtk.glade
 import gobject
-import os
-import os.path
-import sys
 
 from logging import getLogger
 from datetime import datetime,timedelta
 from dateutil.tz import tzlocal
+
+from wuja.utils import find_file_on_path
 
 logger = getLogger("calendar_window")
 
@@ -127,21 +126,4 @@ class CalendarWindow(gobject.GObject):
                 txt += "\n"
         self.textview.get_buffer().set_text(txt)
 
-
-# FIXME: Had to duplicate this, import from wuja.application wasn't working.
-def find_file_on_path(pathname):
-    """
-    Scan the Python path and locate a file with the given name.
-
-    See:
-      http://www.linuxjournal.com/xstatic/articles/lj/0087/4702/4702l2.html
-    """
-    if os.path.isabs(pathname):
-        return pathname
-    for dirname in sys.path:
-        candidate = os.path.join(dirname, pathname)
-        if os.path.isfile(candidate):
-            return candidate
-    raise Exception("Could not find %s on the Python path."
-        % pathname)
 
