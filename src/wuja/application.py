@@ -28,10 +28,8 @@ pygtk.require('2.0')
 import gtk
 import gtk.glade
 import gobject
-import sys
 import os
 import os.path
-import urllib2
 
 from logging import getLogger
 from egg import trayicon
@@ -91,11 +89,11 @@ class WujaApplication:
         action_group = gtk.ActionGroup("wuja_menu")
         action_group.add_actions(actions)
 
-        ui = gtk.UIManager()
-        ui.add_ui_from_file(find_file_on_path("wuja/data/wuja-menu.xml"))
-        ui.insert_action_group(action_group, 0)
+        ui_mgr = gtk.UIManager()
+        ui_mgr.add_ui_from_file(find_file_on_path("wuja/data/wuja-menu.xml"))
+        ui_mgr.insert_action_group(action_group, 0)
 
-        self.menu = ui.get_widget("/wuja_menu")
+        self.menu = ui_mgr.get_widget("/wuja_menu")
         self.menu.show_all()
 
         self.tray_icon = trayicon.TrayIcon("wuja")
@@ -113,7 +111,7 @@ class WujaApplication:
         self.build_notifier()
 
     def _reset_feed_update(self):
-        # Restart the feed update timer from now:
+        """ Restart the feed update timer. """
         self.feed_update_event_source = gobject.timeout_add(
             FEED_UPDATE_INTERVAL * 1000 * 60, self.notifier.update)
         logger.debug("Updating feeds from Google servers every %s minutes."
@@ -122,7 +120,8 @@ class WujaApplication:
     def __update_feeds(self, widget):
         """
         Pass call to update feeds along to the notifier and reset
-        timers. """
+        timers.
+        """
         gobject.source_remove(self.feed_update_event_source)
         self.notifier.update()
         self._reset_feed_update()
@@ -141,15 +140,19 @@ class WujaApplication:
         self.menu.popup(None, None, None, data.button, data.time)
 
     def __open_preferences_dialog(self, widget):
+        """ Open the preferences dialog. """
         self.prefs_dialog = PreferencesDialog(self.config, self.notifier)
 
     def __open_calendar(self, widget):
+        """ Open the calendar display dialog. """
         self.calendar_window = CalendarWindow(self.notifier.cache)
 
     def __close_dialog(self, widget):
+        """ Close the preferences dialog. """
         self.prefs_dialog.close()
 
     def __open_about_dialog(self, widget):
+        """ Open the about dialog. """
         glade_file = 'wuja/data/wuja-about.glade'
         glade_xml = gtk.glade.XML(find_file_on_path(glade_file))
         about_dialog = glade_xml.get_widget('WujaAbout')
@@ -162,6 +165,7 @@ class WujaApplication:
         about_dialog.show_all()
 
     def __close_about_dialog(self, widget, response):
+        """ Close the about dialog. """
         widget.destroy()
 
     def build_notifier(self):
@@ -347,10 +351,3 @@ class AlertNotification(AlertDisplay):
 
 
 
-def process_url(url):
-    """
-    Convert the URL specified by the user into what we need for wuja.
-    """
-
-    url = url.replace('/basic', '/full')
-    return url

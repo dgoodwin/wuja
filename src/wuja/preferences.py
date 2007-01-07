@@ -18,14 +18,25 @@
 #   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #   02110-1301  USA
 
+""" The wuja preferences dialog. """
+
 import gtk
 import gobject
+import urllib2
 
 from logging import getLogger
 
 logger = getLogger("preferences")
 
 from wuja.utils import find_file_on_path
+
+def process_url(url):
+    """
+    Convert the URL specified by the user into what we need for wuja.
+    """
+
+    url = url.replace('/basic', '/full')
+    return url
 
 class PreferencesDialog:
 
@@ -58,10 +69,9 @@ class PreferencesDialog:
         urls_list = gtk.ListStore(gobject.TYPE_STRING)
         self.__title_index = {}
         for url in self.config.get_feed_urls():
-            logger.debug("Existing URL: " + url)
-            it = urls_list.append()
+            url_iter = urls_list.append()
             cal = self.notifier.cache.load(url)
-            urls_list.set_value(it, 0, cal.title)
+            urls_list.set_value(url_iter, 0, cal.title)
             self.__title_index[cal.title] = cal
         self.prefs_url_list.set_model(urls_list)
         renderer = gtk.CellRendererText()
@@ -90,7 +100,7 @@ class PreferencesDialog:
         # Check if the URL is valid before we try to add it:
         logger.info("Verifying URL: " + url)
         try:
-            url_file = urllib2.urlopen(url)
+            urllib2.urlopen(url)
         except Exception:
             logger.error("URL not valid!")
             error_dialog = gtk.MessageDialog(type=gtk.MESSAGE_ERROR,
@@ -113,16 +123,16 @@ class PreferencesDialog:
         """ Remove a URL from the list. """
         urls_list = self.glade_prefs.get_widget('treeview1')
         selection = urls_list.get_selection()
-        (model, it) = selection.get_selected()
-        if it is None:
+        (model, cal) = selection.get_selected()
+        if cal is None:
             logger.debug("Unable to remove URL, no entry selected.")
             return
-        url_to_remove_title = model.get_value(it, 0)
+        url_to_remove_title = model.get_value(cal, 0)
         cal = self.__title_index[url_to_remove_title]
         url_to_remove = cal.url
         logger.info("Removing URL for feed %s: %s" % (url_to_remove_title,
             url_to_remove))
-        model.remove(it)
+        model.remove(cal)
         self.config.remove_feed_url(url_to_remove)
 
     def __remove_all_urls(self, widget):
