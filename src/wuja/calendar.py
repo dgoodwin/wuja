@@ -20,9 +20,6 @@
 
 """ The Wuja calendar display window. """
 
-__revision__ = "$Rev$"
-
-
 import pygtk
 pygtk.require('2.0')
 

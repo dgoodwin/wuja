@@ -42,6 +42,7 @@ from wuja.config import WujaConfiguration, ALERT_NOTIFICATION
 from wuja.data import WUJA_DIR, GCONF_PATH
 from wuja.calendar import CalendarWindow
 from wuja.upgrade import UpgradeManager
+from wuja.preferences import PreferencesDialog
 
 NOTIFICATION_INTERVAL = 1 # minutes between notification checks
 FEED_UPDATE_INTERVAL = 10 # minutes between feed updates
@@ -221,6 +222,7 @@ class WujaApplication:
         gtk.main()
 
 
+
 class AlertDisplay(gobject.GObject):
 
     def __init__(self, event):
@@ -245,6 +247,7 @@ class AlertDisplay(gobject.GObject):
 
 gobject.signal_new("alert-closed", AlertDisplay, gobject.SIGNAL_ACTION,
     gobject.TYPE_BOOLEAN, ())
+
 
 
 class AlertDialog(AlertDisplay):
@@ -304,6 +307,7 @@ class AlertDialog(AlertDisplay):
         widget.get_parent_window().destroy()
 
 
+
 class AlertNotification(AlertDisplay):
 
     def __init__(self, event, tray_icon):
@@ -340,121 +344,6 @@ class AlertNotification(AlertDisplay):
     def snooze_event(self, notification, action):
         self._snooze_event()
 
-
-class PreferencesDialog:
-
-    """
-    Class to open, maintain, and close the Wuja preferences
-    dialog.
-    """
-
-    def __init__(self, config, notifier):
-        """ Open the preferences dialog. """
-        logger.debug("Opening preferences dialog.")
-        self.config = config
-        self.notifier = notifier
-
-        glade_file = 'wuja/data/wuja-prefs.glade'
-        window_name = 'dialog1'
-        self.glade_prefs = gtk.glade.XML(find_file_on_path(glade_file))
-        signals = {
-            'on_add_clicked' : self.__add_url,
-            'on_remove_clicked' : self.__remove_url,
-            'on_remove_all_clicked' : self.__remove_all_urls,
-            'on_help_clicked' : self.__display_help,
-            'on_close_clicked' : self.close
-        }
-        self.glade_prefs.signal_autoconnect(signals)
-        self.prefs_dialog_widget = self.glade_prefs.get_widget(window_name)
-
-        # Populate the list of existing URLs:
-        self.prefs_url_list = self.glade_prefs.get_widget('treeview1')
-        urls_list = gtk.ListStore(gobject.TYPE_STRING)
-        self.__title_index = {}
-        for url in self.config.get_feed_urls():
-            logger.debug("Existing URL: " + url)
-            it = urls_list.append()
-            cal = self.notifier.cache.load(url)
-            urls_list.set_value(it, 0, cal.title)
-            self.__title_index[cal.title] = cal
-        self.prefs_url_list.set_model(urls_list)
-        renderer = gtk.CellRendererText()
-        column = gtk.TreeViewColumn("Feed URLs", renderer, text=0)
-        self.prefs_url_list.append_column(column)
-
-        self.prefs_dialog_widget.show_all()
-
-    def __add_url(self, widget):
-        """ Add a URL to the list.
-
-        If the user specifies a URL ending with "/basic", switch it for
-        "/full". (basic URL's do not contain enough information for
-        Wuja to work, but basic is what Google Calendar links to by
-        default on the settings page.
-
-        If the URL is not valid or unreachable, display an error dialog
-        and skip adding the URL.
-        """
-
-        add_url_textfield = self.glade_prefs.get_widget('entry1')
-
-        url = add_url_textfield.get_text()
-        url = process_url(url)
-
-        # Check if the URL is valid before we try to add it:
-        logger.info("Verifying URL: " + url)
-        try:
-            url_file = urllib2.urlopen(url)
-        except Exception:
-            logger.error("URL not valid!")
-            error_dialog = gtk.MessageDialog(type=gtk.MESSAGE_ERROR,
-                message_format="Invalid URL", buttons=gtk.BUTTONS_OK)
-            error_dialog.run()
-            error_dialog.destroy()
-            return
-
-        add_url_textfield.set_text('')
-
-        self.config.add_feed_url(url)
-
-        # Update the list:
-        urls_list = self.glade_prefs.get_widget('treeview1').get_model()
-        cal = self.notifier.cache.load(url)
-        feed_title = cal.title
-        urls_list.set_value(urls_list.append(), 0, feed_title)
-
-    def __remove_url(self, widget):
-        """ Remove a URL from the list. """
-        urls_list = self.glade_prefs.get_widget('treeview1')
-        selection = urls_list.get_selection()
-        (model, it) = selection.get_selected()
-        if it is None:
-            logger.debug("Unable to remove URL, no entry selected.")
-            return
-        url_to_remove_title = model.get_value(it, 0)
-        cal = self.__title_index[url_to_remove_title]
-        url_to_remove = cal.url
-        logger.info("Removing URL for feed %s: %s" % (url_to_remove_title,
-            url_to_remove))
-        model.remove(it)
-        self.config.remove_feed_url(url_to_remove)
-
-    def __remove_all_urls(self, widget):
-        """ Remove all URL's from the list. """
-        logger.warn("Removing *ALL* URLs.")
-        self.config.remove_all_feed_urls()
-
-        urls_list = self.glade_prefs.get_widget('treeview1')
-        urls_list.set_model()
-
-    def __display_help(self, widget):
-        """ Display preferences help. """
-        logger.info("Help clicked")
-
-    def close(self, widget):
-        """ Close the preferences dialog. """
-        self.prefs_dialog_widget.destroy()
-        self.prefs_dialog = None
 
 
 def find_file_on_path(pathname):
