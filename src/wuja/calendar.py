@@ -106,7 +106,6 @@ class CalendarWindow(gobject.GObject):
         for calendar in self.cache.load_all():
             for entry in calendar.entries:
                 for event in entry.get_events_occurring_on(query_date):
-                    logger.debug('   ' + str(event.time))
                     # Multiple events could have the same time:
                     if not events_for_date.has_key(event.time):
                         events_for_date[event.time] = []

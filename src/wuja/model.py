@@ -395,9 +395,10 @@ class RecurringEntry(Entry):
         possible_events = self.rrule.between(start_range, end_range,
             inc=True)
         for time in possible_events:
-            event = Event(time, self)
-            if self._event_occurs_on(event, self.duration, date):
-                return_me.append(event)
+            if time not in self.exceptions:
+                event = Event(time, self)
+                if self._event_occurs_on(event, self.duration, date):
+                    return_me.append(event)
 
         return return_me
 

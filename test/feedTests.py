@@ -87,8 +87,10 @@ class FeedSourceTests(unittest.TestCase):
         start = datetime(2007, 1, 1, tzinfo=TZ)
         end = datetime(2007, 1, 8, tzinfo=TZ)
         events = e.get_events_starting_between(start, end)
-
         self.assertEqual(4, len(events))
+
+        events = e.get_events_occurring_on(datetime(2007, 1, 3, tzinfo=TZ))
+        self.assertEqual(0, len(events))
 
 
 
