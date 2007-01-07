@@ -23,7 +23,7 @@ import gobject
 
 from logging import getLogger
 
-logger = getLogger("wuja")
+logger = getLogger("preferences")
 
 from wuja.utils import find_file_on_path
 
