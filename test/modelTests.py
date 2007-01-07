@@ -272,6 +272,10 @@ class RecurringEntryTests(unittest.TestCase):
             end_date)
         self.assertEquals(5, len(events))
 
+        events = daily_for_one_week.get_events_occurring_on(
+            datetime(2006, 6, 9, tzinfo=TZ))
+        self.assertEquals(1, len(events))
+
     def test_weekly_all_day_recurrence(self):
         weekly_all_day = RecurringEntry("fakeId", "Weekly All Day", "",
             REMIND, LOCATION, UPDATED, weekly_recurrence_all_day, self.cal)
