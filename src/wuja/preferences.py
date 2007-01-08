@@ -81,7 +81,8 @@ class PreferencesDialog:
         self.prefs_dialog_widget.show_all()
 
     def __add_url(self, widget):
-        """ Add a URL to the list.
+        """
+        Add a URL to the list.
 
         If the user specifies a URL ending with "/basic", switch it for
         "/full". (basic URL's do not contain enough information for
@@ -115,24 +116,24 @@ class PreferencesDialog:
 
         # Update the list:
         urls_list = self.glade_prefs.get_widget('treeview1').get_model()
-        cal = self.notifier.cache.load(url)
-        feed_title = cal.title
-        urls_list.set_value(urls_list.append(), 0, feed_title)
+        #cal = self.notifier.cache.load(url)
+        #feed_title = cal.title
+        urls_list.set_value(urls_list.append(), 0, url)
 
     def __remove_url(self, widget):
         """ Remove a URL from the list. """
         urls_list = self.glade_prefs.get_widget('treeview1')
         selection = urls_list.get_selection()
-        (model, cal) = selection.get_selected()
-        if cal is None:
+        (model, cal_iter) = selection.get_selected()
+        if cal_iter is None:
             logger.debug("Unable to remove URL, no entry selected.")
             return
-        url_to_remove_title = model.get_value(cal, 0)
+        url_to_remove_title = model.get_value(cal_iter, 0)
         cal = self.__title_index[url_to_remove_title]
         url_to_remove = cal.url
         logger.info("Removing URL for feed %s: %s" % (url_to_remove_title,
             url_to_remove))
-        model.remove(cal)
+        model.remove(cal_iter)
         self.config.remove_feed_url(url_to_remove)
 
     def __remove_all_urls(self, widget):

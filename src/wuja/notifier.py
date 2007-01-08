@@ -60,7 +60,8 @@ class Notifier(gobject.GObject):
         self.update()
 
     def update(self):
-        """ Update all feeds, maintain our local cache, and check for
+        """
+        Update all feeds, maintain our local cache, and check for
         upcoming events.
         """
         logger.info("Updating feeds from Google servers.")
@@ -94,7 +95,6 @@ class Notifier(gobject.GObject):
                     cal = self.feed_source.get_calendar(feed_url)
                     self.cache.save(cal)
                     temporary_entries.extend(cal.entries)
-
                 else:
                     logger.info("Feed already up to date: %s (%s)" % \
                         (cal.title, cal.last_update))
@@ -130,7 +130,8 @@ class Notifier(gobject.GObject):
         self.update()
 
     def update_events(self):
-        """ Check pre-fetched calendar entries for upcoming events.
+        """
+        Check pre-fetched calendar entries for upcoming events.
 
         Note: Does not query Google's servers.
         """
@@ -189,7 +190,7 @@ gobject.signal_new("feeds-updated", Notifier, gobject.SIGNAL_ACTION,
     gobject.TYPE_BOOLEAN, (gobject.TYPE_PYOBJECT,))
 
 class AsyncNotifier(Notifier):
-    """ A Notifier that uses threads to be asyncronous. """ 
+    """ A Notifier that uses threads to be asyncronous. """
 
     @threaded
     def update(self):
