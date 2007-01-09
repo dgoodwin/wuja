@@ -1,1 +1,4 @@
-include src/wuja/data/*.xml src/wuja/data/*.glade
+include src/wuja/data/*.xml src/wuja/data/*.glade src/wuja/data/*.png
+include data/wuja.schema
+include testwuja.py logging.conf test/*.py
+include AUTHORS LICENSE README
