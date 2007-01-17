@@ -32,7 +32,7 @@ import gconf
 from wuja.data import GCONF_PATH, WUJA_DB_FILE, WUJA_DIR
 
 GCONF_VERSION_KEY = "version"
-WUJA_VERSION = "0.0.5" # Must be updated each time a release is published.
+WUJA_VERSION = "0.0.6" # Must be updated each time a release is published.
 
 RELEASES = ["0.0.3", "0.0.4", "0.0.5"]
 
