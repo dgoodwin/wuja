@@ -1,8 +1,8 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
-Name: wuja
+Name: gnome-applet-wuja
 Version: 0.0.5
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary: Gnome desktop applet for integration with Google Calendar
 
 Group: Applications/Internet
@@ -12,22 +12,61 @@ Source0: http://dangerouslyinc.com/files/wuja/wuja-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch: noarch
-Requires: python-vobject >= 0.4.4, python-dateutil >= 1.1, python-elementtree >= 1.2.6
+
+Requires: python-vobject >= 0.4.4
+Requires: python-dateutil >= 1.1
+Requires: python-elementtree >= 1.2.6
+
+Requires(pre): GConf2
+Requires(post): GConf2
+Requires(preun): GConf2
+
+Provides: wuja = %{version}-%{release}
+Obsoletes: wuja < 0.0.5-2
 
 %description
 wuja is a Gnome desktop applet for integration with Google Calendar.
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q -n wuja-%{version}
 
 
 %build
 CFLAGS="$RPM_OPT_FLAGS" %{__python} setup.py build
 
 
+%pre
+if [ "$1" -gt 1 ]; then
+    export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
+    gconftool-2 --makefile-uninstall-rule \
+        %{_sysconfdir}/gconf/schemas/wuja.schema >/dev/null || :
+    # If the schema file has ever been renamed::
+    #gconftool-2 --makefile-uninstall-rule \
+    #  %{_sysconfdir}/gconf/schemas/[OLDNAME].schemas > /dev/null || :
+    killall -HUP gconfd-2 || :
+fi
+
+
 %install
 rm -rf $RPM_BUILD_ROOT
+export GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL=1
 %{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
 rm -f $RPM_BUILD_ROOT%{python_sitelib}/*egg-info/requires.txt
+
+
+%post
+export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
+gconftool-2 --makefile-install-rule \
+    %{_sysconfdir}/gconf/schemas/wuja.schema > /dev/null || :
+killall -HUP gconfd-2 || :
+
+
+%preun
+if [ "$1" -eq 0 ]; then
+    export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
+    gconftool-2 --makefile-uninstall-rule \
+        %{_sysconfdir}/gconf/schemas/wuja.schema > /dev/null || :
+    killall -HUP gconfd-2 || :
+fi
 
 
 %clean
@@ -39,60 +78,16 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS
 %doc LICENSE
 %doc README
+%{_sysconfdir}/gconf/schemas/wuja.schema
+%{_bindir}/wuja
 %dir %{python_sitelib}/wuja
-%dir %{python_sitelib}/wuja/data
+%{python_sitelib}/wuja/*
 
-/etc/gconf/schemas/wuja.schema
-/usr/bin/wuja
-%{python_sitelib}/wuja/calendar.py
-%{python_sitelib}/wuja/calendar.pyc
-%{python_sitelib}/wuja/calendar.pyo
-%{python_sitelib}/wuja/log.py
-%{python_sitelib}/wuja/log.pyc
-%{python_sitelib}/wuja/log.pyo
-%{python_sitelib}/wuja/model.py
-%{python_sitelib}/wuja/model.pyc
-%{python_sitelib}/wuja/model.pyo
-%{python_sitelib}/wuja/preferences.py
-%{python_sitelib}/wuja/preferences.pyc
-%{python_sitelib}/wuja/preferences.pyo
-%{python_sitelib}/wuja/utils.py
-%{python_sitelib}/wuja/utils.pyc
-%{python_sitelib}/wuja/utils.pyo
-%{python_sitelib}/wuja/notifier.py
-%{python_sitelib}/wuja/notifier.pyc
-%{python_sitelib}/wuja/notifier.pyo
-%{python_sitelib}/wuja/upgrade.py
-%{python_sitelib}/wuja/upgrade.pyc
-%{python_sitelib}/wuja/upgrade.pyo
-%{python_sitelib}/wuja/config.py
-%{python_sitelib}/wuja/config.pyc
-%{python_sitelib}/wuja/config.pyo
-%{python_sitelib}/wuja/data.py
-%{python_sitelib}/wuja/data.pyc
-%{python_sitelib}/wuja/data.pyo
-%{python_sitelib}/wuja/feed.py
-%{python_sitelib}/wuja/feed.pyc
-%{python_sitelib}/wuja/feed.pyo
-%{python_sitelib}/wuja/decorators.py
-%{python_sitelib}/wuja/decorators.pyc
-%{python_sitelib}/wuja/decorators.pyo
-%{python_sitelib}/wuja/application.py
-%{python_sitelib}/wuja/application.pyc
-%{python_sitelib}/wuja/application.pyo
-%{python_sitelib}/wuja/__init__.py
-%{python_sitelib}/wuja/__init__.pyc
-%{python_sitelib}/wuja/__init__.pyo
-
-%{python_sitelib}/wuja/data/wuja-icon-128x128.png
-%{python_sitelib}/wuja/data/calendar.glade
-%{python_sitelib}/wuja/data/wuja-prefs.glade
-%{python_sitelib}/wuja/data/wuja-about.glade
-%{python_sitelib}/wuja/data/wuja-menu.xml
-%{python_sitelib}/wuja/data/alert-window.glade
-%{python_sitelib}/wuja/data/wuja-icon-24x24.png
 
 %changelog
+* Sun Jan 21 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.5-2
+- Renamed to gnome-applet-wuja.
+
 * Wed Jan 17 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.5-1
 - Initial packaging.
 
