@@ -78,6 +78,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Feb 05 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.6-1
+- Disabled threading for temporary bugfix release.
+
 * Mon Feb 05 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.5-3
 - Updates to .spec file.
 
