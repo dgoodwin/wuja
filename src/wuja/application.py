@@ -35,7 +35,7 @@ from logging import getLogger
 from egg import trayicon
 from datetime import timedelta
 
-from wuja.notifier import AsyncNotifier
+from wuja.notifier import Notifier
 from wuja.config import WujaConfiguration, ALERT_NOTIFICATION
 from wuja.data import WUJA_DIR, GCONF_PATH
 from wuja.calendar import CalendarWindow
@@ -61,7 +61,12 @@ class WujaApplication:
         upgrade_manager = UpgradeManager()
         upgrade_manager.check()
 
-        gtk.gdk.threads_init()
+        # TODO: Disabled and switched from use of AsyncNotifier on
+        # 2007-02-05. Possible problem with pynotify and threading, threading
+        # was our decision to disable to get users up and running with a 0.0.6
+        # bugfix release. Re-enable once the issue is resolved.
+        #gtk.gdk.threads_init()
+
         # Maintain a map of events that have alert windows open to ensure
         # we don't popup multiple windows for the same event that hasn't
         # been confirmed by the user:
@@ -170,7 +175,7 @@ class WujaApplication:
 
     def build_notifier(self):
         """ Builds the notifier object. """
-        self.notifier = AsyncNotifier(self.config)
+        self.notifier = Notifier(self.config)
         # register ourselves as an observer
         self.notifier.connect("feeds-updated", self.notify)
 
