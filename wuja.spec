@@ -1,8 +1,8 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
-Name: gnome-applet-wuja
+Name: wuja
 Version: 0.0.6
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary: Gnome desktop applet for integration with Google Calendar
 
 Group: Applications/Internet
@@ -24,7 +24,7 @@ Requires(preun): GConf2
 Provides: wuja = %{version}-%{release}
 
 %description
-gnome-applet-wuja is a Gnome desktop applet for integration with Google Calendar.
+wuja is a Gnome application for integration with Google Calendar.
 %prep
 %setup -q -n wuja-%{version}
 
@@ -78,6 +78,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Feb 22 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.6-1
+- Renamed back to just wuja, not really a Gnome applet.
+
 * Mon Feb 05 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.6-1
 - Disabled threading for temporary bugfix release.
 
