@@ -35,6 +35,7 @@ from wuja.model import Cache
 
 ALERT_NOTIFICATION = 'notification'
 ALERT_DIALOG = 'dialog'
+DEFAULT_TIMESTAMP_FORMAT = "%I:%M%p"
 
 class WujaConfiguration(gobject.GObject):
 
@@ -45,6 +46,8 @@ class WujaConfiguration(gobject.GObject):
 
         self.client = gconf.client_get_default()
         self.urls_path = os.path.join(self.__gconf_path, "feed_urls")
+        self.timestamp_format_path = os.path.join(self.__gconf_path,
+            "timestamp_format")
         self.__db_file = WUJA_DB_FILE
 
     def get_feed_urls(self):
@@ -105,6 +108,14 @@ class WujaConfiguration(gobject.GObject):
         self.client.set_list(self.urls_path, gconf.VALUE_STRING, urls)
         self.client.suggest_sync()
         self.emit("config-changed")
+
+    def get_timestamp_format(self):
+        #return self.client.get_list(self.urls_path, gconf.VALUE_STRING)
+        format = self.client.get_string(self.timestamp_format_path)
+        if format is None:
+            return DEFAULT_TIMESTAMP_FORMAT
+        return format
+
 
 gobject.signal_new("config-changed", WujaConfiguration, gobject.SIGNAL_ACTION,
     gobject.TYPE_BOOLEAN, ())

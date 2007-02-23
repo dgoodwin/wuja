@@ -27,6 +27,7 @@ import gconf
 
 import settestpath
 from wuja.config import WujaConfiguration
+from wuja.config import DEFAULT_TIMESTAMP_FORMAT
 
 gconfTestPath = '/apps/wuja/test'
 
@@ -91,6 +92,15 @@ class WujaConfigurationTests(unittest.TestCase):
         self.assertEqual(0, len(self.config.get_feed_urls()))
         self.config.add_feed_url('')
         self.assertEqual(0, len(self.config.get_feed_urls()))
+
+    def test_default_timestamp_format(self):
+        """ 
+        If no timestamp is defined in gconf, test that a default
+        value is returned.
+        """
+        self.assertEqual(DEFAULT_TIMESTAMP_FORMAT, 
+            self.config.get_timestamp_format())
+
 
 def suite():
     suite = unittest.TestSuite()
