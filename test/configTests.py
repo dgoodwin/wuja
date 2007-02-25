@@ -24,23 +24,24 @@ __revision__ = "$Revision$"
 
 import unittest
 import gconf
+import os.path
 
 import settestpath
 from wuja.config import WujaConfiguration
 from wuja.config import DEFAULT_TIMESTAMP_FORMAT
 
-gconfTestPath = '/apps/wuja/test'
+GCONF_TEST_PATH = '/apps/wuja/test'
 
 class WujaConfigurationTests(unittest.TestCase):
 
     def setUp(self):
-        self.config = WujaConfiguration(gconfTestPath)
+        self.config = WujaConfiguration(GCONF_TEST_PATH)
 
     def tearDown(self):
         # NOTE: Couldn't find a way to actually delete the directory, this just
         # unsets all the properties beneath it.
         client = gconf.client_get_default()
-        client.recursive_unset(gconfTestPath,
+        client.recursive_unset(GCONF_TEST_PATH,
             gconf.UNSET_INCLUDING_SCHEMA_NAMES)
 
     def test_add_feed_url(self):
@@ -94,12 +95,21 @@ class WujaConfigurationTests(unittest.TestCase):
         self.assertEqual(0, len(self.config.get_feed_urls()))
 
     def test_default_timestamp_format(self):
-        """ 
+        """
         If no timestamp is defined in gconf, test that a default
         value is returned.
         """
-        self.assertEqual(DEFAULT_TIMESTAMP_FORMAT, 
+        self.assertEqual(DEFAULT_TIMESTAMP_FORMAT,
             self.config.get_timestamp_format())
+
+    def test_set_timestamp_format(self):
+        client = gconf.client_get_default()
+        self.assertEqual(None, client.get_string(os.path.join(GCONF_TEST_PATH,
+            "timestamp_format")))
+        new_format = "%H:%M"
+        self.config.set_timestamp_format(new_format)
+        self.assertEqual(new_format, self.config.get_timestamp_format())
+
 
 
 def suite():

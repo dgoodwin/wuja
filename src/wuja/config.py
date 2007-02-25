@@ -36,6 +36,8 @@ from wuja.model import Cache
 ALERT_NOTIFICATION = 'notification'
 ALERT_DIALOG = 'dialog'
 DEFAULT_TIMESTAMP_FORMAT = "%I:%M%p"
+GCONF_FEED_URLS = "feed_urls"
+GCONF_TIMESTAMP_FORMAT = "timestamp_format"
 
 class WujaConfiguration(gobject.GObject):
 
@@ -45,9 +47,9 @@ class WujaConfiguration(gobject.GObject):
         self.__gconf_path = gconf_path
 
         self.client = gconf.client_get_default()
-        self.urls_path = os.path.join(self.__gconf_path, "feed_urls")
+        self.urls_path = os.path.join(self.__gconf_path, GCONF_FEED_URLS)
         self.timestamp_format_path = os.path.join(self.__gconf_path,
-            "timestamp_format")
+            GCONF_TIMESTAMP_FORMAT)
         self.__db_file = WUJA_DB_FILE
 
     def get_feed_urls(self):
@@ -110,11 +112,22 @@ class WujaConfiguration(gobject.GObject):
         self.emit("config-changed")
 
     def get_timestamp_format(self):
-        #return self.client.get_list(self.urls_path, gconf.VALUE_STRING)
+        """
+        Returns the strftime format for timestamps as stored in gconf.
+        If none is defined (i.e. after initial program install), returns
+        a default constant defined in this module.
+        """
         format = self.client.get_string(self.timestamp_format_path)
         if format is None:
             return DEFAULT_TIMESTAMP_FORMAT
         return format
+
+    def set_timestamp_format(self, format):
+        """ Set the timestamp format in gconf. """
+        self.client.set_string(self.timestamp_format_path, format)
+        self.client.suggest_sync()
+        self.emit("config-changed")
+
 
 
 gobject.signal_new("config-changed", WujaConfiguration, gobject.SIGNAL_ACTION,
