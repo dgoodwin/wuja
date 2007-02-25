@@ -30,6 +30,9 @@ logger = getLogger("preferences")
 
 from wuja.utils import find_file_on_path
 
+URLS_WIDGET = "treeview1"
+TIMESTAMP_FORMAT_WIDGET = "time_format_entry"
+
 def process_url(url):
     """
     Convert the URL specified by the user into what we need for wuja.
@@ -59,13 +62,14 @@ class PreferencesDialog:
             'on_remove_clicked' : self.__remove_url,
             'on_remove_all_clicked' : self.__remove_all_urls,
             'on_help_clicked' : self.__display_help,
-            'on_close_clicked' : self.close
+            'on_close_clicked' : self.close,
+            'on_time_format_changed': self.__update_time_format,
         }
         self.glade_prefs.signal_autoconnect(signals)
         self.prefs_dialog_widget = self.glade_prefs.get_widget(window_name)
 
         # Populate the list of existing URLs:
-        self.prefs_url_list = self.glade_prefs.get_widget('treeview1')
+        self.prefs_url_list = self.glade_prefs.get_widget(URLS_WIDGET)
         urls_list = gtk.ListStore(gobject.TYPE_STRING)
         self.__title_index = {}
         for url in self.config.get_feed_urls():
@@ -77,6 +81,10 @@ class PreferencesDialog:
         renderer = gtk.CellRendererText()
         column = gtk.TreeViewColumn("Feed URLs", renderer, text=0)
         self.prefs_url_list.append_column(column)
+
+        # Populate the existing timestamp format:
+        timestamp_format_widget = self.glade_prefs.get_widget(TIMESTAMP_FORMAT_WIDGET)
+        timestamp_format_widget.set_text(self.config.get_timestamp_format())
 
         self.prefs_dialog_widget.show_all()
 
@@ -115,14 +123,14 @@ class PreferencesDialog:
         self.config.add_feed_url(url)
 
         # Update the list:
-        urls_list = self.glade_prefs.get_widget('treeview1').get_model()
+        urls_list = self.glade_prefs.get_widget(URLS_WIDGET).get_model()
         #cal = self.notifier.cache.load(url)
         #feed_title = cal.title
         urls_list.set_value(urls_list.append(), 0, url)
 
     def __remove_url(self, widget):
         """ Remove a URL from the list. """
-        urls_list = self.glade_prefs.get_widget('treeview1')
+        urls_list = self.glade_prefs.get_widget(URLS_WIDGET)
         selection = urls_list.get_selection()
         (model, cal_iter) = selection.get_selected()
         if cal_iter is None:
@@ -141,8 +149,14 @@ class PreferencesDialog:
         logger.warn("Removing *ALL* URLs.")
         self.config.remove_all_feed_urls()
 
-        urls_list = self.glade_prefs.get_widget('treeview1')
+        urls_list = self.glade_prefs.get_widget(URLS_WIDGET)
         urls_list.set_model()
+
+    def __update_time_format(self, widget, event):
+        """ Update the time format. """
+        new_format = self.glade_prefs.get_widget(TIMESTAMP_FORMAT_WIDGET).get_text()
+        logger.debug("Setting new timestamp format: " + new_format)
+        self.config.set_timestamp_format(new_format)
 
     def __display_help(self, widget):
         """ Display preferences help. """
@@ -152,7 +166,6 @@ class PreferencesDialog:
         """ Close the preferences dialog. """
         self.prefs_dialog_widget.destroy()
         self.prefs_dialog = None
-
 
 
 

@@ -265,7 +265,7 @@
 	      </child>
 
 	      <child>
-		<widget class="GtkEntry" id="timeFormatEntry">
+		<widget class="GtkEntry" id="time_format_entry">
 		  <property name="visible">True</property>
 		  <property name="can_focus">True</property>
 		  <property name="editable">True</property>
@@ -275,6 +275,7 @@
 		  <property name="has_frame">True</property>
 		  <property name="invisible_char">•</property>
 		  <property name="activates_default">False</property>
+		  <signal name="focus_out_event" handler="on_time_format_changed" last_modification_time="Sun, 25 Feb 2007 16:35:11 GMT"/>
 		</widget>
 		<packing>
 		  <property name="padding">0</property>

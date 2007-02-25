@@ -126,7 +126,8 @@ class WujaConfiguration(gobject.GObject):
         """ Set the timestamp format in gconf. """
         self.client.set_string(self.timestamp_format_path, format)
         self.client.suggest_sync()
-        self.emit("config-changed")
+        # Don't emit config changed, the timestamp format isn't important
+        # enough to require an update.
 
 
 
