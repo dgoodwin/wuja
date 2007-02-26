@@ -37,9 +37,10 @@ logger = getLogger("calendar_window")
 
 class CalendarWindow(gobject.GObject):
 
-    def __init__(self, cache):
+    def __init__(self, cache, config):
         gobject.GObject.__init__(self)
         self.cache = cache
+        self.config = config
 
         glade_file = 'wuja/data/calendar.glade'
         window_name = 'calendar'
@@ -118,7 +119,8 @@ class CalendarWindow(gobject.GObject):
                     and event.entry.duration % 86400 == 0:
                     txt += "ALL DAY"
                 else:
-                    txt += event.time.strftime("%I:%M%p")
+                    txt += event.time.strftime(
+                        self.config.get_timestamp_format())
 
                 txt += " - "
                 txt += event.entry.title

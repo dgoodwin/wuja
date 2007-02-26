@@ -150,7 +150,7 @@ class WujaApplication:
 
     def __open_calendar(self, widget):
         """ Open the calendar display dialog. """
-        self.calendar_window = CalendarWindow(self.notifier.cache)
+        self.calendar_window = CalendarWindow(self.notifier.cache, self.config)
 
     def __close_dialog(self, widget):
         """ Close the preferences dialog. """
@@ -285,7 +285,8 @@ class AlertDialog(AlertDisplay):
         description = glade_alert.get_widget('description')
 
         title.set_text(event.entry.title)
-        when.set_text(event.time.strftime("%a %b %d %Y - %I:%M%P"))
+        when.set_text(event.time.strftime("%a %b %d %Y - " + 
+            self.config.get_timestamp_format()))
 
         calendar.set_text(event.entry.calendar.title)
 
