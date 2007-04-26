@@ -49,6 +49,9 @@ class UpgradeManager:
         self.__upgrade_actions["0.0.5"] = [
             DeleteCacheAction(),
         ]
+        self.__upgrade_actions["0.0.7"] = [
+            DeleteCacheAction(),
+        ]
 
     def check(self):
         """
