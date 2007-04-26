@@ -1,8 +1,8 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: wuja
-Version: 0.0.6
-Release:        2%{?dist}
+Version: 0.0.7
+Release:        1%{?dist}
 Summary: Gnome desktop applet for integration with Google Calendar
 
 Group: Applications/Internet
@@ -12,10 +12,10 @@ Source0: http://dangerouslyinc.com/files/wuja/wuja-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch: noarch
+BuildRequires: python-devel
 
 Requires: python-vobject >= 0.4.4
 Requires: python-dateutil >= 1.1
-Requires: python-elementtree >= 1.2.6
 
 Requires(pre): GConf2
 Requires(post): GConf2
@@ -78,6 +78,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Apr 26 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.7-1
+- Updated to use _elementtree module in Python 2.5 if available.
+
 * Mon Feb 22 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.6-1
 - Renamed back to just wuja, not really a Gnome applet.
 

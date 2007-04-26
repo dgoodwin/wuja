@@ -26,7 +26,13 @@ import time
 import urllib2
 
 from datetime import datetime
-from elementtree import ElementTree
+
+# Element tree was moved into Python 2.5 as _elementtree, support both:
+try:
+    from _elementtree import ElementTree
+except ImportError:
+    from elementtree import ElementTree
+
 from logging import getLogger
 
 from wuja.model import SingleOccurrenceEntry
