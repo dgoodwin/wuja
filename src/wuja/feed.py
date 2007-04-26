@@ -29,9 +29,9 @@ from datetime import datetime
 
 # Element tree was moved into Python 2.5 as _elementtree, support both:
 try:
-    from _elementtree import ElementTree
+    from _elementtree import ElementTree, XML
 except ImportError:
-    from elementtree import ElementTree
+    from elementtree import ElementTree, XML
 
 from logging import getLogger
 
@@ -74,7 +74,7 @@ class FeedSource:
 
 
 def build_calendar(xml, url, last_update):
-    __root_node = ElementTree.XML(xml)
+    __root_node = XML(xml)
     title = None
     timezone = None
 
