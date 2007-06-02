@@ -1,8 +1,8 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: wuja
-Version: 0.0.7
-Release:        2%{?dist}
+Version: 0.0.8
+Release:        1%{?dist}
 Summary: Gnome desktop applet for integration with Google Calendar
 
 Group: Applications/Internet
@@ -79,6 +79,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Sat Jun 02 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.8-1
+- Releasing 0.0.8.
+
 * Sun Apr 29 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.7-2
 - Updating spec file as per Fedora review suggestions.
 

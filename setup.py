@@ -25,7 +25,7 @@ __revision__ = "$Revision$"
 from distutils.core import setup
 
 setup(name="wuja",
-    version='0.0.7',
+    version='0.0.8',
     description='Gnome Google Calendar integration.',
     author='Devan Goodwin & James Bowes',
     author_email='dgoodwin@dangerouslyinc.com & jbowes@dangerouslyinc.com',
