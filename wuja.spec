@@ -2,7 +2,7 @@
 
 Name: wuja
 Version: 0.0.7
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary: Gnome desktop applet for integration with Google Calendar
 
 Group: Applications/Internet
@@ -16,12 +16,13 @@ BuildRequires: python-devel
 
 Requires: python-vobject >= 0.4.4
 Requires: python-dateutil >= 1.1
+Requires: gnome-python2-libegg >= 2.14.3
+Requires: gnome-python2-gconf >= 2.18.1
+Requires: notify-python >= 0.1.0
 
 Requires(pre): GConf2
 Requires(post): GConf2
 Requires(preun): GConf2
-
-Provides: wuja = %{version}-%{release}
 
 %description
 wuja is a Gnome application for integration with Google Calendar.
@@ -30,7 +31,14 @@ wuja is a Gnome application for integration with Google Calendar.
 
 
 %build
-CFLAGS="$RPM_OPT_FLAGS" %{__python} setup.py build
+%{__python} setup.py build
+
+
+%install
+rm -rf $RPM_BUILD_ROOT
+export GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL=1
+%{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
+rm -f $RPM_BUILD_ROOT%{python_sitelib}/*egg-info/requires.txt
 
 
 %pre
@@ -39,13 +47,6 @@ if [ "$1" -gt 1 ]; then
     gconftool-2 --makefile-uninstall-rule \
         %{_sysconfdir}/gconf/schemas/wuja.schema >/dev/null || :
 fi
-
-
-%install
-rm -rf $RPM_BUILD_ROOT
-export GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL=1
-%{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
-rm -f $RPM_BUILD_ROOT%{python_sitelib}/*egg-info/requires.txt
 
 
 %post
@@ -78,6 +79,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Sun Apr 29 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.7-2
+- Updating spec file as per Fedora review suggestions.
+
 * Thu Apr 26 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.7-1
 - Updated to use _elementtree module in Python 2.5 if available.
 
