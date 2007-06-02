@@ -36,8 +36,10 @@ from wuja.model import Cache
 ALERT_NOTIFICATION = 'notification'
 ALERT_DIALOG = 'dialog'
 DEFAULT_TIMESTAMP_FORMAT = "%I:%M%p"
+DEFAULT_REMINDER = 10 # minutes
 GCONF_FEED_URLS = "feed_urls"
 GCONF_TIMESTAMP_FORMAT = "timestamp_format"
+GCONF_DEFAULT_REMINDER = "default_reminder"
 
 class WujaConfiguration(gobject.GObject):
 
@@ -50,6 +52,8 @@ class WujaConfiguration(gobject.GObject):
         self.urls_path = os.path.join(self.__gconf_path, GCONF_FEED_URLS)
         self.timestamp_format_path = os.path.join(self.__gconf_path,
             GCONF_TIMESTAMP_FORMAT)
+        self.__reminder_path = os.path.join(self.__gconf_path, 
+            GCONF_DEFAULT_REMINDER)
         self.__db_file = WUJA_DB_FILE
 
     def get_feed_urls(self):
@@ -127,6 +131,20 @@ class WujaConfiguration(gobject.GObject):
         self.client.set_string(self.timestamp_format_path, format)
         self.client.suggest_sync()
         # Don't emit config changed, the timestamp format isn't important
+        # enough to require an update.
+
+    def get_reminder(self):
+        """ Returns the default reminder time in minutes. """
+        reminder_mins = self.client.get_int(self.__reminder_path)
+        if reminder_mins is None or reminder_mins == 0:
+            return DEFAULT_REMINDER
+        return reminder_mins
+
+    def set_reminder(self, reminder):
+        """ Set the default reminder minutes in gconf. """
+        self.client.set_int(self.__reminder_path, reminder)
+        self.client.suggest_sync()
+        # Don't emit config changed, the reminder isn't important
         # enough to require an update.
 
 

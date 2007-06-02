@@ -28,7 +28,7 @@ import os.path
 
 import settestpath
 from wuja.config import WujaConfiguration
-from wuja.config import DEFAULT_TIMESTAMP_FORMAT
+from wuja.config import DEFAULT_TIMESTAMP_FORMAT, DEFAULT_REMINDER
 
 GCONF_TEST_PATH = '/apps/wuja/test'
 
@@ -109,6 +109,17 @@ class WujaConfigurationTests(unittest.TestCase):
         new_format = "%H:%M"
         self.config.set_timestamp_format(new_format)
         self.assertEqual(new_format, self.config.get_timestamp_format())
+
+    def test_set_reminder(self):
+        client = gconf.client_get_default()
+        self.assertEqual(None, client.get_string(os.path.join(GCONF_TEST_PATH,
+            "default_reminder")))
+
+        # Reminder should default to 10 if the user hasn't set one explicitly:
+        self.assertEqual(DEFAULT_REMINDER, self.config.get_reminder())
+
+        self.config.set_reminder(25)
+        self.assertEqual(25, self.config.get_reminder())
 
 
 
