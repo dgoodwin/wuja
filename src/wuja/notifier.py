@@ -173,15 +173,22 @@ class Notifier(gobject.GObject):
             # Ignore events in the past:
             if event.time < now:
                 continue
-            if event.entry.reminder is None:
-                continue
+
+            # Google seems really sketchy about whether or not reminders are
+            # included in the feed. Aparently you can now only have reminders
+            # on entries in your personal calendar (pretty sure this wasn't
+            # the case originally). Use one if the entry happened to have one
+            # but most of the time we'll probably end up using the default.
+            reminder = event.entry.reminder
+            if reminder is None:
+                reminder = self.config.get_reminder()
 
             delta = event.time - now
-            if delta < datetime.timedelta(minutes=event.entry.reminder):
+            if delta < datetime.timedelta(minutes=reminder):
                 logger.debug("Notifying observers for event: " +
                     event.entry.title)
                 logger.debug("   When: " + str(event.time))
-                logger.debug("   Reminder: " + str(event.entry.reminder) +
+                logger.debug("   Reminder: " + str(reminder) +
                     " minutes")
                 self.emit("feeds-updated", event)
         return True
