@@ -30,10 +30,12 @@ import gtk.glade
 import gobject
 import os
 import os.path
+import datetime
 
 from logging import getLogger
 from egg import trayicon
 from datetime import timedelta
+from dateutil.tz import tzlocal
 
 from wuja.notifier import Notifier
 from wuja.config import WujaConfiguration, ALERT_NOTIFICATION
@@ -217,9 +219,9 @@ class WujaApplication:
 
         alert_type = self.config.get_alert_type()
         if alert_type == ALERT_NOTIFICATION:
-            alert_window = AlertNotification(event, self.tray_icon)
+            alert_window = AlertNotification(event, self.tray_icon, self.config)
         else:
-            alert_window = AlertDialog(event)
+            alert_window = AlertDialog(event, self.config)
 
         alert_window.connect("alert-closed", self.on_alert_closed)
         self.__open_alerts[event.key] = alert_window
@@ -235,8 +237,9 @@ class WujaApplication:
 
 class AlertDisplay(gobject.GObject):
 
-    def __init__(self, event):
+    def __init__(self, event, config):
         gobject.GObject.__init__(self)
+        self.config = config
 
         logger.debug('Opening alert dialog for event: %s', event.entry.title)
         self.event = event
@@ -252,7 +255,25 @@ class AlertDisplay(gobject.GObject):
         Called when the user presses snooze. Destroys the alert
         window and sets appropriate status for the event in question.
         """
-        logger.debug("Snoozed event: " + self.event.entry.title)
+
+        logger.debug("Snoozing for " + str(self.config.get_snooze()) + 
+            " minutes: " + self.event.entry.title)
+        snooze_until = datetime.datetime.now(tzlocal()) + \
+            datetime.timedelta(minutes=self.config.get_snooze())
+        self.event.snooze_until = snooze_until
+
+        # Warn if snoozing takes us beyond the start of the event:
+        worst_case_notify_time = self.event.time - datetime.timedelta(minutes=1)
+        if worst_case_notify_time <= self.event.snooze_until:
+            warning = gtk.MessageDialog(type=gtk.MESSAGE_WARNING, 
+                buttons=gtk.BUTTONS_OK,
+                message_format="Snooze for event \"" + self.event.entry.title +
+                    "\" extends beyond or close to event start time. You " +
+                    "may not receive another notification before this event " +
+                    "begins.")
+            warning.run()
+            warning.destroy()
+
         self.emit('alert-closed')
 
 gobject.signal_new("alert-closed", AlertDisplay, gobject.SIGNAL_ACTION,
@@ -264,8 +285,8 @@ class AlertDialog(AlertDisplay):
 
     """ Window displayed when an alert is triggered. """
 
-    def __init__(self, event):
-        AlertDisplay.__init__(self, event)
+    def __init__(self, event, config):
+        AlertDisplay.__init__(self, event, config)
 
         glade_file = 'wuja/data/alert-window.glade'
         window_name = 'window1'
@@ -321,8 +342,8 @@ class AlertDialog(AlertDisplay):
 
 class AlertNotification(AlertDisplay):
 
-    def __init__(self, event, tray_icon):
-        AlertDisplay.__init__(self, event)
+    def __init__(self, event, tray_icon, config):
+        AlertDisplay.__init__(self, event, config)
 
         import pynotify
         pynotify.init('wuja')
@@ -346,7 +367,8 @@ class AlertNotification(AlertDisplay):
         notif.attach_to_widget(tray_icon)
         notif.set_timeout(0)
         notif.add_action('accept', 'Accept', self.accept_event)
-        notif.add_action("snooze", 'Snooze', self.snooze_event)
+        notif.add_action('snooze', 'Snooze', self.snooze_event)
+
         notif.show()
 
     def accept_event(self, notification, action):

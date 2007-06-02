@@ -28,7 +28,8 @@ import os.path
 
 import settestpath
 from wuja.config import WujaConfiguration
-from wuja.config import DEFAULT_TIMESTAMP_FORMAT, DEFAULT_REMINDER
+from wuja.config import DEFAULT_TIMESTAMP_FORMAT, DEFAULT_REMINDER,\
+    DEFAULT_SNOOZE
 
 GCONF_TEST_PATH = '/apps/wuja/test'
 
@@ -120,6 +121,17 @@ class WujaConfigurationTests(unittest.TestCase):
 
         self.config.set_reminder(25)
         self.assertEqual(25, self.config.get_reminder())
+
+    def test_set_snooze(self):
+        client = gconf.client_get_default()
+        self.assertEqual(None, client.get_string(os.path.join(GCONF_TEST_PATH,
+            "snooze_mins")))
+
+        # Snooze should default to 10 if the user hasn't set one explicitly:
+        self.assertEqual(DEFAULT_SNOOZE, self.config.get_snooze())
+
+        self.config.set_snooze(25)
+        self.assertEqual(25, self.config.get_snooze())
 
 
 

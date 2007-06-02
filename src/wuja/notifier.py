@@ -174,6 +174,13 @@ class Notifier(gobject.GObject):
             if event.time < now:
                 continue
 
+            # Ignore events we're snoozing:
+            if event.snooze_until != None and event.snooze_until > now:
+                logger.debug("Ignoring snoozed event: " + event.entry.title)
+                continue
+            # If we've made it here, snooze is either expired or None already:
+            event.snooze_until = None
+
             # Google seems really sketchy about whether or not reminders are
             # included in the feed. Aparently you can now only have reminders
             # on entries in your personal calendar (pretty sure this wasn't

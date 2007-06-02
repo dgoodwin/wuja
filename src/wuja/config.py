@@ -37,9 +37,11 @@ ALERT_NOTIFICATION = 'notification'
 ALERT_DIALOG = 'dialog'
 DEFAULT_TIMESTAMP_FORMAT = "%I:%M%p"
 DEFAULT_REMINDER = 10 # minutes
+DEFAULT_SNOOZE = 10 # minutes
 GCONF_FEED_URLS = "feed_urls"
 GCONF_TIMESTAMP_FORMAT = "timestamp_format"
 GCONF_DEFAULT_REMINDER = "default_reminder"
+GCONF_SNOOZE = "snooze"
 
 class WujaConfiguration(gobject.GObject):
 
@@ -54,6 +56,8 @@ class WujaConfiguration(gobject.GObject):
             GCONF_TIMESTAMP_FORMAT)
         self.__reminder_path = os.path.join(self.__gconf_path, 
             GCONF_DEFAULT_REMINDER)
+        self.__snooze_path = os.path.join(self.__gconf_path, 
+            GCONF_SNOOZE)
         self.__db_file = WUJA_DB_FILE
 
     def get_feed_urls(self):
@@ -146,6 +150,18 @@ class WujaConfiguration(gobject.GObject):
         self.client.suggest_sync()
         # Don't emit config changed, the reminder isn't important
         # enough to require an update.
+
+    def get_snooze(self):
+        """ Returns the default snooze time in minutes. """
+        snooze_mins = self.client.get_int(self.__snooze_path)
+        if snooze_mins is None or snooze_mins == 0:
+            return DEFAULT_SNOOZE
+        return snooze_mins
+
+    def set_snooze(self, snooze):
+        """ Set the default snooze minutes in gconf. """
+        self.client.set_int(self.__snooze_path, snooze)
+        self.client.suggest_sync()
 
 
 

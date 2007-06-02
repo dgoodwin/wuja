@@ -111,6 +111,7 @@ class Event:
         self.time = time
         self.entry = entry
         self.accepted = False # set true once user confirms event
+        self.snooze_until = None
 
     def get_key(self):
         """

@@ -33,6 +33,7 @@ from wuja.utils import find_file_on_path
 URLS_WIDGET = "treeview1"
 TIMESTAMP_FORMAT_WIDGET = "time_format_entry"
 REMINDER_WIDGET = "reminder_mins"
+SNOOZE_WIDGET = "snooze_mins"
 
 def process_url(url):
     """
@@ -66,6 +67,7 @@ class PreferencesDialog:
             'on_close_clicked' : self.close,
             'on_time_format_changed': self.__update_time_format,
             'on_reminder_changed': self.__update_reminder,
+            'on_snooze_changed': self.__update_snooze,
         }
         self.glade_prefs.signal_autoconnect(signals)
         self.prefs_dialog_widget = self.glade_prefs.get_widget(window_name)
@@ -92,6 +94,10 @@ class PreferencesDialog:
         reminder_widget = self.glade_prefs.get_widget(
             REMINDER_WIDGET)
         reminder_widget.set_value(self.config.get_reminder())
+
+        snooze_widget = self.glade_prefs.get_widget(
+            SNOOZE_WIDGET)
+        snooze_widget.set_value(self.config.get_snooze())
 
         self.prefs_dialog_widget.show_all()
 
@@ -171,6 +177,12 @@ class PreferencesDialog:
         new = self.glade_prefs.get_widget(REMINDER_WIDGET).get_value()
         logger.debug("Setting new reminder mins: " + str(new))
         self.config.set_reminder(int(new))
+
+    def __update_snooze(self, widget):
+        """ Update the snooze. """
+        new = self.glade_prefs.get_widget(SNOOZE_WIDGET).get_value()
+        logger.debug("Setting new snooze mins: " + str(new))
+        self.config.set_snooze(int(new))
 
     def __display_help(self, widget):
         """ Display preferences help. """
