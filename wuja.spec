@@ -2,7 +2,7 @@
 
 Name: wuja
 Version: 0.0.8
-Release:        1%{?dist}
+Release:        3%{?dist}
 Summary: Gnome desktop applet for integration with Google Calendar
 
 Group: Applications/Internet
@@ -76,9 +76,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/wuja
 %dir %{python_sitelib}/wuja
 %{python_sitelib}/wuja/*
+%{python_sitelib}/wuja*.egg-info
 
 
 %changelog
+* Fri Apr 04 2008 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.8-3
+- Minor fix for missing egg info file.
+
 * Sat Jun 02 2007 Devan Goodwin <dgoodwin@dangerouslyinc.com> 0.0.8-1
 - Releasing 0.0.8.
 
